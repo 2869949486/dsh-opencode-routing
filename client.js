@@ -109,9 +109,28 @@ window.__ModuleLoader__.load({
         peakHoliday: '——今天是中国法定节假日，官方整天算谷，OpenCode 照算峰',
         colKind: '计费项',
         peakExhausted: '但本月额度已经用尽，只能走官方。',
-        peakGoPay: '走 OpenCode 你实付',
-        peakOfficialPay: '走官方直连你实付',
+        peakGoPay: 'OpenCode',
+        peakOfficialPay: 'DeepSeek 官方',
+        colOpenCode: 'OpenCode',
+        colOfficial: 'DeepSeek 官方',
         peakVerdict: '结论',
+        clockTitle: '此刻的峰谷',
+        clockPeak: '高峰期',
+        clockOff: '低谷期',
+        clockFlip: '还剩 {hours} 小时到{next}',
+        clockHoliday: '今天是中国法定节假日，官方 API 全天按低谷计',
+        colRollingQuota: '5 小时额度',
+        capHintText: '纯文本：只吃文字、只出文字。',
+        capHintImage: '图像输入：能看截图、图表和 UI 稿（JPEG/PNG/GIF/WebP）。',
+        capHintVideo: '视频输入：能直接读 mp4 等视频文件并描述画面内容。',
+        capHintAudio: '音频输入：能直接读音频文件。',
+        capHintPdf: 'PDF 输入：能直接读 PDF 文档，不用先转成文本。',
+        capHintTools: '工具调用：模型可以调用 harness 提供的函数——读文件、跑命令、搜网页、写代码——再按返回结果继续干活。',
+        capHintReasoning: '推理：回答前先自己思考一段，难题更稳，但更慢、更费 token。',
+        backToTop: '回到顶部',
+        subscribe: '订阅 OpenCode',
+        copyKey: '复制',
+        copied: '已复制',
         peakGoCheaper: '走 OpenCode 便宜 {percent}%',
         verdictGo: '走 OpenCode 便宜 {percent}%',
         verdictOfficial: '走官方直连便宜 {percent}%',
@@ -220,9 +239,28 @@ window.__ModuleLoader__.load({
         kindOutput: 'output',
         peakHoliday: ' — today is a Chinese public holiday, so the official API charges off-peak all day while OpenCode still charges peak',
         peakExhausted: ' But this month’s allowance is already spent, so only the official route is left.',
-        peakGoPay: 'You pay via OpenCode',
-        peakOfficialPay: 'You pay via official API',
+        peakGoPay: 'OpenCode',
+        peakOfficialPay: 'DeepSeek official',
+        colOpenCode: 'OpenCode',
+        colOfficial: 'DeepSeek official',
         peakVerdict: 'Verdict',
+        clockTitle: 'Peak / off-peak right now',
+        clockPeak: 'peak',
+        clockOff: 'off-peak',
+        clockFlip: '{hours} h until {next}',
+        clockHoliday: 'Chinese public holiday today, so the official API bills off-peak all day',
+        colRollingQuota: '5-hour allowance',
+        capHintText: 'Text only: plain text in, plain text out.',
+        capHintImage: 'Image input: understands screenshots, charts and UI mockups (JPEG/PNG/GIF/WebP).',
+        capHintVideo: 'Video input: reads video files such as mp4 and can describe what happens in them.',
+        capHintAudio: 'Audio input: reads audio files directly.',
+        capHintPdf: 'PDF input: reads PDF documents without converting them to text first.',
+        capHintTools: 'Tool calling: the model can call the functions the harness exposes (read files, run commands, search the web, write code) and act on the results.',
+        capHintReasoning: 'Reasoning: the model thinks before answering; better on hard tasks, but slower and it burns more tokens.',
+        backToTop: 'Back to top',
+        subscribe: 'Subscribe to OpenCode',
+        copyKey: 'Copy',
+        copied: 'Copied',
         peakGoCheaper: 'OpenCode is {percent}% cheaper',
         verdictGo: 'OpenCode is {percent}% cheaper',
         verdictOfficial: 'Official API is {percent}% cheaper',
@@ -331,9 +369,28 @@ window.__ModuleLoader__.load({
         kindOutput: '輸出',
         peakHoliday: '——今天是中國法定假日，官方整天算谷，OpenCode 照算峰',
         peakExhausted: '但本月額度已用盡，只能走官方。',
-        peakGoPay: '走 OpenCode 你實付',
-        peakOfficialPay: '走官方直連你實付',
+        peakGoPay: 'OpenCode',
+        peakOfficialPay: 'DeepSeek 官方',
+        colOpenCode: 'OpenCode',
+        colOfficial: 'DeepSeek 官方',
         peakVerdict: '結論',
+        clockTitle: '此刻的峰谷',
+        clockPeak: '高峰期',
+        clockOff: '低谷期',
+        clockFlip: '還剩 {hours} 小時到{next}',
+        clockHoliday: '今天是中國法定節假日，官方 API 全天按低谷計',
+        colRollingQuota: '5 小時額度',
+        capHintText: '純文字：只吃文字、只出文字。',
+        capHintImage: '圖像輸入：能看截圖、圖表和 UI 稿（JPEG/PNG/GIF/WebP）。',
+        capHintVideo: '影片輸入：能直接讀 mp4 等影片檔並描述畫面內容。',
+        capHintAudio: '音訊輸入：能直接讀音訊檔。',
+        capHintPdf: 'PDF 輸入：能直接讀 PDF 文件，不用先轉成文字。',
+        capHintTools: '工具調用：模型可以調用 harness 提供的函式——讀檔、跑指令、搜網頁、寫程式——再依回傳結果繼續做事。',
+        capHintReasoning: '推理：回答前先自己想一段，難題更穩，但更慢、更耗 token。',
+        backToTop: '回到頂端',
+        subscribe: '訂閱 OpenCode',
+        copyKey: '複製',
+        copied: '已複製',
         peakGoCheaper: '走 OpenCode 便宜 {percent}%',
         verdictGo: '走 OpenCode 便宜 {percent}%',
         verdictOfficial: '走官方直連便宜 {percent}%',
@@ -443,8 +500,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "Nebenzeit",
     "peakHoliday": " – heute ist ein chinesischer gesetzlicher Feiertag: Die offizielle API rechnet den ganzen Tag Nebenzeit ab, OpenCode weiter Hauptzeit",
     "peakExhausted": " Das Kontingent für diesen Monat ist aber schon aufgebraucht, es bleibt nur der offizielle Weg.",
-    "peakGoPay": "Du zahlst über OpenCode",
-    "peakOfficialPay": "Du zahlst über die offizielle API",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek offiziell",
     "peakVerdict": "Fazit",
     "peakGoCheaper": "OpenCode ist {percent}% günstiger",
     "peakFootnote": "Gerechnet pro 1 Mio. Ausgabe-Tokens (bei einer Coding-Rechnung dominiert die Ausgabe), bei ¥{fx} je $. Haupt- und Nebenzeit ändern nur, wie schnell das Kontingent verbraucht wird, nicht das Fazit: Innerhalb des Kontingents bleibt OpenCode günstiger als die offizielle API; Ausnahmen sind ein aufgebrauchtes Kontingent oder ein Modell, dessen eigenes Limit zuerst endet.",
@@ -461,6 +518,25 @@ window.__ModuleLoader__.load({
     "demoOn": "Fall „offiziell günstiger\" zeigen",
     "demoOff": "Zurück zu echten Daten",
     "demoNote": "Beispieldaten: ein Modell, das über OpenCode teurer wäre (real nur bei aufgebrauchtem Kontingent).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek offiziell",
+    "clockTitle": "Haupt- und Nebenzeit gerade jetzt",
+    "clockPeak": "Hauptzeit",
+    "clockOff": "Nebenzeit",
+    "clockFlip": "noch {hours} Std. bis {next}",
+    "clockHoliday": "Heute ist chinesischer gesetzlicher Feiertag, deshalb rechnet die offizielle API den ganzen Tag Nebenzeit ab",
+    "colRollingQuota": "5-Stunden-Kontingent",
+    "capHintText": "Nur Text: reiner Text rein, reiner Text raus.",
+    "capHintImage": "Bildeingabe: versteht Screenshots, Diagramme und UI-Mockups (JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "Videoeingabe: liest Videodateien wie mp4 und beschreibt, was darin passiert.",
+    "capHintAudio": "Audioeingabe: liest Audiodateien direkt.",
+    "capHintPdf": "PDF-Eingabe: liest PDF-Dokumente, ohne sie vorher in Text umzuwandeln.",
+    "capHintTools": "Tool-Aufruf: Das Modell kann die Funktionen aufrufen, die das Harness bereitstellt (Dateien lesen, Befehle ausführen, im Web suchen, Code schreiben), und mit den Ergebnissen arbeiten.",
+    "capHintReasoning": "Reasoning: Das Modell denkt vor der Antwort nach; besser bei schwierigen Aufgaben, dafür langsamer und mit mehr Tokenverbrauch.",
+    "backToTop": "Nach oben",
+    "subscribe": "OpenCode abonnieren",
+    "copyKey": "Kopieren",
+    "copied": "Kopiert",
   },
   "es": {
     "title": "Cuentas y uso de OpenCode",
@@ -554,8 +630,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "hora valle",
     "peakHoliday": " — hoy es festivo oficial en China: la API oficial cobra tarifa valle todo el día, mientras que OpenCode sigue cobrando pico",
     "peakExhausted": " Pero la cuota de este mes ya está agotada, así que solo queda la ruta oficial.",
-    "peakGoPay": "Pagas por OpenCode",
-    "peakOfficialPay": "Pagas por la API oficial",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek oficial",
     "peakVerdict": "Conclusión",
     "peakGoCheaper": "OpenCode sale {percent}% más barato",
     "peakFootnote": "Calculado por millón de tokens de salida (en una factura de código manda la salida), a ¥{fx} por dólar. Las horas pico solo cambian la rapidez con que se consume la cuota, no la conclusión: dentro de la cuota, OpenCode siempre sale más barato que la API oficial; las excepciones son que la cuota se agote o que el límite de un modelo concreto se acabe antes.",
@@ -572,6 +648,25 @@ window.__ModuleLoader__.load({
     "demoOn": "Ver el caso de que lo oficial sea más barato",
     "demoOff": "Volver a los datos reales",
     "demoNote": "Datos de ejemplo: un modelo que con OpenCode sería más caro (en la realidad solo pasa al agotar la cuota).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek oficial",
+    "clockTitle": "Hora pico / valle ahora mismo",
+    "clockPeak": "pico",
+    "clockOff": "valle",
+    "clockFlip": "{next} en {hours} h",
+    "clockHoliday": "Hoy es festivo oficial en China, así que la API oficial cobra tarifa valle todo el día",
+    "colRollingQuota": "Cuota de 5 horas",
+    "capHintText": "Solo texto: entra texto plano, sale texto plano.",
+    "capHintImage": "Entrada de imagen: entiende capturas, gráficos y maquetas de interfaz (JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "Entrada de vídeo: lee archivos de vídeo como mp4 y describe lo que ocurre en ellos.",
+    "capHintAudio": "Entrada de audio: lee archivos de audio directamente.",
+    "capHintPdf": "Entrada de PDF: lee documentos PDF sin convertirlos antes a texto.",
+    "capHintTools": "Llamada a herramientas: el modelo puede llamar a las funciones que expone el harness (leer archivos, ejecutar comandos, buscar en la web, escribir código) y actuar con el resultado.",
+    "capHintReasoning": "Razonamiento: el modelo piensa antes de responder; va mejor en tareas difíciles, pero es más lento y gasta más tokens.",
+    "backToTop": "Volver arriba",
+    "subscribe": "Suscribirse a OpenCode",
+    "copyKey": "Copiar",
+    "copied": "Copiado",
   },
   "fr": {
     "title": "Comptes et usage OpenCode",
@@ -665,8 +760,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "heures creuses",
     "peakHoliday": " — aujourd’hui est un jour férié officiel en Chine : l’API officielle facture en heures creuses toute la journée, alors qu’OpenCode reste en heures pleines",
     "peakExhausted": " Mais le quota de ce mois est déjà épuisé : il ne reste que la route officielle.",
-    "peakGoPay": "Vous payez via OpenCode",
-    "peakOfficialPay": "Vous payez via l’API officielle",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek officiel",
     "peakVerdict": "Verdict",
     "peakGoCheaper": "OpenCode coûte {percent}% de moins",
     "peakFootnote": "Pour 1 M de tokens en sortie (la sortie domine une facture de code), au taux de ¥{fx} pour 1 $. Les heures pleines ne changent que la vitesse à laquelle le quota se consomme, pas la conclusion : tant qu’il reste du quota, OpenCode reste moins cher que l’API officielle ; les exceptions sont un quota épuisé ou un modèle dont le plafond tombe en premier.",
@@ -683,6 +778,25 @@ window.__ModuleLoader__.load({
     "demoOn": "Voir le cas où l’officiel est moins cher",
     "demoOff": "Revenir aux données réelles",
     "demoNote": "Données d’exemple : un modèle plus cher via OpenCode (en pratique, seulement quota épuisé).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek officiel",
+    "clockTitle": "Heures pleines / creuses en ce moment",
+    "clockPeak": "heures pleines",
+    "clockOff": "heures creuses",
+    "clockFlip": "{next} dans {hours} h",
+    "clockHoliday": "Jour férié officiel en Chine aujourd’hui : l’API officielle facture en heures creuses toute la journée",
+    "colRollingQuota": "Quota de 5 heures",
+    "capHintText": "Texte seul : du texte simple en entrée, du texte simple en sortie.",
+    "capHintImage": "Entrée image : comprend les captures d’écran, les graphiques et les maquettes d’interface (JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "Entrée vidéo : lit les fichiers vidéo comme mp4 et décrit ce qui s’y passe.",
+    "capHintAudio": "Entrée audio : lit directement les fichiers audio.",
+    "capHintPdf": "Entrée PDF : lit les documents PDF sans les convertir d’abord en texte.",
+    "capHintTools": "Appel d’outils : le modèle peut appeler les fonctions exposées par le harness (lire des fichiers, lancer des commandes, chercher sur le web, écrire du code) et exploiter les résultats.",
+    "capHintReasoning": "Raisonnement : le modèle réfléchit avant de répondre ; plus fort sur les tâches difficiles, mais plus lent et plus gourmand en tokens.",
+    "backToTop": "Retour en haut",
+    "subscribe": "S’abonner à OpenCode",
+    "copyKey": "Copier",
+    "copied": "Copié",
   },
   "ja": {
     "title": "OpenCode アカウントと使用量",
@@ -776,8 +890,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "オフピーク",
     "peakHoliday": " — 今日は中国の祝日なので、一日中オフピーク、OpenCode はピークのままです",
     "peakExhausted": "ただし今月のクォータはすでに使い切っているため、公式を使うしかありません。",
-    "peakGoPay": "OpenCode 経由の支払い",
-    "peakOfficialPay": "公式直結の支払い",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek 公式",
     "peakVerdict": "結論",
     "peakGoCheaper": "OpenCode のほうが {percent}% 安い",
     "peakFootnote": "出力 100 万トークンあたりに換算（コーディングの請求はほとんどが出力由来）、レートは ¥{fx}/$。ピークとオフピークはクォータの減る速さに影響するだけで、結論は変わりません。クォータの範囲内なら OpenCode 経由のほうが公式直結より常に安く、例外はクォータを使い切った場合と、特定モデルの上限に先に達した場合です。",
@@ -794,6 +908,25 @@ window.__ModuleLoader__.load({
     "demoOn": "公式が安い場合を表示",
     "demoOff": "実際のデータに戻す",
     "demoNote": "サンプル表示：OpenCode 経由のほうが高くなる例（実際は枠を使い切ったときのみ）。",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek 公式",
+    "clockTitle": "現在のピーク / オフピーク",
+    "clockPeak": "ピーク",
+    "clockOff": "オフピーク",
+    "clockFlip": "{next}まであと {hours} 時間",
+    "clockHoliday": "今日は中国の祝日なので、公式 API は一日中オフピークの料金になります",
+    "colRollingQuota": "5 時間の枠",
+    "capHintText": "テキストのみ: プレーンテキストを入力し、プレーンテキストを返します。",
+    "capHintImage": "画像入力: スクリーンショット、グラフ、UI モックアップを理解します（JPEG/PNG/GIF/WebP）。",
+    "capHintVideo": "動画入力: mp4 などの動画ファイルを読み、中で何が起きているかを説明できます。",
+    "capHintAudio": "音声入力: 音声ファイルをそのまま読み取ります。",
+    "capHintPdf": "PDF 入力: PDF 文書をテキストに変換せずにそのまま読み取ります。",
+    "capHintTools": "ツール呼び出し: harness が公開している関数（ファイル読み取り、コマンド実行、Web 検索、コード記述）を呼び出し、その結果を使って動けます。",
+    "capHintReasoning": "推論: 答える前に考えるため難しいタスクに強い反面、遅く、トークンも多く消費します。",
+    "backToTop": "トップへ戻る",
+    "subscribe": "OpenCode を購読する",
+    "copyKey": "コピー",
+    "copied": "コピーしました",
   },
   "ko": {
     "title": "OpenCode 계정 및 사용량",
@@ -887,8 +1020,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "비피크",
     "peakHoliday": " — 오늘은 중국 공휴일이라 하루 종일 비피크, OpenCode는 피크 그대로입니다",
     "peakExhausted": "다만 이번 달 할당량을 이미 다 썼으므로 공식만 쓸 수 있습니다.",
-    "peakGoPay": "OpenCode 경유 결제액",
-    "peakOfficialPay": "공식 직결 결제액",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek 공식",
     "peakVerdict": "결론",
     "peakGoCheaper": "OpenCode가 {percent}% 더 저렴",
     "peakFootnote": "출력 100만 토큰 기준 환산(코딩 요금은 대부분 출력에서 발생), 환율 ¥{fx}/$. 피크·비피크는 할당량이 줄어드는 속도에만 영향을 주고 결론은 바뀌지 않습니다. 할당량 안에서는 OpenCode 경유가 공식 직결보다 항상 저렴하며, 예외는 할당량을 다 쓴 경우와 특정 모델 한도가 먼저 바닥나는 경우입니다.",
@@ -905,6 +1038,25 @@ window.__ModuleLoader__.load({
     "demoOn": "공식이 더 저렴한 경우 보기",
     "demoOff": "실제 데이터로 돌아가기",
     "demoNote": "예시 데이터: OpenCode 경유가 더 비싼 경우(실제로는 한도를 다 썼을 때만).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek 공식",
+    "clockTitle": "지금 피크 / 비피크",
+    "clockPeak": "피크",
+    "clockOff": "비피크",
+    "clockFlip": "{next}까지 {hours}시간 남음",
+    "clockHoliday": "오늘은 중국 공휴일이라 공식 API는 하루 종일 비피크 요금으로 계산됩니다",
+    "colRollingQuota": "5시간 할당량",
+    "capHintText": "텍스트 전용: 일반 텍스트를 넣으면 일반 텍스트로 답합니다.",
+    "capHintImage": "이미지 입력: 스크린샷, 차트, UI 목업을 이해합니다(JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "영상 입력: mp4 같은 동영상 파일을 읽고 그 안에서 무슨 일이 일어나는지 설명합니다.",
+    "capHintAudio": "오디오 입력: 오디오 파일을 그대로 읽습니다.",
+    "capHintPdf": "PDF 입력: PDF 문서를 텍스트로 변환하지 않고 바로 읽습니다.",
+    "capHintTools": "도구 호출: 모델이 harness가 노출하는 함수(파일 읽기, 명령 실행, 웹 검색, 코드 작성)를 호출하고 그 결과로 작업할 수 있습니다.",
+    "capHintReasoning": "추론: 답하기 전에 생각하므로 어려운 작업에 강하지만 느리고 토큰을 더 씁니다.",
+    "backToTop": "맨 위로",
+    "subscribe": "OpenCode 구독하기",
+    "copyKey": "복사",
+    "copied": "복사됨",
   },
   "pt": {
     "title": "Contas e uso do OpenCode",
@@ -998,8 +1150,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "fora do pico",
     "peakHoliday": " — hoje é feriado nacional na China: a API oficial cobra fora do pico o dia inteiro, enquanto o OpenCode continua cobrando pico",
     "peakExhausted": " Mas a cota deste mês já acabou, então só resta a rota oficial.",
-    "peakGoPay": "Você paga pelo OpenCode",
-    "peakOfficialPay": "Você paga pela API oficial",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "DeepSeek oficial",
     "peakVerdict": "Veredito",
     "peakGoCheaper": "O OpenCode sai {percent}% mais barato",
     "peakFootnote": "Cálculo por 1 M de tokens de saída (numa fatura de código a saída domina), a ¥{fx} por dólar. O pico só muda a velocidade com que a cota queima, não a conclusão: dentro da cota, o OpenCode continua mais barato que a API oficial; as exceções são a cota esgotada ou um modelo cujo limite próprio acaba antes.",
@@ -1016,6 +1168,25 @@ window.__ModuleLoader__.load({
     "demoOn": "Ver o caso em que o oficial é mais barato",
     "demoOff": "Voltar aos dados reais",
     "demoNote": "Dados de exemplo: um modelo mais caro via OpenCode (na prática só com a cota esgotada).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "DeepSeek oficial",
+    "clockTitle": "Pico / fora do pico agora",
+    "clockPeak": "pico",
+    "clockOff": "fora do pico",
+    "clockFlip": "{next} em {hours} h",
+    "clockHoliday": "Hoje é feriado nacional na China, então a API oficial cobra fora do pico o dia inteiro",
+    "colRollingQuota": "Cota de 5 horas",
+    "capHintText": "Só texto: entra texto puro, sai texto puro.",
+    "capHintImage": "Entrada de imagem: entende capturas de tela, gráficos e mockups de interface (JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "Entrada de vídeo: lê arquivos de vídeo como mp4 e descreve o que acontece neles.",
+    "capHintAudio": "Entrada de áudio: lê arquivos de áudio diretamente.",
+    "capHintPdf": "Entrada de PDF: lê documentos PDF sem convertê-los antes para texto.",
+    "capHintTools": "Chamada de ferramentas: o modelo pode chamar as funções que o harness expõe (ler arquivos, rodar comandos, buscar na web, escrever código) e agir com o resultado.",
+    "capHintReasoning": "Raciocínio: o modelo pensa antes de responder; vai melhor em tarefas difíceis, mas é mais lento e gasta mais tokens.",
+    "backToTop": "Voltar ao topo",
+    "subscribe": "Assinar o OpenCode",
+    "copyKey": "Copiar",
+    "copied": "Copiado",
   },
   "ru": {
     "title": "Аккаунты и использование OpenCode",
@@ -1109,8 +1280,8 @@ window.__ModuleLoader__.load({
     "peakOffPeak": "не пик",
     "peakHoliday": "; из-за государственного праздника в Китае он весь день считается вне пика, а OpenCode — по-прежнему в пике",
     "peakExhausted": "Но квота за этот месяц уже израсходована, так что остаётся только официальный API.",
-    "peakGoPay": "Вы платите через OpenCode",
-    "peakOfficialPay": "Вы платите через официальный API",
+    "peakGoPay": "OpenCode",
+    "peakOfficialPay": "Официальный DeepSeek",
     "peakVerdict": "Итог",
     "peakGoCheaper": "OpenCode дешевле на {percent}%",
     "peakFootnote": "В расчёте на 1 млн выходных токенов (в счёте за код преобладает выход), курс ¥{fx}/$. Пик влияет только на скорость расхода квоты и не меняет вывод: в пределах квоты OpenCode всегда дешевле прямого официального API; исключения — исчерпанная квота или лимит отдельной модели, который закончится раньше.",
@@ -1127,6 +1298,25 @@ window.__ModuleLoader__.load({
     "demoOn": "Показать случай, когда официальный дешевле",
     "demoOff": "Вернуться к реальным данным",
     "demoNote": "Демо-данные: модель, которая через OpenCode дороже (в реальности — только при исчерпанной квоте).",
+    "colOpenCode": "OpenCode",
+    "colOfficial": "Официальный DeepSeek",
+    "clockTitle": "Пик или не пик прямо сейчас",
+    "clockPeak": "пик",
+    "clockOff": "не пик",
+    "clockFlip": "{next} через {hours} ч",
+    "clockHoliday": "Сегодня государственный праздник в Китае, поэтому официальный API весь день считает по цене вне пика",
+    "colRollingQuota": "Квота на 5 часов",
+    "capHintText": "Только текст: на входе обычный текст, на выходе обычный текст.",
+    "capHintImage": "Ввод изображений: понимает скриншоты, графики и макеты интерфейса (JPEG/PNG/GIF/WebP).",
+    "capHintVideo": "Ввод видео: читает видеофайлы вроде mp4 и описывает, что в них происходит.",
+    "capHintAudio": "Ввод аудио: читает аудиофайлы напрямую.",
+    "capHintPdf": "Ввод PDF: читает PDF-документы, не переводя их сначала в текст.",
+    "capHintTools": "Вызов инструментов: модель может вызывать функции, которые предоставляет harness (читать файлы, выполнять команды, искать в интернете, писать код), и действовать по результатам.",
+    "capHintReasoning": "Рассуждение: модель думает перед ответом; лучше справляется со сложными задачами, но отвечает медленнее и тратит больше токенов.",
+    "backToTop": "Наверх",
+    "subscribe": "Оформить подписку на OpenCode",
+    "copyKey": "Копировать",
+    "copied": "Скопировано",
   },
     });
     /* @@EXTRA_LOCALES_END@@ */
@@ -1186,22 +1376,14 @@ window.__ModuleLoader__.load({
     };
 
     // The dialog floats over the page, so it cannot inherit a translucent surface:
-    // it needs a solid fill and an explicit text colour for the current theme.
-    const theme = () => {
-      let dark = false;
-      try {
-        if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches) dark = true;
-        else {
-          const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.documentElement).backgroundColor ?? '');
-          if (match !== null) dark = (Number(match[1]) + Number(match[2]) + Number(match[3])) / 3 < 128;
-        }
-      } catch {
-        dark = true;
-      }
-      return dark
-        ? { panel: '#202124', text: '#ececec', line: 'rgba(255,255,255,.18)', scrim: 'rgba(0,0,0,.55)' }
-        : { panel: '#ffffff', text: '#1b1b1b', line: 'rgba(0,0,0,.15)', scrim: 'rgba(0,0,0,.35)' };
-    };
+    // it needs a solid fill and an explicit text colour. It stays light even in a
+    // dark harness theme, matching OpenCode's own white/grey dialogs.
+    const theme = () => ({
+      panel: '#f7f7f8',
+      text: '#1a1a1a',
+      line: 'rgba(0,0,0,.12)',
+      scrim: 'rgba(0,0,0,.38)',
+    });
 
     // Model ids read badly in a table ("deepseek-v4.1-flash"); the page shows the
     // vendor casing plus spaces instead.
@@ -1289,13 +1471,21 @@ window.__ModuleLoader__.load({
 
     const capabilityTags = (row) => {
       const inputs = Array.isArray(row.inputs) && row.inputs.length > 0 ? row.inputs : ['text'];
-      const labels = inputs.map((kind) => ({
-        text: t('capsText'), image: t('capsImage'), video: t('capsVideo'),
-        audio: t('capsAudio'), pdf: t('capsPdf'),
-      }[kind] ?? kind));
-      if (row.tools === true) labels.push(t('capsTools'));
-      if (row.reasoning === true) labels.push(t('capsReasoning'));
-      return labels;
+      const hintOf = {
+        text: 'capHintText', image: 'capHintImage', video: 'capHintVideo',
+        audio: 'capHintAudio', pdf: 'capHintPdf',
+      };
+      const tags = inputs.map((kind) => ({
+        key: kind,
+        label: {
+          text: t('capsText'), image: t('capsImage'), video: t('capsVideo'),
+          audio: t('capsAudio'), pdf: t('capsPdf'),
+        }[kind] ?? kind,
+        hint: t(hintOf[kind] ?? 'capHintText'),
+      }));
+      if (row.tools === true) tags.push({ key: 'tools', label: t('capsTools'), hint: t('capHintTools') });
+      if (row.reasoning === true) tags.push({ key: 'reasoning', label: t('capsReasoning'), hint: t('capHintReasoning') });
+      return tags;
     };
 
     function WindowBar({ window, label }) {
@@ -1368,6 +1558,32 @@ window.__ModuleLoader__.load({
       const [inspecting, setInspecting] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
       const [demo, setDemo] = React.useState(false);
+      const [showTop, setShowTop] = React.useState(false);
+      const scroller = React.useRef(null);
+      // The settings pane scrolls, not the window, so the listener is attached in
+      // the capture phase and remembers whichever element actually scrolled.
+      React.useEffect(() => {
+        const onScroll = (event) => {
+          const target = event.target;
+          if (target && target !== document && typeof target.scrollTop === 'number') {
+            scroller.current = target;
+            setShowTop(target.scrollTop > 320);
+            return;
+          }
+          setShowTop((window.scrollY ?? document.documentElement.scrollTop ?? 0) > 320);
+        };
+        document.addEventListener('scroll', onScroll, true);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => {
+          document.removeEventListener('scroll', onScroll, true);
+          window.removeEventListener('scroll', onScroll);
+        };
+      }, []);
+      const toTop = () => {
+        const pane = scroller.current;
+        if (pane && typeof pane.scrollTo === 'function') pane.scrollTo({ top: 0, behavior: 'smooth' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
       // Re-render every second so the "next probe" line counts down instead of
       // freezing at whatever it said when the page opened.
       const [, setTick] = React.useState(0);
@@ -1509,12 +1725,11 @@ window.__ModuleLoader__.load({
         return vendor;
       };
 
-      const CAP_ICON = { text: '📝', image: '🖼️', video: '🎬', audio: '🎵', pdf: '📄' };
-      const capIcon = (label) => {
-        if (label === t('capsTools')) return '🛠️';
-        if (label === t('capsReasoning')) return '🧠';
-        return CAP_ICON[label] ?? '•';
+      const CAP_ICON = {
+        text: '📝', image: '🖼️', video: '🎬', audio: '🎵', pdf: '📄',
+        tools: '🛠️', reasoning: '🧠',
       };
+      const capIcon = (key) => CAP_ICON[key] ?? '•';
 
       const routerAccounts = new Map((router?.accounts ?? []).map((account) => [account.id, account]));
       const usageAccounts = data?.accounts ?? [];
@@ -1644,11 +1859,22 @@ window.__ModuleLoader__.load({
                   paddingTop: 10, borderTop: '1px solid rgba(127,127,127,.18)',
                 },
               },
-                h('span', { style: { opacity: .7, fontSize: 12 } }, t('newKeyFor', { ref: account.keyRef ?? '' })),
                 h('input', {
-                  style: { ...input, minWidth: 300 }, type: 'password', placeholder: 'oc_sk_…', value: keyDraft,
+                  style: { ...input, minWidth: 340, fontFamily: 'ui-monospace, Consolas, monospace' },
+                  type: 'text', spellCheck: false, placeholder: 'oc_sk_…', value: keyDraft,
                   onChange: (event) => setKeyDraft(event.target.value),
                 }),
+                h('button', {
+                  type: 'button', className: 'ocr-btn', style: btn, disabled: keyDraft.length === 0,
+                  onClick: async () => {
+                    try {
+                      await navigator.clipboard.writeText(keyDraft);
+                      setNotice(t('copied'));
+                    } catch (error) {
+                      setActionError(String(error?.message ?? error));
+                    }
+                  },
+                }, t('copyKey')),
                 h('button', {
                   type: 'button', className: 'ocr-btn', style: btn, disabled: busy || keyDraft.trim().length < 8,
                   onClick: async () => {
@@ -1709,21 +1935,22 @@ window.__ModuleLoader__.load({
           ),
           chips.length > 0
             ? h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-                chips.map((label) => h('span', {
-                  key: label,
+                chips.map((chip) => h('span', {
+                  key: chip.key,
+                  title: chip.hint,
                   style: {
                     display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '2px 8px', borderRadius: 999, fontSize: 11,
+                    padding: '2px 8px', borderRadius: 999, fontSize: 11, cursor: 'help',
                     border: `1px solid ${vendor.color}59`, background: `${vendor.color}14`, color: 'inherit',
                   },
-                }, h('span', null, capIcon(label)), h('span', null, label))),
+                }, h('span', null, capIcon(chip.key)), h('span', null, chip.label))),
               )
             : null,
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 12 } },
             stat(t('colRemaining'), row.free ? t('unlimited') : money(row.remaining)),
             stat(t('colMonthlyUsed'), row.free ? t('unlimited') : `${money(row.monthly)} / ${money(row.limit)}`),
             stat(t('colWeeklyUsed'), row.free ? t('unlimited') : money(row.weekly)),
-            stat(t('colRolling'), percentText(row.rolling, row.rollingLimit, row.free)),
+            stat(t('colRollingQuota'), percentText(row.rolling, row.rollingLimit, row.free)),
             stat(t('colRequests'), String(row.requests)),
           ),
         );
@@ -1762,7 +1989,30 @@ window.__ModuleLoader__.load({
         style: winner
           ? { fontWeight: 600, color: '#3c9d5d', background: 'rgba(60,157,93,.12)', padding: '1px 6px', borderRadius: 4 }
           : undefined,
-      }, `${yuan(price)}（${peakFlag ? t('peakAtPeak') : t('peakOffPeak')}）`);
+      }, yuan(price));
+
+      // Both sides run the same wall-clock windows but keep different holiday
+      // calendars, so the page reports them separately with a countdown.
+      const clockInfo = data?.clock ?? null;
+      const periodOf = (side) => (side?.peak ? t('clockPeak') : t('clockOff'));
+      const withPeriod = (label, side) => {
+        if (!side) return label;
+        const period = periodOf(side);
+        // Full-width brackets read correctly in Chinese, but look odd in Latin text.
+        return /^zh/i.test(LANG) ? `${label}（${period}）` : `${label} (${period})`;
+      };
+      const clockLine = (label, side) => h('div', {
+        style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' },
+      },
+        h('span', { style: { minWidth: 96, opacity: .75 } }, label),
+        side ? pill(periodOf(side), side.peak ? '#e0a030' : '#3c9d5d') : h('span', { style: { opacity: .5 } }, t('none')),
+        side && typeof side.hours === 'number'
+          ? h('span', { style: { opacity: .65 } }, t('clockFlip', {
+              hours: side.hours.toFixed(1),
+              next: side.peak ? t('clockOff') : t('clockPeak'),
+            }))
+          : null,
+      );
 
       const inspectingAccount = accountList.find((account) => account.id === inspecting) ?? null;
 
@@ -1771,6 +2021,13 @@ window.__ModuleLoader__.load({
           h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
           state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 } }, t('updatedAt', { time: clock(data?.checkedAt) })) : null,
           h('span', { style: { flex: 1 } }),
+          h('a', {
+            href: 'https://opencode.ai/console',
+            target: '_blank',
+            rel: 'noreferrer',
+            className: 'ocr-btn',
+            style: { ...btn, textDecoration: 'none', display: 'inline-block' },
+          }, t('subscribe')),
           h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => { void load(true); } }, busy ? t('refreshing') : t('refresh')),
         ),
         state.phase === 'error' ? h('div', { style: { color: '#d9534f', fontSize: 13 } }, t('loadError', { message: state.error })) : null,
@@ -1838,11 +2095,25 @@ window.__ModuleLoader__.load({
                   color: verdictColor, background: `${verdictColor}22`, border: `1px solid ${verdictColor}80`,
                 },
               }, verdict),
+              clockInfo
+                ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                    h('div', { style: { fontSize: 12, opacity: .6 } }, t('clockTitle')),
+                    clockLine(t('colOfficial'), clockInfo.official),
+                    clockLine(t('colOpenCode'), clockInfo.opencode),
+                    clockInfo.holiday
+                      ? h('div', { style: { fontSize: 11, opacity: .55 } }, t('clockHoliday'))
+                      : null,
+                  )
+                : null,
               demo ? h('div', { style: { fontSize: 12, opacity: .7 } }, t('demoNote')) : null,
               h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },
                 h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
                 h('thead', null,
-                  h('tr', null, [t('colModel'), t('colKind'), t('peakGoPay'), t('peakOfficialPay')].map((title) => th(title))),
+                  h('tr', null, [
+                    t('colModel'), t('colKind'),
+                    withPeriod(t('colOpenCode'), clockInfo?.opencode),
+                    withPeriod(t('colOfficial'), clockInfo?.official),
+                  ].map((title) => th(title))),
                 ),
                 h('tbody', null, shown.models.flatMap((row) =>
                   (row.rows ?? [{ kind: 'output', go: row.go, official: row.official, cheaper: row.cheaper, ratio: row.ratio }])
@@ -1895,6 +2166,19 @@ window.__ModuleLoader__.load({
             if (ok) setNotice(t('probedAt', { time: clock(Date.now()) }));
           },
         }),
+
+        showTop
+          ? h('button', {
+              type: 'button', className: 'ocr-btn', title: t('backToTop'),
+              onClick: toTop,
+              style: {
+                position: 'fixed', right: 28, bottom: 28, zIndex: 900,
+                width: 38, height: 38, padding: 0, borderRadius: 999, fontSize: 16, lineHeight: 1,
+                background: 'var(--dsh-surface, rgba(127,127,127,.16))', backdropFilter: 'blur(6px)',
+                boxShadow: '0 6px 18px rgba(0,0,0,.28)',
+              },
+            }, '↑')
+          : null,
       );
     }
 

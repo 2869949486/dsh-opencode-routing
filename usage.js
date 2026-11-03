@@ -292,6 +292,47 @@ export function peakMultiplier(model, at, holidayAware = false) {
   return PEAK.utcWeekdayHours.some(([from, to]) => hour >= from && hour < to) ? PEAK.factor : 1
 }
 
+/** Is `side` billing at peak right now?
+ *
+ *  The two sides keep different calendars: DeepSeek's own API treats Chinese
+ *  statutory holidays as off-peak, while OpenCode bills by its weekday schedule
+ *  only (anomalyco/opencode#53071). Both use the same wall-clock windows, so the
+ *  only difference is the holiday rule. */
+export function peakAt(side, at = Date.now()) {
+  const date = new Date(at)
+  const day = date.getUTCDay()
+  if (day === 0 || day === 6) return false
+  const hour = date.getUTCHours()
+  if (!PEAK.utcWeekdayHours.some(([from, to]) => hour >= from && hour < to)) return false
+  return side === 'official' ? !isChinaHoliday(at) : true
+}
+
+/** The peak windows start and end on these hours, so a flip can only happen at
+ *  one of them — no need to scan every minute. */
+const PEAK_BOUNDARIES = PEAK.utcWeekdayHours.flatMap(([from, to]) => [from, to])
+
+/** Peak state for both sides, plus how long until each one flips, in hours with
+ *  one decimal. */
+export function peakClock(at = Date.now()) {
+  const side = (name) => {
+    const peak = peakAt(name, at)
+    const base = new Date(at)
+    let next = null
+    for (let day = 0; day < 14 && next === null; day += 1) {
+      for (const hour of PEAK_BOUNDARIES) {
+        const point = Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate() + day, hour, 0, 0, 0)
+        if (point <= at) continue
+        if (peakAt(name, point) === peak) continue
+        next = point
+        break
+      }
+    }
+    const hours = next === null ? null : Math.round(((next - at) / HOUR) * 10) / 10
+    return { peak, next, hours }
+  }
+  return { at, holiday: isChinaHoliday(at), official: side('official'), opencode: side('opencode') }
+}
+
 /** What each plan costs per month, in USD. The plan's allowance is metered at
  *  DeepSeek's list price, so the subscription buys its allowance at a fixed
  *  discount — Go pays $10 for $100 of list-priced usage, i.e. 10x. */
@@ -684,6 +725,7 @@ export function apply(ctx, config = {}) {
       startedAt,
       windowStarts: starts,
       holidayAware: cfg.holidayAware,
+      clock: peakClock(),
       peak: peakSnapshot(cfg.cnyPerUsd, Date.now(), detectedPlan ?? cfg.plan, {
         priceUsd: cfg.planPriceUsd,
         allowanceUsd: cfg.planAllowanceUsd,

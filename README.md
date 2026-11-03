@@ -74,6 +74,12 @@ The official `/inference/go/v1/usage` endpoint only returns rounded rolling / we
 "查看用量" opens a per-account dialog with the three windows, their reset times and the probe result (it probes that
 account only and never switches models).
 
+The peak card reports **both calendars side by side** — the official API and OpenCode — with the current period and how
+long (in hours, one decimal) until it flips. Capability chips on the model cards carry a tooltip explaining what the tag
+means, the header links to the OpenCode Console subscription page, and a floating arrow returns to the top once you have
+scrolled down. Every price cell shows the cached-input, uncached-input and output line, so a cached hit (the green row)
+can be compared directly with what the official API would charge for the same tokens.
+
 "编辑密钥" fetches the account's current key from `GET /opencode-quota-router.json?key=<account id>` and pre-fills the
 input (a local-only endpoint; the list snapshot only ever carries a mask). Model names follow vendor casing
 (`deepseek-v4.1-flash` → `DeepSeek V4.1 Flash`); vendors with a published brand mark render as an inline SVG, the rest

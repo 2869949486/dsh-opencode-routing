@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 
 import * as accounts from './index.js'
 import { apply as applyRouter, isExhausted, maskKey, nextProbeAt, retryAfter } from './router.js'
-import { apply as applyUsage, isChinaHoliday, peakMultiplier, peakSnapshot } from './usage.js'
+import { apply as applyUsage, isChinaHoliday, peakClock, peakMultiplier, peakSnapshot } from './usage.js'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -70,6 +70,24 @@ assert.equal(isExhausted({ rolling: { status: 'ok', percent: 100 } }), true)
   assert.equal(holiday.models.every((row) => row.cheaper === 'go'), true)
   const plain = peakSnapshot(7.1, plainPeak, 'go')
   assert.ok(Math.abs(plain.models[0].ratio - 0.1) < 0.001, 'both peak: exactly the 10x discount')
+
+  // The page reports both calendars separately with a countdown to the flip.
+  const clockHoliday = peakClock(holidayPeak)
+  assert.equal(clockHoliday.holiday, true)
+  assert.equal(clockHoliday.official.peak, false, 'the official API is off-peak on a holiday')
+  assert.equal(clockHoliday.opencode.peak, true, 'OpenCode keeps billing the holiday as peak')
+  assert.equal(typeof clockHoliday.opencode.hours, 'number')
+  assert.ok(clockHoliday.opencode.hours > 0 && clockHoliday.opencode.hours <= 5, 'the window ends within 5 hours')
+
+  const clockPlain = peakClock(plainPeak)
+  assert.equal(clockPlain.official.peak, true)
+  assert.equal(clockPlain.opencode.peak, true)
+  assert.ok(clockPlain.opencode.hours >= 1.9 && clockPlain.opencode.hours <= 2.1, 'two hours left in the morning window')
+
+  const clockQuiet = peakClock(Date.parse('2026-02-24T12:00:00Z')) // Beijing 20:00
+  assert.equal(clockQuiet.official.peak, false)
+  assert.equal(clockQuiet.opencode.peak, false)
+  assert.ok(clockQuiet.opencode.hours > 0, 'a flip always lies ahead')
 }
 console.log('pure logic ok')
 
