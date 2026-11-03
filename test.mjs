@@ -284,6 +284,10 @@ await crash('opencode-go', { code: 'QUOTA', status: 429, message: 'usage limit r
   assert.equal((await call(flash)).provider, 'deepseek-account')
   const reset = await api('POST', { action: 'reset' })
   assert.equal(reset.body.mode, 'primary')
+  // Nothing is quarantined after a reset, but the periodic probe still has a
+  // next run: the page must show a time instead of a dash.
+  assert.equal(typeof reset.body.nextProbeAt, 'number', 'nextProbeAt is a timestamp, not null')
+  assert.ok(reset.body.nextProbeAt > Date.now(), 'nextProbeAt is in the future')
   assert.equal((await call(flash)).provider, 'opencode-go')
 }
 console.log('plan-wide fallback ok')

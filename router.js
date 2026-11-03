@@ -803,7 +803,9 @@ export function apply(ctx, config = {}) {
       if (state.mode === 'fallback' && state.until > now) marks.push(state.until)
       for (const entry of Object.values(state.quarantine)) if (entry.until > now) marks.push(entry.until)
       for (const account of state.accounts) if (account.exhaustedUntil > now) marks.push(account.exhaustedUntil)
-      return marks.length > 0 ? Math.min(...marks) : null
+      // Nothing is quarantined right now, but the periodic probe still runs: report
+      // when it will fire instead of leaving the page showing a dash.
+      return marks.length > 0 ? Math.min(...marks) : now + cfg.probeIntervalMs
     })()
     return {
       version: 3,

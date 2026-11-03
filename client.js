@@ -109,7 +109,9 @@ window.__ModuleLoader__.load({
         peakOfficialPay: '走官方直连你实付',
         peakVerdict: '结论',
         peakGoCheaper: '走 OpenCode 便宜 {percent}%',
-        peakOfficialCheaper: '走官方直连便宜 {percent}%',
+        verdictGo: '走 OpenCode 便宜 {percent}%',
+        verdictOfficial: '走官方直连便宜 {percent}%',
+        verdictExhausted: '本月额度已用尽，只能走官方直连',
         peakFootnote: '按每 100 万输出 tokens 折算（编码账单主要来自输出），汇率 ¥{fx}/$。峰谷只影响额度烧多快，不改变结论：额度内走 OpenCode 始终比官方直连便宜；例外是额度用尽，或某个模型的额度先见底。',
         footerOfficial: '上面「官方 5 小时 / 本周 / 本月」百分比来自 OpenCode 接口，是账户真实用量，别的客户端或别的机器用了也会算进去。',
         footerLocal: '按模型的金额是本机估算：只统计这个 harness 的会话日志，用来拆开看模型分布；其它工具的调用没有本地记录。',
@@ -211,7 +213,9 @@ window.__ModuleLoader__.load({
         peakOfficialPay: 'You pay via official API',
         peakVerdict: 'Verdict',
         peakGoCheaper: 'OpenCode is {percent}% cheaper',
-        peakOfficialCheaper: 'Official API is {percent}% cheaper',
+        verdictGo: 'OpenCode is {percent}% cheaper',
+        verdictOfficial: 'Official API is {percent}% cheaper',
+        verdictExhausted: 'This month’s allowance is used up, so only the official API is left',
         peakFootnote: 'Per 1M output tokens (output dominates a coding bill), at ¥{fx}/$. Peak hours only change how fast the allowance burns, not the verdict: on allowance, OpenCode stays cheaper than the official API; the exceptions are a spent allowance or a model whose individual cap runs out first.',
         footerOfficial: 'The official 5-hour / weekly / monthly percentages come from OpenCode’s API and describe the whole account — usage from other clients or machines counts too.',
         footerLocal: 'Per-model money is a local estimate: it only counts this harness’s session log, which is what makes the model split visible; calls from other tools leave no local record.',
@@ -313,7 +317,9 @@ window.__ModuleLoader__.load({
         peakOfficialPay: '走官方直連你實付',
         peakVerdict: '結論',
         peakGoCheaper: '走 OpenCode 便宜 {percent}%',
-        peakOfficialCheaper: '走官方直連便宜 {percent}%',
+        verdictGo: '走 OpenCode 便宜 {percent}%',
+        verdictOfficial: '走官方直連便宜 {percent}%',
+        verdictExhausted: '本月額度已用盡，只能走官方直連',
         peakFootnote: '依每 100 萬輸出 tokens 折算（編碼帳單主要來自輸出），匯率 ¥{fx}/$。峰谷只影響額度消耗速度，不改變結論：額度內走 OpenCode 始終比官方直連便宜；例外是額度用盡，或某個模型的額度先用完。',
         footerOfficial: '上面「官方 5 小時／本週／本月」百分比來自 OpenCode 介面，是帳號真實用量，其他用戶端或機器用掉的也會算進去。',
         footerLocal: '依模型的金額是本機估算：只統計這個 harness 的工作階段日誌，用來拆開看模型分布；其他工具的呼叫沒有本機記錄。',
@@ -1286,6 +1292,65 @@ window.__ModuleLoader__.load({
       const data = state.usage;
       const router = state.router;
       const statusText = STATUS();
+      const chinese = LANG === 'zh' || LANG === 'zh-tw';
+
+      // The router stores machine reasons ("allowance recovered"); the page says
+      // what actually happened instead of echoing the enum.
+      const reasonText = (reason) => {
+        const raw = String(reason ?? '');
+        const pick = (zh, en) => (chinese ? zh : en);
+        const rules = [
+          [/^allowance recovered/i, pick('额度已恢复，已切回 OpenCode 账户池', 'allowance recovered, back on the OpenCode pool')],
+          [/^reset in Settings/i, pick('在设置里重置了封禁标记', 'marks were reset in Settings')],
+          [/^selected in Settings/i, pick('在设置里手动设为当前账户', 'selected by hand in Settings')],
+          [/^first account added/i, pick('首个账户已启用', 'the first account was enabled')],
+          [/^initial$/i, pick('初始状态', 'initial')],
+          [/^loaded$/i, pick('从状态文件恢复', 'restored from the state file')],
+          [/^failover: (\S+) unavailable/i, pick('上一个账户不可用，已自动换下一个', 'the previous account went unavailable, switched to the next one')],
+          [/^account failover after (\w+)/i, pick('鉴权失败（$1），已换下一个账户', 'authentication failed ($1), switched to the next account')],
+          [/^quota failover from (\S+)/i, pick('$1 额度用尽，已换下一个账户', '$1 ran out of allowance, switched to the next account')],
+          [/^every OpenCode account is out of allowance/i, pick('所有账户额度都用完了，暂时走官方直连', 'every account is out of allowance, using the official API for now')],
+          [/^OpenCode authentication failed \((\w+)\)/i, pick('OpenCode 鉴权失败（$1），暂时走官方直连', 'OpenCode authentication failed ($1), using the official API for now')],
+          [/^OpenCode quota window exhausted/i, pick('本窗口额度用尽，暂时走官方直连', 'this allowance window is used up, using the official API for now')],
+          [/^OpenCode quota exhausted/i, pick('额度用尽，暂时走官方直连', 'out of allowance, using the official API for now')],
+          [/^active account (\S+) removed/i, pick('当前账户被删除，已自动换下一个', 'the active account was deleted, switched to the next one')],
+          [/^auth \((.+)\)/i, pick('鉴权失败：$1', 'authentication failed: $1')],
+        ];
+        for (const [pattern, text] of rules) {
+          if (pattern.test(raw)) return raw.replace(pattern, text);
+        }
+        return raw;
+      };
+
+      // A vendor badge per model family: the mark and the tint both come from the
+      // family, so a card's gradient matches its avatar.
+      const VENDORS = [
+        [/^deepseek/i, { mark: 'DS', name: 'DeepSeek', color: '#4d6bfe' }],
+        [/^glm/i, { mark: 'GLM', name: 'Zhipu', color: '#3b6cf6' }],
+        [/^gpt/i, { mark: 'GPT', name: 'OpenAI', color: '#10a37f' }],
+        [/^claude/i, { mark: 'C', name: 'Anthropic', color: '#d97757' }],
+        [/^grok/i, { mark: 'X', name: 'xAI', color: '#64748b' }],
+        [/^qwen/i, { mark: 'Q', name: 'Qwen', color: '#615ced' }],
+        [/^kimi/i, { mark: 'K', name: 'Moonshot', color: '#8b5cf6' }],
+        [/^minimax/i, { mark: 'MM', name: 'MiniMax', color: '#ff6b00' }],
+        [/^mimo/i, { mark: 'Mi', name: 'MiMo', color: '#ff6900' }],
+        [/^longcat/i, { mark: 'LC', name: 'LongCat', color: '#f59e0b' }],
+        [/^hy\d/i, { mark: 'H', name: 'Hunyuan', color: '#0057ff' }],
+        [/^muse/i, { mark: 'M', name: 'Muse', color: '#a855f7' }],
+        [/free$/i, { mark: '∞', name: 'Free', color: '#3c9d5d' }],
+      ];
+      const vendorOf = (model) => {
+        const hit = VENDORS.find(([pattern]) => pattern.test(model));
+        if (hit) return hit[1];
+        return { mark: String(model).slice(0, 2).toUpperCase(), name: model, color: '#6b7280' };
+      };
+
+      const CAP_ICON = { text: '📝', image: '🖼️', video: '🎬', audio: '🎵', pdf: '📄' };
+      const capIcon = (label) => {
+        if (label === t('capsTools')) return '🛠️';
+        if (label === t('capsReasoning')) return '🧠';
+        return CAP_ICON[label] ?? '•';
+      };
 
       const routerAccounts = new Map((router?.accounts ?? []).map((account) => [account.id, account]));
       const usageAccounts = data?.accounts ?? [];
@@ -1311,137 +1376,6 @@ window.__ModuleLoader__.load({
         };
       });
 
-      const accountRows = accountList.map((account, index) => {
-        const [text, color] = statusText[account.status] ?? [
-          account.usageError ? t('statusError') : account.enabled === false ? t('statusDisabled') : account.active ? t('statusActive') : t('statusSpare'),
-          account.usageError ? '#d9534f' : 'inherit',
-        ];
-        return h(React.Fragment, { key: account.id },
-          h('tr', null,
-            cell(String(index + 1), { opacity: .6 }),
-            cell(h('span', null,
-              account.label,
-              account.active ? h('span', {
-                style: { marginLeft: 8, fontSize: 11, padding: '1px 6px', borderRadius: 999, border: '1px solid rgba(60,157,93,.6)', color: '#3c9d5d' },
-              }, t('statusCurrent')) : null,
-            )),
-            cell(account.hint
-              ? h('span', { style: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12 } }, account.hint)
-              : h('span', { style: { opacity: .55 } }, t('notConfigured'))),
-            cell(official(account.usage?.rolling)),
-            cell(official(account.usage?.weekly)),
-            cell(official(account.usage?.monthly)),
-            cell(h('span', { style: { color } },
-              text,
-              account.exhaustedUntil ? ` · ${clock(account.exhaustedUntil)}` : '',
-            )),
-            cell(router && h('div', {
-              style: {
-                display: 'grid', gridTemplateColumns: 'repeat(2, minmax(78px, max-content))',
-                gap: 6, padding: '2px 0',
-              },
-            },
-              h('button', { type: 'button', style: btn, onClick: () => setInspecting(account.id) }, t('viewUsage')),
-              h('button', { type: 'button', style: btn, disabled: busy || account.active, onClick: () => void act({ action: 'activate', id: account.id }) }, t('setActive')),
-              h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'update', id: account.id, enabled: !account.enabled }) }, account.enabled ? t('disable') : t('enable')),
-              h('button', {
-                type: 'button', style: btn, disabled: busy,
-                onClick: () => { void act({ action: 'move', id: account.id, direction: 'up' }); },
-              }, '↑'),
-              h('button', {
-                type: 'button', style: btn, disabled: busy,
-                onClick: () => { void act({ action: 'move', id: account.id, direction: 'down' }); },
-              }, '↓'),
-              h('button', {
-                type: 'button', style: btn, disabled: busy,
-                onClick: () => { setEditing(editing === account.id ? null : account.id); setKeyDraft(''); },
-              }, t('editKey')),
-              h('button', {
-                type: 'button', style: { ...btn, color: '#d9534f' }, disabled: busy,
-                onClick: () => {
-                  if (accountList.length <= 1) {
-                    setActionError(t('keepOne'));
-                    return;
-                  }
-                  void act({ action: 'remove', id: account.id });
-                },
-              }, t('remove')),
-            ) || h('span', { style: { opacity: .5, fontSize: 12 } }, t('readonly'))),
-          ),
-          editing === account.id
-            ? h('tr', { key: `${account.id}-edit` },
-                h('td', { colSpan: 8, style: { padding: '6px 10px', borderBottom: '1px solid rgba(127,127,127,.22)' } },
-                  h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
-                    h('span', { style: { opacity: .7, fontSize: 12 } }, t('newKeyFor', { ref: account.keyRef ?? '' })),
-                    h('input', {
-                      style: { ...input, minWidth: 320 }, type: 'password', placeholder: 'oc_sk_…', value: keyDraft,
-                      onChange: (event) => setKeyDraft(event.target.value),
-                    }),
-                    h('button', {
-                      type: 'button', style: btn, disabled: busy || keyDraft.trim().length < 8,
-                      onClick: async () => {
-                        const ok = await act({ action: 'update', id: account.id, key: keyDraft.trim() });
-                        if (ok) {
-                          setEditing(null);
-                          setKeyDraft('');
-                          setNotice(t('keyUpdated'));
-                        }
-                      },
-                    }, t('save')),
-                    h('button', { type: 'button', style: btn, onClick: () => { setEditing(null); setKeyDraft(''); } }, t('cancel')),
-                  ),
-                ),
-              )
-            : null,
-        );
-      });
-
-      const addAccount = async () => {
-        if (draft.key.trim().length < 8) {
-          setActionError(t('shortKey'));
-          return;
-        }
-        const ok = await act({ action: 'add', label: draft.label.trim(), key: draft.key.trim() });
-        if (ok) {
-          setDraft({ label: '', key: '' });
-          setNotice(t('accountAdded'));
-        }
-      };
-
-      const rows = (data?.models ?? []).map((row) =>
-        h('tr', { key: row.model },
-          cell(money(row.remaining), { fontWeight: 600 }),
-          cell(row.free ? t('unlimited') : `${yuan(row.monthly)} / ${money(row.limit)}`),
-          cell(yuan(row.weekly)),
-          cell(percentText(row.rolling, row.rollingLimit, row.free)),
-          cell(h('div', { style: { display: 'flex', flexDirection: 'column' } },
-            h('span', { style: { fontFamily: 'ui-monospace, Consolas, monospace' } }, row.model),
-            row.name && row.name !== row.model ? h('span', { style: { fontSize: 11, opacity: .55 } }, row.name) : null,
-          )),
-          cell(h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 260 } },
-            capabilityTags(row).map((label) => h('span', {
-              key: label,
-              style: {
-                padding: '0 6px', borderRadius: 4, fontSize: 11,
-                border: '1px solid rgba(127,127,127,.35)', opacity: .85,
-              },
-            }, label)),
-          )),
-          cell(String(row.requests)),
-          cell(`${tokens(row.input)} / ${tokens(row.output)}`),
-        ),
-      );
-
-      const peak = data?.peak;
-      const quotaSpent = typeof data?.usage?.monthly?.percent === 'number' ? data.usage.monthly.percent : null;
-      const priceCell = (price, peakFlag, winner) => h('span', {
-        style: winner
-          ? { fontWeight: 600, color: '#3c9d5d', background: 'rgba(60,157,93,.12)', padding: '1px 6px', borderRadius: 4 }
-          : undefined,
-      }, `${yuan(price)}（${peakFlag ? t('peakAtPeak') : t('peakOffPeak')}）`);
-
-      const inspectingAccount = accountList.find((account) => account.id === inspecting) ?? null;
-
       // Layout primitives: every block is a card with its own padding and gap, so
       // buttons never sit flush against each other or against the table edges.
       const card = (...children) => h('div', {
@@ -1460,7 +1394,7 @@ window.__ModuleLoader__.load({
       );
 
       const stat = (label, value) => h('div', {
-        style: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 110 },
+        style: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 96 },
       },
         h('span', { style: { fontSize: 11, opacity: .55 } }, label),
         h('span', { style: { fontSize: 13, fontWeight: 500 } }, value),
@@ -1469,6 +1403,171 @@ window.__ModuleLoader__.load({
       const tools = (...children) => h('div', {
         style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
       }, ...children);
+
+      const pill = (text, color) => h('span', {
+        style: {
+          fontSize: 11, padding: '1px 8px', borderRadius: 999,
+          border: `1px solid ${color}99`, color,
+        },
+      }, text);
+
+      const accountCards = accountList.map((account, index) => {
+        const [text, color] = statusText[account.status] ?? [
+          account.usageError ? t('statusError') : account.enabled === false ? t('statusDisabled') : account.active ? t('statusActive') : t('statusSpare'),
+          account.usageError ? '#d9534f' : 'inherit',
+        ];
+        return h('div', {
+          key: account.id,
+          style: {
+            display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 14px', borderRadius: 10,
+            border: `1px solid ${account.active ? 'rgba(60,157,93,.45)' : 'rgba(127,127,127,.22)'}`,
+            background: account.active ? 'rgba(60,157,93,.06)' : 'rgba(127,127,127,.03)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+            h('span', { style: { opacity: .45, fontSize: 11 } }, `#${index + 1}`),
+            h('span', { style: { fontWeight: 600, fontSize: 13 } }, account.label),
+            account.active ? pill(t('statusCurrent'), '#3c9d5d') : null,
+            h('span', {
+              style: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12, opacity: account.hint ? .65 : .45 },
+            }, account.hint ?? t('notConfigured')),
+            h('span', { style: { flex: 1 } }),
+            h('span', { style: { color, fontSize: 12 } },
+              text,
+              account.exhaustedUntil ? ` · ${clock(account.exhaustedUntil)}` : ''),
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 12 } },
+            stat(t('colRolling'), official(account.usage?.rolling)),
+            stat(t('colWeekly'), official(account.usage?.weekly)),
+            stat(t('colMonthly'), official(account.usage?.monthly)),
+          ),
+          router
+            ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingTop: 2 } },
+                h('button', { type: 'button', style: btn, onClick: () => setInspecting(account.id) }, t('viewUsage')),
+                h('button', { type: 'button', style: btn, disabled: busy || account.active, onClick: () => void act({ action: 'activate', id: account.id }) }, t('setActive')),
+                h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'update', id: account.id, enabled: !account.enabled }) }, account.enabled ? t('disable') : t('enable')),
+                h('button', { type: 'button', style: btn, disabled: busy, onClick: () => { void act({ action: 'move', id: account.id, direction: 'up' }); } }, '↑'),
+                h('button', { type: 'button', style: btn, disabled: busy, onClick: () => { void act({ action: 'move', id: account.id, direction: 'down' }); } }, '↓'),
+                h('button', {
+                  type: 'button', style: btn, disabled: busy,
+                  onClick: () => { setEditing(editing === account.id ? null : account.id); setKeyDraft(''); },
+                }, t('editKey')),
+                h('button', {
+                  type: 'button', style: { ...btn, color: '#d9534f' }, disabled: busy,
+                  onClick: () => {
+                    if (accountList.length <= 1) {
+                      setActionError(t('keepOne'));
+                      return;
+                    }
+                    void act({ action: 'remove', id: account.id });
+                  },
+                }, t('remove')),
+              )
+            : h('span', { style: { opacity: .5, fontSize: 12 } }, t('readonly')),
+          editing === account.id
+            ? h('div', {
+                style: {
+                  display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
+                  paddingTop: 10, borderTop: '1px solid rgba(127,127,127,.18)',
+                },
+              },
+                h('span', { style: { opacity: .7, fontSize: 12 } }, t('newKeyFor', { ref: account.keyRef ?? '' })),
+                h('input', {
+                  style: { ...input, minWidth: 300 }, type: 'password', placeholder: 'oc_sk_…', value: keyDraft,
+                  onChange: (event) => setKeyDraft(event.target.value),
+                }),
+                h('button', {
+                  type: 'button', style: btn, disabled: busy || keyDraft.trim().length < 8,
+                  onClick: async () => {
+                    const ok = await act({ action: 'update', id: account.id, key: keyDraft.trim() });
+                    if (ok) {
+                      setEditing(null);
+                      setKeyDraft('');
+                      setNotice(t('keyUpdated'));
+                    }
+                  },
+                }, t('save')),
+                h('button', { type: 'button', style: btn, onClick: () => { setEditing(null); setKeyDraft(''); } }, t('cancel')),
+              )
+            : null,
+        );
+      });
+
+      const addAccount = async () => {
+        if (draft.key.trim().length < 8) {
+          setActionError(t('shortKey'));
+          return;
+        }
+        const ok = await act({ action: 'add', label: draft.label.trim(), key: draft.key.trim() });
+        if (ok) {
+          setDraft({ label: '', key: '' });
+          setNotice(t('accountAdded'));
+        }
+      };
+
+      const modelCards = (data?.models ?? []).map((row) => {
+        const vendor = vendorOf(row.model);
+        const chips = capabilityTags(row);
+        return h('div', {
+          key: row.model,
+          style: {
+            display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 16px', borderRadius: 10,
+            border: `1px solid ${vendor.color}3d`,
+            background: `linear-gradient(135deg, ${vendor.color}2e, ${vendor.color}0f 55%, rgba(127,127,127,.03))`,
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+            h('span', {
+              style: {
+                width: 30, height: 30, borderRadius: '50%', flex: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: `${vendor.color}26`, border: `1px solid ${vendor.color}80`,
+                color: vendor.color, fontSize: 11, fontWeight: 700,
+              },
+            }, vendor.mark),
+            h('span', { style: { fontWeight: 600, fontSize: 13 } }, row.model),
+            row.free ? pill(t('unlimited'), '#3c9d5d') : null,
+          ),
+          chips.length > 0
+            ? h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                chips.map((label) => h('span', {
+                  key: label,
+                  style: {
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '2px 8px', borderRadius: 999, fontSize: 11,
+                    border: `1px solid ${vendor.color}59`, background: `${vendor.color}14`, color: 'inherit',
+                  },
+                }, h('span', null, capIcon(label)), h('span', null, label))),
+              )
+            : null,
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 12 } },
+            stat(t('colRemaining'), row.free ? t('unlimited') : money(row.remaining)),
+            stat(t('colMonthlyUsed'), row.free ? t('unlimited') : `${money(row.monthly)} / ${money(row.limit)}`),
+            stat(t('colWeeklyUsed'), row.free ? t('unlimited') : money(row.weekly)),
+            stat(t('colRolling'), percentText(row.rolling, row.rollingLimit, row.free)),
+            stat(t('colRequests'), String(row.requests)),
+          ),
+        );
+      });
+
+      const peak = data?.peak;
+      const quotaSpent = typeof data?.usage?.monthly?.percent === 'number' ? data.usage.monthly.percent : null;
+      const exhausted = quotaSpent !== null && quotaSpent >= 100;
+      const allGo = peak ? peak.models.every((row) => row.cheaper === 'go') : false;
+      const saving = peak && peak.models.length > 0
+        ? Math.round(Math.max(...peak.models.map((row) => (row.cheaper === 'go' ? (1 - row.ratio) * 100 : (row.ratio - 1) * 100))))
+        : 0;
+      const verdict = exhausted
+        ? t('verdictExhausted')
+        : allGo ? t('verdictGo', { percent: saving }) : t('verdictOfficial', { percent: saving });
+      const verdictColor = exhausted ? '#e0a030' : allGo ? '#3c9d5d' : '#e0a030';
+      const priceCell = (price, peakFlag, winner) => h('span', {
+        style: winner
+          ? { fontWeight: 600, color: '#3c9d5d', background: 'rgba(60,157,93,.12)', padding: '1px 6px', borderRadius: 4 }
+          : undefined,
+      }, `${yuan(price)}（${peakFlag ? t('peakAtPeak') : t('peakOffPeak')}）`);
+
+      const inspectingAccount = accountList.find((account) => account.id === inspecting) ?? null;
 
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
@@ -1483,19 +1582,13 @@ window.__ModuleLoader__.load({
 
         card(
           cardHead(t('routerTitle'), router
-            ? h('span', {
-                style: {
-                  padding: '1px 8px', borderRadius: 999, fontSize: 12,
-                  border: `1px solid ${router.mode === 'fallback' ? 'rgba(224,160,48,.7)' : 'rgba(60,157,93,.6)'}`,
-                  color: router.mode === 'fallback' ? '#e0a030' : '#3c9d5d',
-                },
-              }, router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'))
+            ? pill(router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'), router.mode === 'fallback' ? '#e0a030' : '#3c9d5d')
             : h('span', { style: { opacity: .7, fontSize: 12 } }, t('routerMissing'))),
-          router?.reason ? h('div', { style: { fontSize: 12, opacity: .6 } }, t('modeReason', { reason: router.reason })) : null,
+          router?.reason ? h('div', { style: { fontSize: 12, opacity: .65 } }, t('modeReason', { reason: reasonText(router.reason) })) : null,
           router
             ? h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
                 stat(t('activeAccount'), router.activeLabel ?? t('none')),
-                stat(t('nextProbe'), router.nextProbeAt ? when(router.nextProbeAt) : t('none')),
+                stat(t('nextProbe'), router.nextProbeAt ? when(router.nextProbeAt) : when(Date.now() + (router.probeIntervalMs ?? 0))),
                 stat(t('colStatus'), router.mode === 'fallback' ? t('modeFallback') : t('modePrimary')),
               )
             : null,
@@ -1510,103 +1603,70 @@ window.__ModuleLoader__.load({
 
         card(
           cardHead(t('accountsTitle'), h('span', { style: { opacity: .55, fontSize: 12 } }, t('accountsOrder'))),
-          h('div', {
-            style: {
-              overflowX: 'auto', cursor: 'grab', borderRadius: 8,
-              border: '1px solid rgba(127,127,127,.18)',
-            },
-            ...draggable(),
-          },
-            h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
-              h('thead', null,
-                h('tr', null, [t('colIndex'), t('colAccount'), t('colKey'), t('colRolling'), t('colWeekly'), t('colMonthly'), t('colStatus'), t('colActions')].map((title) => th(title))),
-              ),
-              h('tbody', null, accountRows.length > 0
-                ? accountRows
-                : h('tr', null, h('td', { colSpan: 8, style: { padding: 14, opacity: .6 } }, t('noAccounts')))),
-            ),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+            accountCards.length > 0
+              ? accountCards
+              : h('div', { style: { opacity: .6, fontSize: 12 } }, t('noAccounts')),
           ),
-          router ? h('div', {
-            style: {
-              display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap',
-              paddingTop: 12, borderTop: '1px solid rgba(127,127,127,.18)',
-            },
-          },
-            h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
-              t('colAccount'),
-              h('input', {
-                style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
-                onChange: (event) => setDraft({ ...draft, label: event.target.value }),
-              }),
-            ),
-            h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
-              t('colKey'),
-              h('input', {
-                style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
-                onChange: (event) => setDraft({ ...draft, key: event.target.value }),
-              }),
-            ),
-            h('button', { type: 'button', style: btn, disabled: busy || draft.key.trim().length < 8, onClick: () => void addAccount() }, t('addAndProbe')),
-          ) : null,
         ),
 
-        peak && card(
-          cardHead(t('peakTitle')),
-          h('div', { style: { fontSize: 12, opacity: .78, lineHeight: 1.8, marginBottom: 2 } },
-            t('peakPlan', {
-              plan: peak.plan.id,
-              price: peak.plan.priceCny.toFixed(0),
-              usd: peak.plan.priceUsd,
-              allowance: peak.plan.allowanceCny.toFixed(0),
-              allowanceUsd: peak.plan.allowanceUsd,
-              discount: (10 / peak.plan.leverage).toFixed(1),
-              percent: (100 / peak.plan.leverage).toFixed(0),
-            })),
-          h('div', { style: { fontSize: 12, opacity: .78, lineHeight: 1.8, marginBottom: 8 } },
-            t('peakNow', {
-              goPeak: peak.go.peak ? t('peakGoPeak') : t('peakGoOff'),
-              officialPeak: peak.official.peak ? t('peakOfficialPeak') : t('peakOfficialOff'),
-              holiday: peak.holiday && peak.go.peak ? t('peakHoliday') : '',
-            }),
-            quotaSpent !== null && quotaSpent >= 100 ? t('peakExhausted') : ''),
-          h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
-            h('thead', null,
-              h('tr', null, [t('colModel'), t('peakGoPay'), t('peakOfficialPay'), t('peakVerdict')].map((title) => th(title))),
-            ),
-            h('tbody', null, peak.models.map((row) =>
-              h('tr', { key: row.model },
-                cell(h('span', { style: { fontFamily: 'ui-monospace, Consolas, monospace' } }, row.model)),
-                cell(priceCell(row.go.pay, row.go.factor > 1, row.cheaper === 'go')),
-                cell(priceCell(row.official.pay, row.official.factor > 1, row.cheaper === 'official')),
-                cell(row.cheaper === 'go'
-                  ? t('peakGoCheaper', { percent: Math.round((1 - row.ratio) * 100) })
-                  : t('peakOfficialCheaper', { percent: Math.round((row.ratio - 1) * 100) }), { fontWeight: 600 }),
+        router
+          ? card(
+              cardHead(t('addAccount')),
+              h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' } },
+                h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+                  t('colAccount'),
+                  h('input', {
+                    style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
+                    onChange: (event) => setDraft({ ...draft, label: event.target.value }),
+                  }),
+                ),
+                h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+                  t('colKey'),
+                  h('input', {
+                    style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
+                    onChange: (event) => setDraft({ ...draft, key: event.target.value }),
+                  }),
+                ),
+                h('button', { type: 'button', style: btn, disabled: busy || draft.key.trim().length < 8, onClick: () => void addAccount() }, t('addAndProbe')),
               ),
-            )),
-          ),
-          h('div', { style: { opacity: .55, fontSize: 11, marginTop: 6, lineHeight: 1.6 } },
-            t('peakFootnote', { fx: peak.cnyPerUsd })),
-        ),
+            )
+          : null,
+
+        peak
+          ? card(
+              h('div', {
+                style: {
+                  padding: '16px 18px', borderRadius: 10, fontSize: 18, fontWeight: 700, lineHeight: 1.5,
+                  color: verdictColor, background: `${verdictColor}22`, border: `1px solid ${verdictColor}80`,
+                },
+              }, verdict),
+              h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },
+                h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
+                h('thead', null,
+                  h('tr', null, [t('colModel'), t('peakGoPay'), t('peakOfficialPay'), t('peakVerdict')].map((title) => th(title))),
+                ),
+                h('tbody', null, peak.models.map((row) =>
+                  h('tr', { key: row.model },
+                    cell(h('span', { style: { fontFamily: 'ui-monospace, Consolas, monospace' } }, row.model)),
+                    cell(priceCell(row.go.pay, row.go.factor > 1, row.cheaper === 'go')),
+                    cell(priceCell(row.official.pay, row.official.factor > 1, row.cheaper === 'official')),
+                    cell(row.cheaper === 'go'
+                      ? t('peakGoCheaper', { percent: Math.round((1 - row.ratio) * 100) })
+                      : t('peakOfficialCheaper', { percent: Math.round((row.ratio - 1) * 100) }), { fontWeight: 600 }),
+                  ),
+                )),
+                ),
+              ),
+            )
+          : null,
 
         card(
           cardHead(t('modelsTitle')),
-          h('div', {
-            style: {
-              overflowX: 'auto', maxHeight: '56vh', overflowY: 'auto', cursor: 'grab',
-              borderRadius: 8, border: '1px solid rgba(127,127,127,.18)',
-            },
-            ...draggable(),
-          },
-            h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
-              h('thead', null,
-                h('tr', null, [t('colRemaining'), t('colMonthlyUsed'), t('colWeeklyUsed'), t('colRolling'), t('colModel'), t('colCaps'), t('colRequests'), t('colTokens')].map((title) => th(title))),
-              ),
-              h('tbody', null, rows),
-            ),
-          ),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, modelCards),
         ),
 
-        h('div', { style: { opacity: .55, fontSize: 12, marginTop: 4, lineHeight: 1.8 } },
+        h('div', { style: { opacity: .55, fontSize: 12, lineHeight: 1.8 } },
           t('footerOfficial'),
           h('br'),
           t('footerLocal'),
