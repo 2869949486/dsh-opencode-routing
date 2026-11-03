@@ -7,7 +7,7 @@
 # so they need a hand-declared protocol, and a static `x-opencode-session`
 # header stands in for the per-session header the catalog provider adds.
 #
-# The insert is ONE entry: `dsh-opencode-router` mounts the account pool /
+# The insert is ONE entry: `dsh-opencode-routing` mounts the account pool /
 # quota router and the usage dashboard together. `usage:` and `router:` hold the
 # keys those two halves interpret differently (each one owns a `path`).
 - id: llm-pi-ai
@@ -67,7 +67,7 @@
 
 - insert:
     - id: opencode-router
-      name: 'dsh-opencode-router'
+      name: 'dsh-opencode-routing'
       config:
         usageUrl: https://opencode.ai/inference/go/v1/usage
         apiKeyRef: OPENCODE_API_KEY

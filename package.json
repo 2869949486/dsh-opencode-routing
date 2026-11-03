@@ -1,5 +1,5 @@
 {
-  "name": "dsh-opencode-router",
+  "name": "dsh-opencode-routing",
   "version": "2.1.0",
   "type": "module",
   "description": "dsh plugin: OpenCode account pool with automatic A-to-B failover and quota routing, plus a per-account / per-model usage dashboard, in one Settings page.",
@@ -46,11 +46,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/2869949486/dsh-opencode-router.git"
+    "url": "git+https://github.com/2869949486/dsh-opencode-routing.git"
   },
-  "homepage": "https://github.com/2869949486/dsh-opencode-router#readme",
+  "homepage": "https://github.com/2869949486/dsh-opencode-routing#readme",
   "bugs": {
-    "url": "https://github.com/2869949486/dsh-opencode-router/issues"
+    "url": "https://github.com/2869949486/dsh-opencode-routing/issues"
   },
   "engines": {
     "dsh": "^0.2.0-rc.1"

@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: 'dsh-opencode-router',
+  id: 'dsh-opencode-routing',
   factory(require) {
     const React = require('react');
     const h = React.createElement;

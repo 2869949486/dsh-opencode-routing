@@ -1,4 +1,4 @@
-# dsh-opencode-router
+# dsh-opencode-routing
 
 一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件，把原先分开的两个插件合成一个：
 **OpenCode 账户池 + 额度路由** 和 **用量看板** 现在装在同一个包里，设置里也只有一个页面
@@ -10,7 +10,7 @@
 ## 安装
 
 ```bash
-npm i dsh-opencode-router
+npm i dsh-opencode-routing
 ```
 
 包自带 `cordis.patch.yml`：里面同时声明 `opencode-go` / `opencode-free` 两个 provider 和**一条** insert
@@ -20,7 +20,7 @@ npm i dsh-opencode-router
 ```yaml
 - insert:
     - id: opencode-router
-      name: 'dsh-opencode-router'
+      name: 'dsh-opencode-routing'
       config:
         usageUrl: https://opencode.ai/inference/go/v1/usage
         apiKeyRef: OPENCODE_API_KEY
@@ -114,7 +114,7 @@ node test.mjs
 
 `dsh-opencode-quota-router` 与 `dsh-opencode-usage-settings` 是它的前身，功能已全部并入本包；
 旧包在 npm 上标记为 deprecated，指向这里。仓库分别是
-[`2869949486/dsh-opencode-router`](https://github.com/2869949486/dsh-opencode-router)（当前）、
+[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)（当前）、
 [`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router)、
 [`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage)。
 
