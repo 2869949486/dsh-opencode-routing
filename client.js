@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: 'dsh-opencode-accounts',
+  id: 'dsh-opencode-router',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
@@ -1093,8 +1093,9 @@ window.__ModuleLoader__.load({
     };
 
     const btn = {
-      padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(127,127,127,.45)',
+      padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(127,127,127,.45)',
       background: 'transparent', color: 'inherit', cursor: 'pointer', font: 'inherit', fontSize: 12,
+      lineHeight: 1.6, whiteSpace: 'nowrap',
     };
     const input = {
       padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(127,127,127,.45)',
@@ -1334,7 +1335,12 @@ window.__ModuleLoader__.load({
               text,
               account.exhaustedUntil ? ` · ${clock(account.exhaustedUntil)}` : '',
             )),
-            cell(router && h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+            cell(router && h('div', {
+              style: {
+                display: 'grid', gridTemplateColumns: 'repeat(2, minmax(78px, max-content))',
+                gap: 6, padding: '2px 0',
+              },
+            },
               h('button', { type: 'button', style: btn, onClick: () => setInspecting(account.id) }, t('viewUsage')),
               h('button', { type: 'button', style: btn, disabled: busy || account.active, onClick: () => void act({ action: 'activate', id: account.id }) }, t('setActive')),
               h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'update', id: account.id, enabled: !account.enabled }) }, account.enabled ? t('disable') : t('enable')),
@@ -1436,9 +1442,37 @@ window.__ModuleLoader__.load({
 
       const inspectingAccount = accountList.find((account) => account.id === inspecting) ?? null;
 
-      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
-          h('div', { style: { fontSize: 15, fontWeight: 600 } }, t('title')),
+      // Layout primitives: every block is a card with its own padding and gap, so
+      // buttons never sit flush against each other or against the table edges.
+      const card = (...children) => h('div', {
+        style: {
+          padding: '14px 16px', border: '1px solid rgba(127,127,127,.25)', borderRadius: 10,
+          background: 'var(--dsh-surface, rgba(127,127,127,.04))',
+          display: 'flex', flexDirection: 'column', gap: 12,
+        },
+      }, ...children);
+
+      const cardHead = (text, extra) => h('div', {
+        style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+      },
+        h('span', { style: { fontWeight: 600, fontSize: 13 } }, text),
+        extra ?? null,
+      );
+
+      const stat = (label, value) => h('div', {
+        style: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 110 },
+      },
+        h('span', { style: { fontSize: 11, opacity: .55 } }, label),
+        h('span', { style: { fontSize: 13, fontWeight: 500 } }, value),
+      );
+
+      const tools = (...children) => h('div', {
+        style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+      }, ...children);
+
+      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
+          h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
           state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 } }, t('updatedAt', { time: clock(data?.checkedAt) })) : null,
           h('span', { style: { flex: 1 } }),
           h('button', { type: 'button', style: btn, disabled: busy, onClick: () => { void load(true); } }, busy ? t('refreshing') : t('refresh')),
@@ -1447,60 +1481,77 @@ window.__ModuleLoader__.load({
         actionError ? h('div', { style: { color: '#d9534f', fontSize: 13 } }, actionError) : null,
         notice ? h('div', { style: { color: '#3c9d5d', fontSize: 13 } }, notice) : null,
 
-        h('div', { style: { padding: '10px 12px', border: '1px solid rgba(127,127,127,.25)', borderRadius: 8 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12 } },
-            h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('routerTitle')),
-            router
-              ? h('span', {
-                  style: {
-                    padding: '1px 8px', borderRadius: 999,
-                    border: `1px solid ${router.mode === 'fallback' ? 'rgba(224,160,48,.7)' : 'rgba(60,157,93,.6)'}`,
-                    color: router.mode === 'fallback' ? '#e0a030' : '#3c9d5d',
-                  },
-                }, router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'))
-              : h('span', { style: { opacity: .7 } }, t('routerMissing')),
-            router?.reason ? h('span', { style: { opacity: .6 } }, t('modeReason', { reason: router.reason })) : null,
-            h('span', { style: { flex: 1 } }),
-            router?.activeLabel ? h('span', { style: { opacity: .75 } }, `${t('activeAccount')}: ${router.activeLabel}`) : null,
-            router?.nextProbeAt ? h('span', { style: { opacity: .6 } }, `${t('nextProbe')}: ${when(router.nextProbeAt)}`) : null,
-          ),
-          router ? h('div', { style: { display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' } },
-            h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),
-            h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'reset' }) }, t('resetMarks')),
-            h('span', { style: { fontSize: 11, opacity: .55 } }, t('resetHint')),
-          ) : null,
+        card(
+          cardHead(t('routerTitle'), router
+            ? h('span', {
+                style: {
+                  padding: '1px 8px', borderRadius: 999, fontSize: 12,
+                  border: `1px solid ${router.mode === 'fallback' ? 'rgba(224,160,48,.7)' : 'rgba(60,157,93,.6)'}`,
+                  color: router.mode === 'fallback' ? '#e0a030' : '#3c9d5d',
+                },
+              }, router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'))
+            : h('span', { style: { opacity: .7, fontSize: 12 } }, t('routerMissing'))),
+          router?.reason ? h('div', { style: { fontSize: 12, opacity: .6 } }, t('modeReason', { reason: router.reason })) : null,
+          router
+            ? h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
+                stat(t('activeAccount'), router.activeLabel ?? t('none')),
+                stat(t('nextProbe'), router.nextProbeAt ? when(router.nextProbeAt) : t('none')),
+                stat(t('colStatus'), router.mode === 'fallback' ? t('modeFallback') : t('modePrimary')),
+              )
+            : null,
+          router
+            ? tools(
+                h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),
+                h('button', { type: 'button', style: btn, disabled: busy, onClick: () => void act({ action: 'reset' }) }, t('resetMarks')),
+                h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('resetHint')),
+              )
+            : null,
         ),
 
-        h('div', null,
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' } },
-            h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('accountsTitle')),
-            h('span', { style: { opacity: .55, fontSize: 12 } }, t('accountsOrder')),
-          ),
-          h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },
+        card(
+          cardHead(t('accountsTitle'), h('span', { style: { opacity: .55, fontSize: 12 } }, t('accountsOrder'))),
+          h('div', {
+            style: {
+              overflowX: 'auto', cursor: 'grab', borderRadius: 8,
+              border: '1px solid rgba(127,127,127,.18)',
+            },
+            ...draggable(),
+          },
             h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
               h('thead', null,
                 h('tr', null, [t('colIndex'), t('colAccount'), t('colKey'), t('colRolling'), t('colWeekly'), t('colMonthly'), t('colStatus'), t('colActions')].map((title) => th(title))),
               ),
               h('tbody', null, accountRows.length > 0
                 ? accountRows
-                : h('tr', null, h('td', { colSpan: 8, style: { padding: '10px', opacity: .6 } }, t('noAccounts')))),
+                : h('tr', null, h('td', { colSpan: 8, style: { padding: 14, opacity: .6 } }, t('noAccounts')))),
             ),
           ),
-          router ? h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 } },
-            h('input', {
-              style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
-              onChange: (event) => setDraft({ ...draft, label: event.target.value }),
-            }),
-            h('input', {
-              style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
-              onChange: (event) => setDraft({ ...draft, key: event.target.value }),
-            }),
+          router ? h('div', {
+            style: {
+              display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap',
+              paddingTop: 12, borderTop: '1px solid rgba(127,127,127,.18)',
+            },
+          },
+            h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+              t('colAccount'),
+              h('input', {
+                style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
+                onChange: (event) => setDraft({ ...draft, label: event.target.value }),
+              }),
+            ),
+            h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+              t('colKey'),
+              h('input', {
+                style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
+                onChange: (event) => setDraft({ ...draft, key: event.target.value }),
+              }),
+            ),
             h('button', { type: 'button', style: btn, disabled: busy || draft.key.trim().length < 8, onClick: () => void addAccount() }, t('addAndProbe')),
           ) : null,
         ),
 
-        peak && h('div', { style: { padding: '10px 12px', border: '1px solid rgba(127,127,127,.25)', borderRadius: 8 } },
-          h('div', { style: { fontWeight: 600, fontSize: 13, marginBottom: 4 } }, t('peakTitle')),
+        peak && card(
+          cardHead(t('peakTitle')),
           h('div', { style: { fontSize: 12, opacity: .78, lineHeight: 1.8, marginBottom: 2 } },
             t('peakPlan', {
               plan: peak.plan.id,
@@ -1537,12 +1588,13 @@ window.__ModuleLoader__.load({
             t('peakFootnote', { fx: peak.cnyPerUsd })),
         ),
 
-        h('div', null,
-          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6, flexWrap: 'wrap' } },
-            h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('modelsTitle')),
-          ),
+        card(
+          cardHead(t('modelsTitle')),
           h('div', {
-            style: { overflowX: 'auto', maxHeight: '56vh', overflowY: 'auto', cursor: 'grab' },
+            style: {
+              overflowX: 'auto', maxHeight: '56vh', overflowY: 'auto', cursor: 'grab',
+              borderRadius: 8, border: '1px solid rgba(127,127,127,.18)',
+            },
             ...draggable(),
           },
             h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
@@ -1578,9 +1630,9 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         ctx.slots.inject('settings.section', () => ctx.slots.register({
           name: 'settings.section',
-          id: 'opencode-accounts',
+          id: 'opencode-router',
           order: 18,
-          label: 'OpenCode 账户与用量',
+          label: 'OpenCode 路由与用量',
         }, UsageSection));
       },
     };

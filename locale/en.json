@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "OpenCode Accounts & Usage",
+    "title": "OpenCode Router & Usage",
     "description": "One plugin for all of OpenCode: an account pool (add a key with a note, automatic A-to-B failover, switch / disable / re-key / delete), per-account 5-hour, weekly and monthly allowance, per-model spend with capability tags (image, video, text-only, tool calls, context size), and a live \"OpenCode vs. official API\" cost comparison."
   }
 }

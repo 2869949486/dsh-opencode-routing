@@ -7,7 +7,7 @@
 import * as router from './router.js'
 import * as usage from './usage.js'
 
-export const name = 'opencode-accounts'
+export const name = 'opencode-router'
 export const inject = []
 
 /** Top-level keys apply to both children; `usage:` / `router:` objects override
@@ -25,8 +25,8 @@ function partition(config) {
 
 export function apply(ctx, config = {}) {
   const { usageConfig, routerConfig } = partition(config)
-  ctx.plugin({ name: 'opencode-accounts:usage', inject: usage.inject, apply: usage.apply }, usageConfig)
-  ctx.plugin({ name: 'opencode-accounts:router', inject: router.inject, apply: router.apply }, routerConfig)
+  ctx.plugin({ name: 'opencode-router:usage', inject: usage.inject, apply: usage.apply }, usageConfig)
+  ctx.plugin({ name: 'opencode-router:router', inject: router.inject, apply: router.apply }, routerConfig)
 }
 
 export { isChinaHoliday, peakMultiplier, peakSnapshot } from './usage.js'

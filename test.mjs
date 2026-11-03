@@ -20,7 +20,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // ---- one package, two children -------------------------------------------
 {
-  assert.equal(accounts.name, 'opencode-accounts')
+  assert.equal(accounts.name, 'opencode-router')
   assert.equal(accounts.maskKey('short'), 'sho…', 'helpers are re-exported')
   const mounted = []
   const meta = {
@@ -34,7 +34,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
     router: { path: '/r', probeIntervalMs: 1000 },
   })
   assert.equal(mounted.length, 2)
-  assert.deepEqual(mounted.map((entry) => entry.spec.name), ['opencode-accounts:usage', 'opencode-accounts:router'])
+  assert.deepEqual(mounted.map((entry) => entry.spec.name), ['opencode-router:usage', 'opencode-router:router'])
   assert.equal(mounted[0].config.path, '/u')
   assert.equal(mounted[0].config.plan, 'go')
   assert.equal(mounted[1].config.path, '/r')
