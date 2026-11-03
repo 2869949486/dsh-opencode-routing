@@ -967,6 +967,18 @@ export function apply(ctx, config = {}) {
 
   async function handleApi(request, response) {
     try {
+      if (request.method === 'GET') {
+        // Settings can ask for one account's key so "edit key" opens with the
+        // current value filled in. Local-only endpoint, never in the snapshot.
+        const url = new URL(request.url ?? '/', 'http://127.0.0.1')
+        const reveal = url.searchParams.get('key')
+        if (reveal !== null) {
+          const account = state.accounts.find((entry) => entry.id === reveal)
+          if (account === undefined) throw new Error(`没有账户 ${reveal}`)
+          sendJson(response, 200, { id: account.id, key: (await accountKey(account)) ?? null })
+          return
+        }
+      }
       if (request.method === 'POST') {
         const text = await readBody(request)
         let body

@@ -369,6 +369,37 @@ console.log('usage view ok')
 }
 console.log('single-account fallback ok')
 
+// "Edit key" pre-fills from the stored value; the snapshot never carries it
+{
+  const reveal = async (query) => {
+    const handler = apiRoutes.get('/opencode-quota-router.json')
+    const response = {
+      status: 0,
+      body: undefined,
+      writeHead(status) {
+        this.status = status
+      },
+      end(chunk) {
+        this.body = JSON.parse(chunk)
+      },
+    }
+    await handler({ method: 'GET', url: `/opencode-quota-router.json${query}` }, response)
+    return response
+  }
+
+  const hit = await reveal('?key=a1')
+  assert.equal(hit.status, 200)
+  assert.equal(hit.body.key, 'oc_sk_test', 'the stored key comes back for the editor')
+
+  const missing = await reveal('?key=zzz')
+  assert.equal(missing.status, 400, 'an unknown account is rejected')
+  assert.match(missing.body.error, /zzz/)
+
+  const snapshot = await api('GET')
+  assert.equal(JSON.stringify(snapshot.body).includes('oc_sk_test'), false, 'the snapshot stays masked')
+}
+console.log('reveal key ok')
+
 for (const dispose of disposers) await dispose()
 server.close()
 console.log('all accounts checks passed')

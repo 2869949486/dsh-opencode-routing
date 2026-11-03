@@ -1,6 +1,6 @@
 {
   "name": "dsh-opencode-routing",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "type": "module",
   "description": "dsh plugin: OpenCode account pool with automatic A-to-B failover and quota routing, plus a per-account / per-model usage dashboard, in one Settings page.",
   "exports": {
