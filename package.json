@@ -1,0 +1,58 @@
+{
+  "name": "dsh-opencode-accounts",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "dsh plugin: OpenCode account pool with automatic A-to-B failover, per-account quota probing, and a per-model usage dashboard in one Settings page.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "router.js",
+    "usage.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "test.mjs",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "opencode",
+    "usage",
+    "multi-account",
+    "quota",
+    "router",
+    "billing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2869949486/dsh-opencode-accounts.git"
+  },
+  "homepage": "https://github.com/2869949486/dsh-opencode-accounts#readme",
+  "bugs": {
+    "url": "https://github.com/2869949486/dsh-opencode-accounts/issues"
+  },
+  "engines": {
+    "dsh": "^0.2.0-rc.1"
+  }
+}
