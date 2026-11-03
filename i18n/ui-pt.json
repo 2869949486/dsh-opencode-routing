@@ -94,9 +94,18 @@
   "peakOfficialPay": "Você paga pela API oficial",
   "peakVerdict": "Veredito",
   "peakGoCheaper": "O OpenCode sai {percent}% mais barato",
-  "peakOfficialCheaper": "A API oficial sai {percent}% mais barata",
   "peakFootnote": "Cálculo por 1 M de tokens de saída (numa fatura de código a saída domina), a ¥{fx} por dólar. O pico só muda a velocidade com que a cota queima, não a conclusão: dentro da cota, o OpenCode continua mais barato que a API oficial; as exceções são a cota esgotada ou um modelo cujo limite próprio acaba antes.",
   "footerOfficial": "As porcentagens oficiais de 5 horas / semana / mês vêm da API do OpenCode e descrevem a conta inteira: uso de outros clientes ou de outras máquinas também entra na conta.",
   "footerLocal": "O valor por modelo é uma estimativa local: conta só o log de sessões deste harness, que é o que permite ver a divisão por modelo; chamadas de outras ferramentas não deixam registro local.",
-  "footerPeakRule": "O valor é estimado a preço fora do pico, dobrado no horário de pico para os modelos DeepSeek; modelos gratuitos não são cobrados."
+  "footerPeakRule": "O valor é estimado a preço fora do pico, dobrado no horário de pico para os modelos DeepSeek; modelos gratuitos não são cobrados.",
+  "kindCacheRead": "entrada em cache",
+  "kindInput": "entrada sem cache",
+  "kindOutput": "saída",
+  "colKind": "Item",
+  "verdictGo": "{percent}% mais barato via OpenCode",
+  "verdictOfficial": "{percent}% mais barato via API oficial",
+  "verdictExhausted": "Cota mensal esgotada — resta apenas a API oficial",
+  "demoOn": "Ver o caso em que o oficial é mais barato",
+  "demoOff": "Voltar aos dados reais",
+  "demoNote": "Dados de exemplo: um modelo mais caro via OpenCode (na prática só com a cota esgotada)."
 }

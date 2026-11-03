@@ -230,6 +230,11 @@ function normalize(config = {}) {
     // our own schedule, not DeepSeek's holiday calendar"), so this stays off by
     // default — the dashboard is about the Go bill.
     holidayAware: config.holidayAware === true,
+    // The subscription price and its monthly allowance can be overridden here,
+    // so a plan change from OpenCode needs a config edit, not a patch: the
+    // discount shown on the page is derived from these two numbers.
+    planPriceUsd: Number.isFinite(config.planPriceUsd) && config.planPriceUsd > 0 ? config.planPriceUsd : undefined,
+    planAllowanceUsd: Number.isFinite(config.planAllowanceUsd) && config.planAllowanceUsd > 0 ? config.planAllowanceUsd : undefined,
     limits: LIMITS[plan],
   }
 }
@@ -292,40 +297,60 @@ export function peakMultiplier(model, at, holidayAware = false) {
  *  discount — Go pays $10 for $100 of list-priced usage, i.e. 10x. */
 const PLAN_PRICES = { go: 10, 'go-plus': 40, 'go-teams': 20 }
 
+/** The three lines DeepSeek bills on, in the order the page shows them: a cached
+ *  prompt token is by far the cheapest, so it leads. */
+export const BILLING_KINDS = ['cacheRead', 'input', 'output']
+
 /** Which route is cheaper at this instant, expressed in the money you actually
- *  hand over: Go charges the list price against a 10x-discounted allowance, while
- *  DeepSeek's API bills the list price directly. */
-export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go') {
+ *  hand over: OpenCode charges the list price against a discounted allowance,
+ *  while DeepSeek's API bills the list price directly.
+ *
+ *  `overrides` lets the settings page (or a future price change) replace the
+ *  plan price and its allowance without touching this file: the discount is
+ *  derived, so editing either number re-derives the verdict on its own. */
+export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides = {}) {
   const fx = Number.isFinite(cnyPerUsd) && cnyPerUsd > 0 ? cnyPerUsd : OFFICIAL.defaultCnyPerUsd
-  const priceUsd = PLAN_PRICES[plan] ?? PLAN_PRICES.go
-  const allowanceUsd = LIMITS[plan]?.['deepseek-v4.1-flash'] ?? LIMITS.go['deepseek-v4.1-flash']
+  const priceUsd = Number.isFinite(overrides.priceUsd) && overrides.priceUsd > 0
+    ? overrides.priceUsd
+    : PLAN_PRICES[plan] ?? PLAN_PRICES.go
+  const listed = LIMITS[plan]?.['deepseek-v4.1-flash'] ?? LIMITS.go['deepseek-v4.1-flash']
+  const allowanceUsd = Number.isFinite(overrides.allowanceUsd) && overrides.allowanceUsd > 0
+    ? overrides.allowanceUsd
+    : listed
   const leverage = allowanceUsd / priceUsd
   const routes = []
   for (const [model, official] of Object.entries(OFFICIAL.prices)) {
     const goFactor = peakMultiplier(model, at, false)
     const officialFactor = peakMultiplier(model, at, true)
-    // One million output tokens is the yardstick: output dominates a coding bill.
-    const list = official.output
-    const burn = list * goFactor // what the request subtracts from the allowance
-    const goPay = burn / leverage // what it actually costs you, given the discount
-    const officialPay = list * officialFactor
+    const rows = BILLING_KINDS.map((kind) => {
+      // One million tokens of this kind is the yardstick; output dominates a
+      // coding bill, so the headline verdict still reads off the output line.
+      const list = official[kind]
+      const burn = list * goFactor // what the request subtracts from the allowance
+      const goPay = burn / leverage // what it actually costs you, given the discount
+      const officialPay = list * officialFactor
+      return { kind, list, go: { factor: goFactor, burn, pay: goPay }, official: { factor: officialFactor, pay: officialPay }, cheaper: goPay <= officialPay ? 'go' : 'official', ratio: goPay / officialPay }
+    })
+    const headline = rows[rows.length - 1]
     routes.push({
       model,
-      list,
-      go: { factor: goFactor, burn, pay: goPay },
-      official: { factor: officialFactor, pay: officialPay },
-      cheaper: goPay <= officialPay ? 'go' : 'official',
-      ratio: goPay / officialPay,
+      rows,
+      list: headline.list,
+      go: headline.go,
+      official: headline.official,
+      cheaper: headline.cheaper,
+      ratio: headline.ratio,
     })
   }
   return {
     at,
     cnyPerUsd: fx,
     holiday: isChinaHoliday(at),
-    plan: { id: plan, priceUsd, priceCny: priceUsd * fx, allowanceUsd, allowanceCny: allowanceUsd * fx, leverage },
+    plan: { id: plan, priceUsd, priceCny: priceUsd * fx, allowanceUsd, allowanceCny: allowanceUsd * fx, leverage, overridden: Boolean(overrides.priceUsd || overrides.allowanceUsd) },
     go: { peak: peakMultiplier('deepseek-v4.1-flash', at, false) === PEAK.factor },
     official: { peak: peakMultiplier('deepseek-v4.1-flash', at, true) === PEAK.factor },
     factor: PEAK.factor,
+    kinds: BILLING_KINDS,
     models: routes,
   }
 }
@@ -659,7 +684,10 @@ export function apply(ctx, config = {}) {
       startedAt,
       windowStarts: starts,
       holidayAware: cfg.holidayAware,
-      peak: peakSnapshot(cfg.cnyPerUsd, Date.now(), detectedPlan ?? cfg.plan),
+      peak: peakSnapshot(cfg.cnyPerUsd, Date.now(), detectedPlan ?? cfg.plan, {
+        priceUsd: cfg.planPriceUsd,
+        allowanceUsd: cfg.planAllowanceUsd,
+      }),
       usage: usageSnapshot,
       usageError,
       accounts,

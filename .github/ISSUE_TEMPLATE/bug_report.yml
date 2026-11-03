@@ -1,0 +1,48 @@
+name: Bug report
+description: Something is broken in the account pool, the routing or the usage dashboard
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please mask any API key before pasting output.
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin version
+      description: From `package.json`, or the Settings page footer
+      placeholder: 2.3.0
+    validations:
+      required: true
+  - type: input
+    id: harness
+    attributes:
+      label: DeepSeek Harness version
+      placeholder: 0.2.0-rc.1
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Account pool / failover
+        - Quota routing / fallback
+        - Usage dashboard
+        - Settings page UI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Expected vs actual, plus the steps that reproduce it
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: State snapshot (optional)
+      description: Output of `GET /opencode-quota-router.json` — keys are already masked
+      render: json

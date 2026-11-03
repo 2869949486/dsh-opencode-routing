@@ -94,9 +94,18 @@
   "peakOfficialPay": "公式直結の支払い",
   "peakVerdict": "結論",
   "peakGoCheaper": "OpenCode のほうが {percent}% 安い",
-  "peakOfficialCheaper": "公式直結のほうが {percent}% 安い",
   "peakFootnote": "出力 100 万トークンあたりに換算（コーディングの請求はほとんどが出力由来）、レートは ¥{fx}/$。ピークとオフピークはクォータの減る速さに影響するだけで、結論は変わりません。クォータの範囲内なら OpenCode 経由のほうが公式直結より常に安く、例外はクォータを使い切った場合と、特定モデルの上限に先に達した場合です。",
   "footerOfficial": "上の「公式 5 時間 / 今週 / 今月」の割合は OpenCode の API が返す実際のアカウント使用量で、他のクライアントや別のマシンからの利用も含まれます。",
   "footerLocal": "モデル別の金額はローカル推定です。この harness のセッションログだけを集計してモデル別の内訳を出すもので、他のツールからの呼び出しはローカルに記録されません。",
-  "footerPeakRule": "金額はオフピーク価格で見積もり、DeepSeek モデルはピーク時に 2 倍で計算します。無料モデルは課金されません。"
+  "footerPeakRule": "金額はオフピーク価格で見積もり、DeepSeek モデルはピーク時に 2 倍で計算します。無料モデルは課金されません。",
+  "kindCacheRead": "キャッシュ済み入力",
+  "kindInput": "未キャッシュ入力",
+  "kindOutput": "出力",
+  "colKind": "課金項目",
+  "verdictGo": "OpenCode 経由が {percent}% 安い",
+  "verdictOfficial": "公式 API 経由が {percent}% 安い",
+  "verdictExhausted": "今月の枠を使い切ったため公式 API のみ",
+  "demoOn": "公式が安い場合を表示",
+  "demoOff": "実際のデータに戻す",
+  "demoNote": "サンプル表示：OpenCode 経由のほうが高くなる例（実際は枠を使い切ったときのみ）。"
 }

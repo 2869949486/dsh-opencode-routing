@@ -94,9 +94,18 @@
   "peakOfficialPay": "Du zahlst über die offizielle API",
   "peakVerdict": "Fazit",
   "peakGoCheaper": "OpenCode ist {percent}% günstiger",
-  "peakOfficialCheaper": "Die offizielle API ist {percent}% günstiger",
   "peakFootnote": "Gerechnet pro 1 Mio. Ausgabe-Tokens (bei einer Coding-Rechnung dominiert die Ausgabe), bei ¥{fx} je $. Haupt- und Nebenzeit ändern nur, wie schnell das Kontingent verbraucht wird, nicht das Fazit: Innerhalb des Kontingents bleibt OpenCode günstiger als die offizielle API; Ausnahmen sind ein aufgebrauchtes Kontingent oder ein Modell, dessen eigenes Limit zuerst endet.",
   "footerOfficial": "Die offiziellen Prozente für 5 Stunden / Woche / Monat kommen von der OpenCode-API und beschreiben das ganze Konto – Nutzung über andere Clients oder Rechner zählt mit.",
   "footerLocal": "Beträge pro Modell sind eine lokale Schätzung: Sie zählen nur das Sitzungsprotokoll dieses Harness, und genau das macht die Verteilung pro Modell sichtbar; Aufrufe anderer Tools hinterlassen lokal keine Spur.",
-  "footerPeakRule": "Beträge sind zum Nebenzeit-Preis geschätzt, bei DeepSeek-Modellen zur Hauptzeit doppelt; kostenlose Modelle werden nicht berechnet."
+  "footerPeakRule": "Beträge sind zum Nebenzeit-Preis geschätzt, bei DeepSeek-Modellen zur Hauptzeit doppelt; kostenlose Modelle werden nicht berechnet.",
+  "kindCacheRead": "zwischengespeicherte Eingabe",
+  "kindInput": "nicht zwischengespeicherte Eingabe",
+  "kindOutput": "Ausgabe",
+  "colKind": "Posten",
+  "verdictGo": "Über OpenCode {percent}% günstiger",
+  "verdictOfficial": "Über die offizielle API {percent}% günstiger",
+  "verdictExhausted": "Monatskontingent aufgebraucht – nur die offizielle API bleibt",
+  "demoOn": "Fall „offiziell günstiger\" zeigen",
+  "demoOff": "Zurück zu echten Daten",
+  "demoNote": "Beispieldaten: ein Modell, das über OpenCode teurer wäre (real nur bei aufgebrauchtem Kontingent)."
 }

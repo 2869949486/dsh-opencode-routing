@@ -1,21 +1,25 @@
 # dsh-opencode-routing
 
-一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件，把原先分开的两个插件合成一个：
-**OpenCode 账户池 + 额度路由** 和 **用量看板** 现在装在同一个包里，设置里也只有一个页面
-「OpenCode 账户与用量」。
+[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Русский](README.ru.md)
 
-- **客户端**：`settings.section` 槽位，60 秒自动刷新；账户池可增删改、模型表带能力标签、两张表都能按住左右拖动；界面支持 10 种语言（跟随浏览器语言）。
-- **Host**：两个只读/管理接口 —— `GET /opencode-usage.json`（用量，`?refresh=1` 强制刷新）与 `GET|POST /opencode-quota-router.json`（账户池与路由，动作见下）。
+A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that merges two earlier plugins
+into one package: an **OpenCode account pool with automatic A→B failover and quota routing**, plus a
+**per-account / per-model usage dashboard**. Both live on a single Settings page, "OpenCode 账户与用量".
 
-## 安装
+- **Client**: one `settings.section`, refreshed every 60 s; accounts can be added, edited, reordered and probed;
+  model cards carry capability tags; both tables pan by dragging; the UI speaks 10 languages (browser language wins).
+- **Host**: two endpoints — `GET /opencode-usage.json` (usage, `?refresh=1` forces a refresh) and
+  `GET|POST /opencode-quota-router.json` (pool and routing; actions below).
+
+## Install
 
 ```bash
 npm i dsh-opencode-routing
 ```
 
-包自带 `cordis.patch.yml`：里面同时声明 `opencode-go` / `opencode-free` 两个 provider 和**一条** insert
-（`id: opencode-router`）。`usage:` 与 `router:` 两个子对象分别对应看板与路由各自的配置项（两边都有 `path`，
-所以必须分开写）。
+The package ships its own `cordis.patch.yml`: it declares the `opencode-go` / `opencode-free` providers and a
+**single** insert (`id: opencode-router`). The `usage:` and `router:` sub-objects hold each half's settings (both
+halves own a `path`, so they cannot share one flat namespace).
 
 ```yaml
 - insert:
@@ -34,98 +38,117 @@ npm i dsh-opencode-routing
               fallback: { provider: deepseek-account, model: deepseek-flash }
 ```
 
-顶层键对两半都生效（`usageUrl`、`apiKeyRef`、`probeIntervalMs` 之类），子对象里的键只覆盖自己那一半。
+Top-level keys apply to both halves (`usageUrl`, `apiKeyRef`, `probeIntervalMs`, …); keys inside a sub-object only
+override that half.
 
-## 账户池与轮替
+## Account pool and failover
 
-账户顺序就是使用顺序。任何时候只有一个「当前账户」，它的密钥会被镜像到 provider 读取的那个凭据引用
-（默认 `OPENCODE_API_KEY`），因此切换账户不需要改任何 provider 配置：`resolveApiKey` 是在
-`agent/request` 钩子之后、每次流式请求时现取的。
+Pool order is usage order. Exactly one account is "current" at any time, and its key is mirrored into the credential
+reference the provider reads (default `OPENCODE_API_KEY`). Switching accounts therefore needs no provider config
+change: `resolveApiKey` runs after the `agent/request` hook, on every streaming call.
 
-- **A 用完自动用 B**：出现 `QUOTA` / `ACCOUNT_QUOTA` / 429 且官方额度确认耗尽，或出现鉴权类错误
-  （`AUTH`、`INVALID_CREDENTIAL`、`MISSING_CREDENTIAL`、`ACCOUNT_SIGN_IN_REQUIRED`、`CLIENT_UPGRADE_REQUIRED`）时，
-  当前账户被标记为不可用（额度用尽到窗口重置，鉴权失败 30 分钟），路由切到下一个启用账户并在**同一步重试**，
-  不会把整轮对话降级。
-- **单模型隔离**：只有一个模型报耗尽、池里还有额度时，只隔离这个模型（默认 30 分钟），其它模型继续走套餐。
-- **整池耗尽**：才把这条路整体回退到 `fallback`（默认 DeepSeek 账户），并每 30 分钟（或 rolling 窗口重置时刻）
-  用零 token 的 `GET /inference/go/v1/usage` 探测，恢复后自动回到套餐。
-- **重置**：设置页的「重置封禁标记」清空所有「额度用尽 / 鉴权失败」标记并立刻回到账户池，不动账户与密钥。
+- **A runs dry, B takes over**: on `QUOTA` / `ACCOUNT_QUOTA` / 429 once the official allowance is confirmed spent, or
+  on an auth-class error (`AUTH`, `INVALID_CREDENTIAL`, `MISSING_CREDENTIAL`, `ACCOUNT_SIGN_IN_REQUIRED`,
+  `CLIENT_UPGRADE_REQUIRED`), the current account is marked unusable (until the window resets, or for 30 minutes on
+  auth failure), routing moves to the next enabled account and **retries the same step** — the turn is never downgraded.
+- **Single-model quarantine**: when only one model is out of allowance and the pool still has budget, only that model
+  is quarantined (30 minutes by default); every other model keeps using the plan.
+- **Whole pool dry**: only then does the route fall back to its `fallback` (DeepSeek account by default), with a
+  zero-token `GET /inference/go/v1/usage` probe every 30 minutes (or at the rolling window reset) that returns to the
+  plan automatically.
+- **Reset**: "重置封禁标记" in Settings clears every exhausted/auth mark and returns to the pool immediately. Accounts and
+  keys are untouched.
 
-## 用量看板
+## Usage dashboard
 
-官方 `/inference/go/v1/usage` 只给一组四舍五入的 rolling / weekly / monthly 百分比，**没有按模型明细**；
-而套餐是按模型各自计额度（5 小时 = 月额度 20%、周 = 50%、月 = 100%）。所以页面有两套数：
+The official `/inference/go/v1/usage` endpoint only returns rounded rolling / weekly / monthly percentages and
+**no per-model breakdown**, while the plan meters each model separately (5 h = 20 % of the monthly allowance, week =
+50 %, month = 100 %). So the page shows two sets of numbers:
 
-- **官方百分比**（每个账户一行）：来自接口，是账户真实用量，别的客户端、别的机器用了也算进去。
-- **按模型金额**（模型表）：本机估算 —— 回扫 `$DSH_HOME/sessions` 近 40 天的会话日志，只统计 provider 以
-  `opencode` 开头的 `assistant/message`，按公开单价（含 DeepSeek 峰谷 2×）折算。别的工具用掉的额度没有本地记录。
+- **Official percentages** (one line per account): straight from the API — real account usage, including other
+  clients and other machines.
+- **Per-model money** (model table): a local estimate. It rescans `$DSH_HOME/sessions` for the last 40 days and only
+  counts `assistant/message` events whose provider starts with `opencode`, priced at the public rates (including
+  DeepSeek's 2× peak window). Usage from other tools has no local record.
 
-「查看用量」按钮按账户弹窗展示三个窗口的百分比、重置时间与探测结果（只探测该账户，不切换模型）。
+"查看用量" opens a per-account dialog with the three windows, their reset times and the probe result (it probes that
+account only and never switches models).
 
-「编辑密钥」直接用 `GET /opencode-quota-router.json?key=<账户 id>` 取回该账户的当前密钥并预填输入框
-（本机端点；列表快照始终只给掩码）。模型名按厂商习惯大写（`deepseek-v4.1-flash` → `DeepSeek V4.1 Flash`），
-能取到品牌图标的厂商显示 SVG 图标，取不到的保留字母徽标。「下次探测」是真实的定时器（默认 30 分钟一次），
-页面每秒重绘一次，所以会像倒计时一样走；打开页面本身只读快照，不会触发探测。
+"编辑密钥" fetches the account's current key from `GET /opencode-quota-router.json?key=<account id>` and pre-fills the
+input (a local-only endpoint; the list snapshot only ever carries a mask). Model names follow vendor casing
+(`deepseek-v4.1-flash` → `DeepSeek V4.1 Flash`); vendors with a published brand mark render as an inline SVG, the rest
+keep a letter badge. "下次探测" is a real timer (30 minutes by default) and the page re-renders every second, so it
+counts down; opening the page only reads the snapshot and never triggers a probe.
 
-「此刻用哪个更划算」按套餐杠杆算：Go 付 $10 拿到 $100 官方价额度（≈¥710），所以走 OpenCode 恒为官方价的
-10%（便宜 90%）。真实数据里不会出现官方更便宜，卡片右下角的按钮可以切到示例数据，看那种情况长什么样。
+"此刻用哪个更划算" is derived from the subscription leverage: Go charges $10 for $100 of list-priced allowance
+(≈ ¥710), so OpenCode always costs 10 % of the official price — 90 % cheaper. Real data never favours the official
+API; the button in the card's corner switches to sample data so you can see what that case would look like.
 
-模型表的「能力」列来自同一个模型目录接口（`/inference/go/v1/models`）的
-`modalities.input` 与 `capabilities`，标出 文本 / 图像 / 视频 / 音频 / PDF、工具调用、推理，以及上下文长度；
-价格为 0 的模型显示「无限」。
+The capability column comes from the same catalog endpoint (`/inference/go/v1/models`): `modalities.input` and
+`capabilities` are rendered as text / image / video / audio / PDF, tool calls, reasoning, plus context length.
+Zero-priced models show "无限" (unlimited).
 
-### 峰谷与节假日
+### Peak / off-peak and holidays
 
-官方 API 的空闲时段是北京周一至周五 09:00–12:00、14:00–18:00 之外（含午休、夜间、周末、**法定节假日**），
-价格正好是峰价一半。OpenCode 只照 UTC 周一至周五 01–04、06–10 两个窗口算峰，**不认中国法定节假日**
-（anomalyco/opencode#53071 维护者原话：*"Go pricing follows our own schedule, not DeepSeek's holiday calendar."*）。
+DeepSeek's off-peak window is everything outside Beijing time Mon–Fri 09:00–12:00 and 14:00–18:00 (lunch break,
+nights, weekends and **statutory holidays** included) at exactly half the peak price. OpenCode only treats UTC Mon–Fri
+01–04 and 06–10 as peak and **ignores Chinese statutory holidays** (anomalyco/opencode#53071, maintainer:
+*"Go pricing follows our own schedule, not DeepSeek's holiday calendar."*).
 
-插件里带 2026–2031 的中国法定节假日表，只有把 `holidayAware: true` 写进配置（`usage.holidayAware`）才会计入
-官方侧折算；默认关闭，因为 OpenCode 侧照旧按峰计费。表在 `usage.js` 的 `HOLIDAYS`，`isChinaHoliday()`
-可单独调用。
+The plugin ships the 2026–2031 Chinese statutory holiday table. It is only applied to the official side when
+`holidayAware: true` is set (`usage.holidayAware`); it defaults to off because OpenCode keeps charging peak on those
+days. The table lives in `usage.js` as `HOLIDAYS`, and `isChinaHoliday()` can be called on its own.
 
-## 设置接口
+The subscription price and its allowance can be overridden with `usage.planPriceUsd` / `usage.planAllowanceUsd`; the
+discount on the page is derived from those two numbers, so a plan change from OpenCode is a config edit, not a patch.
 
-`GET /opencode-quota-router.json` 返回 `{mode, reason, active, accounts[], quarantine[], routes[], lastFailure}`，
-账户里的密钥永远是掩码（`hint`）。`POST` 同一路径，body `{action, ...}`：
+## Settings API
 
-| action | 参数 | 作用 |
+`GET /opencode-quota-router.json` returns `{mode, reason, active, accounts[], quarantine[], routes[], lastFailure}`;
+account keys are always masked (`hint`). `POST` to the same path with `{action, ...}`:
+
+| action | arguments | effect |
 | --- | --- | --- |
-| `add` | `label?`, `key` | 新建账户（密钥≥8 字符），写入凭据库并探测 |
-| `update` | `id`, `label?` / `enabled?` / `key?` | 改名、停用/启用、换密钥 |
-| `remove` | `id` | 删除账户并清掉它的密钥（至少留一个） |
-| `activate` | `id` | 立刻切到该账户 |
-| `move` | `id`, `direction: up\|down` | 调整顺序 |
-| `probe` | `id?` | 探测全部账户；带 `id` 只探测这一个 |
-| `reset` | — | 清空封禁标记，回到账户池 |
+| `add` | `label?`, `key` | create an account (key ≥ 8 chars), store it and probe |
+| `update` | `id`, `label?` / `enabled?` / `key?` | rename, disable/enable, rotate the key |
+| `remove` | `id` | delete an account and its key (one is always kept) |
+| `activate` | `id` | switch to it now |
+| `move` | `id`, `direction: up\|down` | reorder |
+| `probe` | `id?` | probe every account, or just one |
+| `reset` | — | clear the exhausted/auth marks and return to the pool |
 
-`GET /opencode-usage.json` 返回 `{plan, configuredPlan, detectedPlan, holidayAware, peak, usage, accounts[],
-activeAccount, models[], totals}`；`?refresh=1` 先强制刷新官方快照再返回。
+`GET /opencode-usage.json` returns `{plan, configuredPlan, detectedPlan, holidayAware, peak, usage, accounts[],
+activeAccount, models[], totals}`; `?refresh=1` forces a fresh official snapshot first.
 
-## 多语言
+## Languages
 
-界面文案在 `client.js` 的 `DICT` 里：`zh`（源）、`zh-tw`、`en`，以及 `es` / `fr` / `de` / `pt` / `ja` / `ko` / `ru`
-（由 `_merge_i18n.mjs` 从翻译文件内联，缺键回退到 `en`，再回退到键名）。`localeOf()` 按浏览器语言前缀匹配，
-中文区分简繁。
+UI strings live in `DICT` in `client.js`: `zh` (source), `zh-tw`, `en`, plus `es` / `fr` / `de` / `pt` / `ja` / `ko` /
+`ru` (inlined from translation files by `scripts/merge-i18n.mjs`; a missing key falls back to `en`, then to the key
+itself). `localeOf()` matches the browser language prefix and separates Simplified from Traditional Chinese.
 
-## 测试
+## Tests
 
 ```bash
 node test.mjs
 ```
 
-不需要任何模型额度：假 context、假凭据库、假 webServer，本地起一个 usage 端点按 API key 返回不同百分比，
-覆盖组合插件挂载、账户收养、单模型隔离、A→B 切换与密钥镜像、按账户探测、整池耗尽回退、重置、设置动作校验、
-用量视图（能力标签、无限额度、峰谷换算）与单账户退化。
+No model quota is required: fake context, fake credential store, fake webServer, and a local usage endpoint that
+answers per API key. Coverage: composite mounting, account adoption, single-model quarantine, A→B failover with key
+mirroring, per-account probing, whole-pool fallback, reset, settings-action validation, the usage view (capability
+tags, unlimited models, peak/off-peak maths, billing lines) and the single-account degradation.
 
-## 与旧包的关系
+## Relation to the old packages
 
-`dsh-opencode-quota-router` 与 `dsh-opencode-usage-settings` 是它的前身，功能已全部并入本包；
-旧包在 npm 上标记为 deprecated，指向这里。仓库分别是
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)（当前）、
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router)、
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage)。
+`dsh-opencode-quota-router` and `dsh-opencode-usage-settings` are its predecessors; everything they did is merged
+here. Both are marked deprecated on npm and point at this package. Repositories:
+[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing) (current),
+[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router),
+[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage).
+
+## Contributing
+
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Run `node test.mjs` before opening a PR.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

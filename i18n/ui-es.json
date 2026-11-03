@@ -94,9 +94,18 @@
   "peakOfficialPay": "Pagas por la API oficial",
   "peakVerdict": "Conclusión",
   "peakGoCheaper": "OpenCode sale {percent}% más barato",
-  "peakOfficialCheaper": "La API oficial sale {percent}% más barata",
   "peakFootnote": "Calculado por millón de tokens de salida (en una factura de código manda la salida), a ¥{fx} por dólar. Las horas pico solo cambian la rapidez con que se consume la cuota, no la conclusión: dentro de la cuota, OpenCode siempre sale más barato que la API oficial; las excepciones son que la cuota se agote o que el límite de un modelo concreto se acabe antes.",
   "footerOfficial": "Los porcentajes oficiales de 5 horas / semana / mes vienen de la API de OpenCode y describen la cuenta completa: el uso desde otros clientes u otras máquinas también cuenta.",
   "footerLocal": "El importe por modelo es una estimación local: solo cuenta el registro de sesiones de este harness, que es lo que permite ver el reparto por modelo; las llamadas de otras herramientas no dejan rastro local.",
-  "footerPeakRule": "El importe se estima a tarifa valle, duplicada en hora pico para los modelos DeepSeek; los modelos gratuitos no se facturan."
+  "footerPeakRule": "El importe se estima a tarifa valle, duplicada en hora pico para los modelos DeepSeek; los modelos gratuitos no se facturan.",
+  "kindCacheRead": "entrada en caché",
+  "kindInput": "entrada sin caché",
+  "kindOutput": "salida",
+  "colKind": "Concepto",
+  "verdictGo": "Con OpenCode un {percent}% más barato",
+  "verdictOfficial": "Con la API oficial un {percent}% más barato",
+  "verdictExhausted": "Cuota mensual agotada: solo queda la API oficial",
+  "demoOn": "Ver el caso de que lo oficial sea más barato",
+  "demoOff": "Volver a los datos reales",
+  "demoNote": "Datos de ejemplo: un modelo que con OpenCode sería más caro (en la realidad solo pasa al agotar la cuota)."
 }

@@ -357,6 +357,23 @@ await sleep(300)
   assert.equal(freeRow.remaining, undefined, 'free models have no remaining quota')
   assert.equal(freeRow.inputs.includes('video'), true)
   assert.equal(data.peak.plan.leverage, 10)
+
+  // Every model breaks down into the three lines DeepSeek bills on, cheapest first
+  const peakFlash = data.peak.models.find((entry) => entry.model === 'deepseek-v4.1-flash')
+  assert.deepEqual(peakFlash.rows.map((line) => line.kind), ['cacheRead', 'input', 'output'])
+  assert.equal(peakFlash.rows[0].cheaper, 'go', 'the cached line is still cheaper on OpenCode')
+  assert.equal(Math.round(peakFlash.rows[0].ratio * 100) / 100, 0.1)
+}
+
+// A plan change is a config edit, not a code change: the discount is derived
+{
+  const offPeak = Date.UTC(2026, 10, 3, 16, 0)
+  const cheaper = peakSnapshot(7.1, offPeak, 'go', { priceUsd: 10, allowanceUsd: 50 })
+  assert.equal(cheaper.plan.leverage, 5, 'a smaller allowance halves the discount')
+  assert.equal(cheaper.plan.overridden, true)
+  const dearer = peakSnapshot(7.1, offPeak, 'go', { priceUsd: 50, allowanceUsd: 100 })
+  assert.equal(dearer.plan.leverage, 2)
+  assert.equal(dearer.models[0].rows[0].cheaper, 'go', 'still cheaper, just less so')
 }
 console.log('usage view ok')
 

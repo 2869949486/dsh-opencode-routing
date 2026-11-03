@@ -94,9 +94,18 @@
   "peakOfficialPay": "Vous payez via l’API officielle",
   "peakVerdict": "Verdict",
   "peakGoCheaper": "OpenCode coûte {percent}% de moins",
-  "peakOfficialCheaper": "L’API officielle coûte {percent}% de moins",
   "peakFootnote": "Pour 1 M de tokens en sortie (la sortie domine une facture de code), au taux de ¥{fx} pour 1 $. Les heures pleines ne changent que la vitesse à laquelle le quota se consomme, pas la conclusion : tant qu’il reste du quota, OpenCode reste moins cher que l’API officielle ; les exceptions sont un quota épuisé ou un modèle dont le plafond tombe en premier.",
   "footerOfficial": "Les pourcentages officiels 5 heures / semaine / mois viennent de l’API OpenCode et décrivent le compte entier : l’usage d’autres clients ou d’autres machines compte aussi.",
   "footerLocal": "Le montant par modèle est une estimation locale : seuls les journaux de session de ce harness sont comptés, ce qui permet de voir la répartition par modèle ; les appels des autres outils ne laissent aucune trace locale.",
-  "footerPeakRule": "Le montant est estimé au tarif heures creuses, doublé en heures pleines pour les modèles DeepSeek ; les modèles gratuits ne sont pas facturés."
+  "footerPeakRule": "Le montant est estimé au tarif heures creuses, doublé en heures pleines pour les modèles DeepSeek ; les modèles gratuits ne sont pas facturés.",
+  "kindCacheRead": "entrée en cache",
+  "kindInput": "entrée hors cache",
+  "kindOutput": "sortie",
+  "colKind": "Poste",
+  "verdictGo": "{percent}% moins cher via OpenCode",
+  "verdictOfficial": "{percent}% moins cher via l’API officielle",
+  "verdictExhausted": "Quota mensuel épuisé — il ne reste que l’API officielle",
+  "demoOn": "Voir le cas où l’officiel est moins cher",
+  "demoOff": "Revenir aux données réelles",
+  "demoNote": "Données d’exemple : un modèle plus cher via OpenCode (en pratique, seulement quota épuisé)."
 }

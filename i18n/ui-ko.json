@@ -94,9 +94,18 @@
   "peakOfficialPay": "공식 직결 결제액",
   "peakVerdict": "결론",
   "peakGoCheaper": "OpenCode가 {percent}% 더 저렴",
-  "peakOfficialCheaper": "공식 직결이 {percent}% 더 저렴",
   "peakFootnote": "출력 100만 토큰 기준 환산(코딩 요금은 대부분 출력에서 발생), 환율 ¥{fx}/$. 피크·비피크는 할당량이 줄어드는 속도에만 영향을 주고 결론은 바뀌지 않습니다. 할당량 안에서는 OpenCode 경유가 공식 직결보다 항상 저렴하며, 예외는 할당량을 다 쓴 경우와 특정 모델 한도가 먼저 바닥나는 경우입니다.",
   "footerOfficial": "위의 \"공식 5시간 / 이번 주 / 이번 달\" 비율은 OpenCode API가 주는 실제 계정 사용량이며, 다른 클라이언트나 다른 기기에서 쓴 양도 포함됩니다.",
   "footerLocal": "모델별 금액은 로컬 추정치입니다. 이 harness의 세션 로그만 집계해 모델별 분포를 보여 주는 것이며, 다른 도구의 호출은 로컬에 기록되지 않습니다.",
-  "footerPeakRule": "금액은 비피크 가격으로 추정하고, DeepSeek 모델은 피크 시간에 2배로 계산합니다. 무료 모델은 과금되지 않습니다."
+  "footerPeakRule": "금액은 비피크 가격으로 추정하고, DeepSeek 모델은 피크 시간에 2배로 계산합니다. 무료 모델은 과금되지 않습니다.",
+  "kindCacheRead": "캐시된 입력",
+  "kindInput": "캐시되지 않은 입력",
+  "kindOutput": "출력",
+  "colKind": "과금 항목",
+  "verdictGo": "OpenCode 경유가 {percent}% 저렴",
+  "verdictOfficial": "공식 API 경유가 {percent}% 저렴",
+  "verdictExhausted": "이번 달 한도를 모두 사용해 공식 API만 가능",
+  "demoOn": "공식이 더 저렴한 경우 보기",
+  "demoOff": "실제 데이터로 돌아가기",
+  "demoNote": "예시 데이터: OpenCode 경유가 더 비싼 경우(실제로는 한도를 다 썼을 때만)."
 }

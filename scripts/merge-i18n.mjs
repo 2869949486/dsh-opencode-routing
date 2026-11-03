@@ -50,6 +50,17 @@ const body = locales
 const block = `${BEGIN}\n    Object.assign(DICT, {\n${body.replace(/^ {4}/gm, '  ')}\n    });\n    ${END}`
 
 const start = source.indexOf(BEGIN)
+const current = start === -1 ? '' : source.slice(start, source.indexOf(END) + END.length)
+
+if (process.argv.includes('--check')) {
+  if (current !== block) {
+    console.error('client.js is out of date: run `node scripts/merge-i18n.mjs`')
+    process.exit(1)
+  }
+  console.log(`locales in sync: ${locales.map((entry) => `${entry.lang}(${entry.count})`).join(' ')}`)
+  process.exit(0)
+}
+
 if (start !== -1) {
   const end = source.indexOf(END) + END.length
   source = `${source.slice(0, start)}${block}${source.slice(end)}`
