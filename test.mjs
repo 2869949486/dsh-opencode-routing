@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 
 import * as accounts from './index.js'
 import { apply as applyRouter, isExhausted, maskKey, nextProbeAt, retryAfter } from './router.js'
-import { apply as applyUsage, isChinaHoliday, peakClock, peakMultiplier, peakSnapshot } from './usage.js'
+import { apply as applyUsage, isChinaHoliday, parseGoDocs, peakClock, peakMultiplier, peakSnapshot } from './usage.js'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -88,6 +88,30 @@ assert.equal(isExhausted({ rolling: { status: 'ok', percent: 100 } }), true)
   assert.equal(clockQuiet.official.peak, false)
   assert.equal(clockQuiet.opencode.peak, false)
   assert.ok(clockQuiet.opencode.hours > 0, 'a flip always lies ahead')
+
+  // The pricing page is the only place the plan price and the per-model allowance
+  // are published, so the scraper must survive the real markup.
+  const docs = parseGoDocs(`
+    <table><tbody>
+      <tr><td><strong>Go</strong></td><td><strong>$10/month</strong></td><td>Lower-cost access</td></tr>
+      <tr><td><strong>Go Plus</strong></td><td><strong>$40/month</strong></td><td>Higher limits</td></tr>
+      <tr><td>DeepSeek V4.1 Flash (Off-Peak)</td><td>$0.15</td><td>$0.60</td><td>$0.003</td><td>-</td><td><strong>$100</strong></td></tr>
+      <tr><td>DeepSeek V4.1 Flash (Peak)</td><td>$0.30</td><td>$1.20</td><td>$0.006</td><td>-</td><td><strong>$100</strong></td></tr>
+      <tr><td>DeepSeek V4 Pro (Off-Peak)</td><td>$0.66</td><td>$1.98</td><td>$0.022</td><td>-</td><td><strong>$15</strong></td></tr>
+    </tbody></table>`)
+  assert.equal(docs.plans.go, 10)
+  assert.equal(docs.plans['go-plus'], 40)
+  assert.deepEqual(docs.models['deepseek-v4.1-flash'], { input: 0.15, output: 0.6, cacheRead: 0.003 })
+  assert.equal(docs.limits['deepseek-v4.1-flash'], 100)
+  assert.equal(docs.models['deepseek-v4-pro'].output, 1.98, 'the off-peak row wins over the peak row')
+
+  // With live OpenCode prices the allowance burns at OpenCode's rate, converted to
+  // CNY, so the ratio drifts slightly off the pure 10x: 0.60*7.1/10 / 4 ≈ 0.1065.
+  const live = peakSnapshot(7.1, plainPeak, 'go', {
+    prices: { 'deepseek-v4.1-flash': docs.models['deepseek-v4.1-flash'] },
+  })
+  const liveOutput = live.models[0].rows.find((row) => row.kind === 'output')
+  assert.ok(Math.abs(liveOutput.ratio - 0.1065) < 0.002, `live ratio ${liveOutput.ratio}`)
 }
 console.log('pure logic ok')
 
@@ -336,6 +360,9 @@ applyUsage({
   sessionsRoot,
   accountsStatePath: statePath,
   refreshSeconds: 3600,
+  // Tests never touch the network for prices: the built-in table keeps the
+  // arithmetic deterministic, and the scraper has its own fixture below.
+  pricingSync: false,
 })
 
 const request = async (query = '') => {

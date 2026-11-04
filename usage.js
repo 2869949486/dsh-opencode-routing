@@ -107,7 +107,9 @@ const OFFICIAL = {
   },
 }
 
-/** Monthly dollar allowance per model, per plan (USD). */
+/** Monthly dollar allowance per model, per plan (USD). These are the built-in
+ *  fallbacks: `parseGoDocs` can replace them at runtime with whatever the public
+ *  pricing table currently says, so a price or allowance change needs no release. */
 const LIMITS = {
   go: {
     'deepseek-v4.1-flash': 100,
@@ -201,6 +203,52 @@ const LIMITS = {
   },
 }
 
+/** Where the public pricing page lives. OpenCode has no pricing API, so the
+ *  plan price and the per-model monthly allowances are scraped from this table
+ *  (the same numbers a human reads) and cached next to the router state. */
+export const DEFAULT_PRICING_URL = 'https://opencode.ai/v2/docs/console/go'
+
+/** Turn "DeepSeek V4.1 Flash" into "deepseek-v4.1-flash". */
+function slugOf(name) {
+  return name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+/** Read the plan table and the model table out of the pricing page.
+ *  Returns `{plans, models, limits}`; anything it cannot find stays absent so the
+ *  caller keeps the built-in number instead of a wrong one. */
+export function parseGoDocs(html) {
+  const text = String(html ?? '')
+  const plans = {}
+  const models = {}
+  const limits = {}
+  const planRow = /<strong>(Go(?: Plus| Teams)?)<\/strong>\s*<\/td>\s*<td>\s*<strong>\s*\$([\d.]+)\s*\/\s*month/gi
+  for (const match of text.matchAll(planRow)) {
+    const id = match[1].toLowerCase().replace(/\s+/g, '-')
+    const price = Number(match[2])
+    if (Number.isFinite(price) && price > 0) plans[id] = price
+  }
+  const rowPattern = /<tr>\s*<td>([^<]+)<\/td>((?:\s*<td>[\s\S]*?<\/td>)+)\s*<\/tr>/gi
+  for (const match of text.matchAll(rowPattern)) {
+    const cells = [...match[2].matchAll(/<td>([\s\S]*?)<\/td>/gi)]
+      .map((cell) => cell[1].replace(/<[^>]+>/g, '').trim())
+    if (cells.length < 5) continue
+    const label = match[1].trim()
+    const name = label.replace(/\s*\((?:off-)?peak\)\s*$/i, '')
+    const peak = /\(peak\)/i.test(label)
+    const numbers = cells.map((cell) => Number(cell.replace(/[$,]/g, '')))
+    const [input, output, cacheRead] = numbers
+    if (![input, output, cacheRead].every((value) => Number.isFinite(value))) continue
+    const id = slugOf(name)
+    if (id.length === 0) continue
+    // The table lists the off-peak row first; the peak row repeats the same
+    // allowance, so only the first row of a model writes the numbers.
+    if (!peak && models[id] === undefined) models[id] = { input, output, cacheRead }
+    const allowance = numbers[numbers.length - 1]
+    if (!peak && Number.isFinite(allowance) && allowance > 0 && limits[id] === undefined) limits[id] = allowance
+  }
+  return { plans, models, limits }
+}
+
 function dshHome() {
   const configured = process.env.DSH_HOME
   return configured !== undefined && configured.length > 0 ? configured : path.join(os.homedir(), '.dsh')
@@ -235,6 +283,15 @@ function normalize(config = {}) {
     // discount shown on the page is derived from these two numbers.
     planPriceUsd: Number.isFinite(config.planPriceUsd) && config.planPriceUsd > 0 ? config.planPriceUsd : undefined,
     planAllowanceUsd: Number.isFinite(config.planAllowanceUsd) && config.planAllowanceUsd > 0 ? config.planAllowanceUsd : undefined,
+    // OpenCode has no pricing API, so the plan price and the per-model monthly
+    // allowances are read off the public table. Cached for a day; a failed read
+    // silently keeps the built-in numbers.
+    pricingSync: config.pricingSync !== false,
+    pricingUrl: typeof config.pricingUrl === 'string' && config.pricingUrl.length > 0 ? config.pricingUrl : DEFAULT_PRICING_URL,
+    pricingPath: typeof config.pricingPath === 'string' && config.pricingPath.length > 0
+      ? config.pricingPath
+      : path.join(dshHome(), 'opencode-routing-pricing.json'),
+    pricingTtlMs: Number.isFinite(config.pricingTtlMs) && config.pricingTtlMs > 0 ? config.pricingTtlMs : DAY,
     limits: LIMITS[plan],
   }
 }
@@ -363,11 +420,15 @@ export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides 
   for (const [model, official] of Object.entries(OFFICIAL.prices)) {
     const goFactor = peakMultiplier(model, at, false)
     const officialFactor = peakMultiplier(model, at, true)
+    // OpenCode's own list price, scraped from the pricing page, is in USD and can
+    // drift from DeepSeek's CNY list. When we have it, the allowance burns at the
+    // rate OpenCode actually charges, converted to CNY so both columns compare.
+    const live = overrides.prices?.[model]
     const rows = BILLING_KINDS.map((kind) => {
       // One million tokens of this kind is the yardstick; output dominates a
       // coding bill, so the headline verdict still reads off the output line.
       const list = official[kind]
-      const burn = list * goFactor // what the request subtracts from the allowance
+      const burn = (live === undefined ? list : live[kind] * fx) * goFactor
       const goPay = burn / leverage // what it actually costs you, given the discount
       const officialPay = list * officialFactor
       return { kind, list, go: { factor: goFactor, burn, pay: goPay }, official: { factor: officialFactor, pay: officialPay }, cheaper: goPay <= officialPay ? 'go' : 'official', ratio: goPay / officialPay }
@@ -437,6 +498,48 @@ export function apply(ctx, config = {}) {
   let catalogError = null
   let detectedPlan = undefined
   let impliedMonthly = undefined
+  // Prices scraped from the public table, cached on disk so a restart does not
+  // re-fetch and a network hiccup keeps yesterday's numbers.
+  let pricing = { source: 'builtin', fetchedAt: 0, plans: {}, models: {}, limits: {}, error: null }
+
+  function loadPricingCache() {
+    if (!cfg.pricingSync) return
+    try {
+      const cached = JSON.parse(fs.readFileSync(cfg.pricingPath, 'utf8'))
+      if (cached?.version !== 1) return
+      pricing = {
+        source: 'cache',
+        fetchedAt: Number(cached.fetchedAt ?? 0),
+        plans: cached.plans ?? {},
+        models: cached.models ?? {},
+        limits: cached.limits ?? {},
+        error: null,
+      }
+    } catch {
+      // No cache yet: the built-in table is already in `pricing`.
+    }
+  }
+
+  async function syncPricing(force = false) {
+    if (!cfg.pricingSync && !force) return
+    if (!force && pricing.fetchedAt > 0 && Date.now() - pricing.fetchedAt < cfg.pricingTtlMs) return
+    try {
+      const response = await fetch(cfg.pricingUrl, { signal: AbortSignal.timeout(15000), headers: { accept: 'text/html' } })
+      if (!response.ok) throw new Error(`pricing page answered ${response.status}`)
+      const parsed = parseGoDocs(await response.text())
+      if (Object.keys(parsed.plans).length === 0 && Object.keys(parsed.models).length === 0) {
+        throw new Error('pricing page had no plan or model rows')
+      }
+      pricing = { source: 'docs', fetchedAt: Date.now(), error: null, ...parsed }
+      try {
+        fs.writeFileSync(cfg.pricingPath, `${JSON.stringify({ version: 1, fetchedAt: pricing.fetchedAt, plans: pricing.plans, models: pricing.models, limits: pricing.limits }, null, 2)}\n`)
+      } catch {
+        // A read-only home is fine: the numbers still live in memory.
+      }
+    } catch (error) {
+      pricing = { ...pricing, error: String(error?.message ?? error) }
+    }
+  }
 
   function record(sessionId, seq, message, usage, time) {
     const source = message?.source
@@ -616,6 +719,8 @@ export function apply(ctx, config = {}) {
     usageError = active?.usageError ?? null
   }
   void refreshSnapshot()
+  loadPricingCache()
+  void syncPricing()
 
   function windowStart(name) {
     const now = Date.now()
@@ -691,7 +796,11 @@ export function apply(ctx, config = {}) {
         if (upgrade !== undefined) detectedPlan = upgrade
       }
     }
-    const effectiveLimits = LIMITS[detectedPlan ?? cfg.plan]
+    const effectivePlan = detectedPlan ?? cfg.plan
+    // The scraped table describes the Go plan; only let it override that tier.
+    const effectiveLimits = effectivePlan === 'go'
+      ? { ...LIMITS.go, ...pricing.limits }
+      : LIMITS[effectivePlan]
     const catalogInfo = new Map(catalog.map((entry) => [entry.id, entry]))
     const rows = [...models.values()]
       .map((entry) => {
@@ -727,9 +836,18 @@ export function apply(ctx, config = {}) {
       holidayAware: cfg.holidayAware,
       clock: peakClock(),
       peak: peakSnapshot(cfg.cnyPerUsd, Date.now(), detectedPlan ?? cfg.plan, {
-        priceUsd: cfg.planPriceUsd,
-        allowanceUsd: cfg.planAllowanceUsd,
+        priceUsd: cfg.planPriceUsd ?? pricing.plans[detectedPlan ?? cfg.plan],
+        allowanceUsd: cfg.planAllowanceUsd ?? pricing.limits['deepseek-v4.1-flash'],
+        prices: pricing.models,
       }),
+      pricing: {
+        source: pricing.source,
+        fetchedAt: pricing.fetchedAt,
+        error: pricing.error,
+        plans: pricing.plans,
+        limits: pricing.limits,
+        models: Object.keys(pricing.models).length,
+      },
       usage: usageSnapshot,
       usageError,
       accounts,
@@ -749,6 +867,23 @@ export function apply(ctx, config = {}) {
       refreshNow = new URL(request.url ?? '/', 'http://localhost').searchParams.get('refresh') === '1'
     } catch {
       refreshNow = false
+    }
+    if (request.method === 'POST' && request.url?.startsWith(`${cfg.path}.json`)) {
+      // The settings page's "sync prices" button: re-read the public table now
+      // instead of waiting for the daily refresh.
+      let action
+      try {
+        const chunks = []
+        for await (const chunk of request) chunks.push(chunk)
+        action = JSON.parse(Buffer.concat(chunks).toString('utf8'))?.action
+      } catch {
+        action = undefined
+      }
+      if (action === 'syncPricing') await syncPricing(true)
+      else if (action === 'refresh') await refreshSnapshot()
+      response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+      response.end(JSON.stringify(view(), null, 2))
+      return
     }
     if (refreshNow) await refreshSnapshot()
     const data = view()

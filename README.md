@@ -80,6 +80,12 @@ means, the header links to the OpenCode Console subscription page, and a floatin
 scrolled down. Every price cell shows the cached-input, uncached-input and output line, so a cached hit (the green row)
 can be compared directly with what the official API would charge for the same tokens.
 
+Prices are **not hardcoded**: the plugin reads OpenCode's public pricing table (`pricingUrl`, daily, cached in
+`$DSH_HOME/opencode-routing-pricing.json`) and takes the plan price, every per-model rate and every monthly allowance
+from it. `POST /opencode-usage.json` with `{"action":"syncPricing"}` forces a refresh; `pricingSync: false` keeps the
+built-in table instead. The dialog follows the harness appearance setting (light / dark / follow system) by sampling the
+painted page background, so it never lands dark-on-dark.
+
 "编辑密钥" fetches the account's current key from `GET /opencode-quota-router.json?key=<account id>` and pre-fills the
 input (a local-only endpoint; the list snapshot only ever carries a mask). Model names follow vendor casing
 (`deepseek-v4.1-flash` → `DeepSeek V4.1 Flash`); vendors with a published brand mark render as an inline SVG, the rest

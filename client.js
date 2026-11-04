@@ -1376,14 +1376,41 @@ window.__ModuleLoader__.load({
     };
 
     // The dialog floats over the page, so it cannot inherit a translucent surface:
-    // it needs a solid fill and an explicit text colour. It stays light even in a
-    // dark harness theme, matching OpenCode's own white/grey dialogs.
-    const theme = () => ({
-      panel: '#f7f7f8',
-      text: '#1a1a1a',
-      line: 'rgba(0,0,0,.12)',
-      scrim: 'rgba(0,0,0,.38)',
-    });
+    // it needs a solid fill and an explicit text colour. Which palette it gets is
+    // decided by the harness itself — read the painted page background, so the
+    // dialog follows whatever the appearance setting (light / dark / system) chose.
+    const rgbOf = (value) => {
+      const match = /rgba?\(([^)]+)\)/.exec(String(value ?? ''));
+      if (match === null) return null;
+      const parts = match[1].split(/[,/\s]+/).filter((part) => part.length > 0).map(Number);
+      if (parts.length < 3 || parts.slice(0, 3).some((part) => !Number.isFinite(part))) return null;
+      return parts.slice(0, 3);
+    };
+    const luminance = (value) => {
+      const rgb = rgbOf(value);
+      if (rgb === null) return null;
+      const [r, g, b] = rgb.map((channel) => {
+        const c = channel / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const pageIsDark = () => {
+      try {
+        const body = document.body;
+        const root = document.documentElement;
+        const probe = luminance(body === null ? '' : getComputedStyle(body).backgroundColor)
+          ?? luminance(root === null ? '' : getComputedStyle(root).backgroundColor);
+        if (probe !== null) return probe < 0.35;
+      } catch {
+        // Fall through to the media query when the DOM is not readable.
+      }
+      return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    const theme = () => (pageIsDark()
+      ? { panel: '#202124', text: '#e8eaed', line: 'rgba(255,255,255,.16)', scrim: 'rgba(0,0,0,.55)' }
+      : { panel: '#f7f7f8', text: '#1a1a1a', line: 'rgba(0,0,0,.12)', scrim: 'rgba(0,0,0,.38)' });
 
     // Model ids read badly in a table ("deepseek-v4.1-flash"); the page shows the
     // vendor casing plus spaces instead.
@@ -1590,6 +1617,34 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         const timer = setInterval(() => setTick((value) => value + 1), 1000);
         return () => clearInterval(timer);
+      }, []);
+
+      // Appearance can change while the page is open (light / dark / follow system),
+      // and the shell does not re-render plugin code on its own: watch the two
+      // signals that carry the change and force a repaint.
+      React.useEffect(() => {
+        const bump = () => setTick((value) => value + 1);
+        const media = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+          ? window.matchMedia('(prefers-color-scheme: dark)')
+          : null;
+        media?.addEventListener?.('change', bump);
+        let observer;
+        try {
+          observer = new MutationObserver(bump);
+          observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class', 'style', 'data-theme', 'data-color-mode', 'data-appearance'],
+          });
+          if (document.body !== null) {
+            observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+          }
+        } catch {
+          observer = undefined;
+        }
+        return () => {
+          media?.removeEventListener?.('change', bump);
+          observer?.disconnect();
+        };
       }, []);
 
       const load = React.useCallback(async (force) => {
