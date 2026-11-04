@@ -420,6 +420,10 @@ export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides 
   for (const [model, official] of Object.entries(OFFICIAL.prices)) {
     const goFactor = peakMultiplier(model, at, false)
     const officialFactor = peakMultiplier(model, at, true)
+    // Each model carries its own monthly allowance (Flash $100, Pro $15), so the
+    // discount differs per model: Pro buys 1.5x its fee, not 10x.
+    const modelAllowance = overrides.limits?.[model]
+    const modelLeverage = Number.isFinite(modelAllowance) && modelAllowance > 0 ? modelAllowance / priceUsd : leverage
     // OpenCode's own list price, scraped from the pricing page, is in USD and can
     // drift from DeepSeek's CNY list. When we have it, the allowance burns at the
     // rate OpenCode actually charges, converted to CNY so both columns compare.
@@ -429,7 +433,7 @@ export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides 
       // coding bill, so the headline verdict still reads off the output line.
       const list = official[kind]
       const burn = (live === undefined ? list : live[kind] * fx) * goFactor
-      const goPay = burn / leverage // what it actually costs you, given the discount
+      const goPay = burn / modelLeverage // what it actually costs you, given the discount
       const officialPay = list * officialFactor
       return { kind, list, go: { factor: goFactor, burn, pay: goPay }, official: { factor: officialFactor, pay: officialPay }, cheaper: goPay <= officialPay ? 'go' : 'official', ratio: goPay / officialPay }
     })
@@ -442,6 +446,8 @@ export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides 
       official: headline.official,
       cheaper: headline.cheaper,
       ratio: headline.ratio,
+      leverage: modelLeverage,
+      allowanceUsd: Number.isFinite(modelAllowance) && modelAllowance > 0 ? modelAllowance : allowanceUsd,
     })
   }
   return {
@@ -839,6 +845,7 @@ export function apply(ctx, config = {}) {
         priceUsd: cfg.planPriceUsd ?? pricing.plans[detectedPlan ?? cfg.plan],
         allowanceUsd: cfg.planAllowanceUsd ?? pricing.limits['deepseek-v4.1-flash'],
         prices: pricing.models,
+        limits: effectivePlan === 'go' ? pricing.limits : undefined,
       }),
       pricing: {
         source: pricing.source,

@@ -2015,22 +2015,24 @@ window.__ModuleLoader__.load({
       const quotaSpent = typeof data?.usage?.monthly?.percent === 'number' ? data.usage.monthly.percent : null;
       const exhausted = quotaSpent !== null && quotaSpent >= 100;
       // The real numbers can never favour the official API (a $10 plan carries
-      // $100 of list price), so the page can also show what that case looks like.
-      const demoPeak = {
-        plan: peak?.plan ?? { leverage: 10 },
-        models: [{
-          model: 'deepseek-v4-pro',
-          rows: [
-            { kind: 'cacheRead', go: { pay: 0.015, factor: 1 }, official: { pay: 0.15, factor: 1 }, cheaper: 'go', ratio: 0.1 },
-            { kind: 'input', go: { pay: 0.45, factor: 1 }, official: { pay: 4.5, factor: 1 }, cheaper: 'go', ratio: 0.1 },
-            { kind: 'output', go: { pay: 1.35, factor: 1 }, official: { pay: 13.5, factor: 1 }, cheaper: 'go', ratio: 0.1 },
-          ],
-          go: { pay: 13.5, factor: 1 },
-          official: { pay: 9, factor: 1 },
-          cheaper: 'official',
-          ratio: 1.5,
-        }],
-      };
+      // $100 of list price), so the page can also show what that case looks like:
+      // the same models, priced as if the allowance were smaller than the fee.
+      const demoPeak = peak
+        ? {
+          plan: { ...peak.plan, leverage: 2 / 3 },
+          models: peak.models.map((model) => ({
+            ...model,
+            cheaper: 'official',
+            ratio: 1.5,
+            rows: (model.rows ?? []).map((row) => ({
+              ...row,
+              go: { ...row.go, pay: row.official.pay * 1.5 },
+              cheaper: 'official',
+              ratio: 1.5,
+            })),
+          })),
+        }
+        : undefined;
       const shown = demo ? demoPeak : peak;
       const allGo = shown ? shown.models.every((row) => row.cheaper === 'go') : false;
       const saving = shown && shown.models.length > 0

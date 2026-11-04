@@ -112,6 +112,14 @@ assert.equal(isExhausted({ rolling: { status: 'ok', percent: 100 } }), true)
   })
   const liveOutput = live.models[0].rows.find((row) => row.kind === 'output')
   assert.ok(Math.abs(liveOutput.ratio - 0.1065) < 0.002, `live ratio ${liveOutput.ratio}`)
+
+  // Each model buys its own allowance: Pro's $15 on a $10 plan is 1.5x, not 10x,
+  // so the discount has to be derived per model rather than from Flash's number.
+  const perModel = peakSnapshot(7.1, plainPeak, 'go', { limits: { 'deepseek-v4.1-flash': 100, 'deepseek-v4-pro': 15 } })
+  const pro = perModel.models.find((entry) => entry.model === 'deepseek-v4-pro')
+  assert.equal(pro.leverage, 1.5)
+  assert.ok(Math.abs(pro.ratio - 2 / 3) < 0.001, `Pro ratio ${pro.ratio}`)
+  assert.equal(pro.cheaper, 'go', 'OpenCode is still cheaper on Pro, just less so')
 }
 console.log('pure logic ok')
 
