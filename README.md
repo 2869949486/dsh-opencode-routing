@@ -94,7 +94,7 @@ counts down; opening the page only reads the snapshot and never triggers a probe
 
 "此刻用哪个更划算" is derived from the subscription leverage: Go charges $10 for $100 of list-priced allowance
 (≈ ¥710), so OpenCode always costs 10 % of the official price — 90 % cheaper. Real data never favours the official
-API; the button in the card's corner switches to sample data so you can see what that case would look like.
+API.
 
 The capability column comes from the same catalog endpoint (`/inference/go/v1/models`): `modalities.input` and
 `capabilities` are rendered as text / image / video / audio / PDF, tool calls, reasoning, plus context length.

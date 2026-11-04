@@ -135,9 +135,6 @@ window.__ModuleLoader__.load({
         verdictGo: '走 OpenCode 便宜 {percent}%',
         verdictOfficial: '走官方直连便宜 {percent}%',
         verdictExhausted: '本月额度已用尽，只能走官方直连',
-        demoOn: '看官方更便宜的样子',
-        demoOff: '回到真实数据',
-        demoNote: '示例数据：假设某个模型走 OpenCode 反而更贵（现实中只有额度用尽才会发生）。',
         peakFootnote: '按每 100 万输出 tokens 折算（编码账单主要来自输出），汇率 ¥{fx}/$。峰谷只影响额度烧多快，不改变结论：额度内走 OpenCode 始终比官方直连便宜；例外是额度用尽，或某个模型的额度先见底。',
         footerOfficial: '上面「官方 5 小时 / 本周 / 本月」百分比来自 OpenCode 接口，是账户真实用量，别的客户端或别的机器用了也会算进去。',
         footerLocal: '按模型的金额是本机估算：只统计这个 harness 的会话日志，用来拆开看模型分布；其它工具的调用没有本地记录。',
@@ -265,9 +262,6 @@ window.__ModuleLoader__.load({
         verdictGo: 'OpenCode is {percent}% cheaper',
         verdictOfficial: 'Official API is {percent}% cheaper',
         verdictExhausted: 'This month’s allowance is used up, so only the official API is left',
-        demoOn: 'Show the official-is-cheaper case',
-        demoOff: 'Back to real data',
-        demoNote: 'Sample data: pretend one model is more expensive on OpenCode — in practice that only happens once the allowance runs out.',
         peakFootnote: 'Per 1M output tokens (output dominates a coding bill), at ¥{fx}/$. Peak hours only change how fast the allowance burns, not the verdict: on allowance, OpenCode stays cheaper than the official API; the exceptions are a spent allowance or a model whose individual cap runs out first.',
         footerOfficial: 'The official 5-hour / weekly / monthly percentages come from OpenCode’s API and describe the whole account — usage from other clients or machines counts too.',
         footerLocal: 'Per-model money is a local estimate: it only counts this harness’s session log, which is what makes the model split visible; calls from other tools leave no local record.',
@@ -395,9 +389,6 @@ window.__ModuleLoader__.load({
         verdictGo: '走 OpenCode 便宜 {percent}%',
         verdictOfficial: '走官方直連便宜 {percent}%',
         verdictExhausted: '本月額度已用盡，只能走官方直連',
-        demoOn: '看官方更便宜的樣子',
-        demoOff: '回到真實資料',
-        demoNote: '範例資料：假設某個模型走 OpenCode 反而更貴（現實中只有額度用盡才會發生）。',
         peakFootnote: '依每 100 萬輸出 tokens 折算（編碼帳單主要來自輸出），匯率 ¥{fx}/$。峰谷只影響額度消耗速度，不改變結論：額度內走 OpenCode 始終比官方直連便宜；例外是額度用盡，或某個模型的額度先用完。',
         footerOfficial: '上面「官方 5 小時／本週／本月」百分比來自 OpenCode 介面，是帳號真實用量，其他用戶端或機器用掉的也會算進去。',
         footerLocal: '依模型的金額是本機估算：只統計這個 harness 的工作階段日誌，用來拆開看模型分布；其他工具的呼叫沒有本機記錄。',
@@ -515,9 +506,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "Über OpenCode {percent}% günstiger",
     "verdictOfficial": "Über die offizielle API {percent}% günstiger",
     "verdictExhausted": "Monatskontingent aufgebraucht – nur die offizielle API bleibt",
-    "demoOn": "Fall „offiziell günstiger\" zeigen",
-    "demoOff": "Zurück zu echten Daten",
-    "demoNote": "Beispieldaten: ein Modell, das über OpenCode teurer wäre (real nur bei aufgebrauchtem Kontingent).",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek offiziell",
     "clockTitle": "Haupt- und Nebenzeit gerade jetzt",
@@ -645,9 +633,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "Con OpenCode un {percent}% más barato",
     "verdictOfficial": "Con la API oficial un {percent}% más barato",
     "verdictExhausted": "Cuota mensual agotada: solo queda la API oficial",
-    "demoOn": "Ver el caso de que lo oficial sea más barato",
-    "demoOff": "Volver a los datos reales",
-    "demoNote": "Datos de ejemplo: un modelo que con OpenCode sería más caro (en la realidad solo pasa al agotar la cuota).",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek oficial",
     "clockTitle": "Hora pico / valle ahora mismo",
@@ -775,9 +760,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "{percent}% moins cher via OpenCode",
     "verdictOfficial": "{percent}% moins cher via l’API officielle",
     "verdictExhausted": "Quota mensuel épuisé — il ne reste que l’API officielle",
-    "demoOn": "Voir le cas où l’officiel est moins cher",
-    "demoOff": "Revenir aux données réelles",
-    "demoNote": "Données d’exemple : un modèle plus cher via OpenCode (en pratique, seulement quota épuisé).",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek officiel",
     "clockTitle": "Heures pleines / creuses en ce moment",
@@ -905,9 +887,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "OpenCode 経由が {percent}% 安い",
     "verdictOfficial": "公式 API 経由が {percent}% 安い",
     "verdictExhausted": "今月の枠を使い切ったため公式 API のみ",
-    "demoOn": "公式が安い場合を表示",
-    "demoOff": "実際のデータに戻す",
-    "demoNote": "サンプル表示：OpenCode 経由のほうが高くなる例（実際は枠を使い切ったときのみ）。",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek 公式",
     "clockTitle": "現在のピーク / オフピーク",
@@ -1035,9 +1014,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "OpenCode 경유가 {percent}% 저렴",
     "verdictOfficial": "공식 API 경유가 {percent}% 저렴",
     "verdictExhausted": "이번 달 한도를 모두 사용해 공식 API만 가능",
-    "demoOn": "공식이 더 저렴한 경우 보기",
-    "demoOff": "실제 데이터로 돌아가기",
-    "demoNote": "예시 데이터: OpenCode 경유가 더 비싼 경우(실제로는 한도를 다 썼을 때만).",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek 공식",
     "clockTitle": "지금 피크 / 비피크",
@@ -1165,9 +1141,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "{percent}% mais barato via OpenCode",
     "verdictOfficial": "{percent}% mais barato via API oficial",
     "verdictExhausted": "Cota mensal esgotada — resta apenas a API oficial",
-    "demoOn": "Ver o caso em que o oficial é mais barato",
-    "demoOff": "Voltar aos dados reais",
-    "demoNote": "Dados de exemplo: um modelo mais caro via OpenCode (na prática só com a cota esgotada).",
     "colOpenCode": "OpenCode",
     "colOfficial": "DeepSeek oficial",
     "clockTitle": "Pico / fora do pico agora",
@@ -1295,9 +1268,6 @@ window.__ModuleLoader__.load({
     "verdictGo": "Через OpenCode дешевле на {percent}%",
     "verdictOfficial": "Через официальный API дешевле на {percent}%",
     "verdictExhausted": "Месячная квота исчерпана — остаётся только официальный API",
-    "demoOn": "Показать случай, когда официальный дешевле",
-    "demoOff": "Вернуться к реальным данным",
-    "demoNote": "Демо-данные: модель, которая через OpenCode дороже (в реальности — только при исчерпанной квоте).",
     "colOpenCode": "OpenCode",
     "colOfficial": "Официальный DeepSeek",
     "clockTitle": "Пик или не пик прямо сейчас",
@@ -1584,7 +1554,6 @@ window.__ModuleLoader__.load({
       const [keyDraft, setKeyDraft] = React.useState('');
       const [inspecting, setInspecting] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
-      const [demo, setDemo] = React.useState(false);
       const [showTop, setShowTop] = React.useState(false);
       const scroller = React.useRef(null);
       // The settings pane scrolls, not the window, so the listener is attached in
@@ -2014,34 +1983,15 @@ window.__ModuleLoader__.load({
       const peak = data?.peak;
       const quotaSpent = typeof data?.usage?.monthly?.percent === 'number' ? data.usage.monthly.percent : null;
       const exhausted = quotaSpent !== null && quotaSpent >= 100;
-      // The real numbers can never favour the official API (a $10 plan carries
-      // $100 of list price), so the page can also show what that case looks like:
-      // the same models, priced as if the allowance were smaller than the fee.
-      const demoPeak = peak
-        ? {
-          plan: { ...peak.plan, leverage: 2 / 3 },
-          models: peak.models.map((model) => ({
-            ...model,
-            cheaper: 'official',
-            ratio: 1.5,
-            rows: (model.rows ?? []).map((row) => ({
-              ...row,
-              go: { ...row.go, pay: row.official.pay * 1.5 },
-              cheaper: 'official',
-              ratio: 1.5,
-            })),
-          })),
-        }
-        : undefined;
-      const shown = demo ? demoPeak : peak;
+      const shown = peak;
       const allGo = shown ? shown.models.every((row) => row.cheaper === 'go') : false;
       const saving = shown && shown.models.length > 0
         ? Math.round(Math.max(...shown.models.map((row) => (row.cheaper === 'go' ? (1 - row.ratio) * 100 : (row.ratio - 1) * 100))))
         : 0;
-      const verdict = exhausted && !demo
+      const verdict = exhausted
         ? t('verdictExhausted')
         : allGo ? t('verdictGo', { percent: saving }) : t('verdictOfficial', { percent: saving });
-      const verdictColor = exhausted && !demo ? '#e0a030' : allGo ? '#3c9d5d' : '#e0a030';
+      const verdictColor = exhausted ? '#e0a030' : allGo ? '#3c9d5d' : '#e0a030';
       const priceCell = (price, peakFlag, winner) => h('span', {
         style: winner
           ? { fontWeight: 600, color: '#3c9d5d', background: 'rgba(60,157,93,.12)', padding: '1px 6px', borderRadius: 4 }
@@ -2162,9 +2112,7 @@ window.__ModuleLoader__.load({
                       : null,
                   )
                 : null,
-              demo ? h('div', { style: { fontSize: 12, opacity: .7 } }, t('demoNote')) : null,
-              h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },
-                h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
+              h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },                h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
                 h('thead', null,
                   h('tr', null, [
                     t('colModel'), t('colKind'),
@@ -2192,12 +2140,6 @@ window.__ModuleLoader__.load({
                     ),
                 )),
                 ),
-              ),
-              h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
-                h('button', {
-                  type: 'button', className: 'ocr-btn', style: btn,
-                  onClick: () => setDemo(!demo),
-                }, demo ? t('demoOff') : t('demoOn')),
               ),
             )
           : null,
