@@ -131,10 +131,7 @@ node test.mjs
 ## 与旧包的关系
 
 `dsh-opencode-quota-router` 与 `dsh-opencode-usage-settings` 是它的前身，功能已全部并入本包；
-旧包在 npm 上标记为 deprecated，指向这里。仓库分别是
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)（当前）、
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router)、
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage)。
+旧包在 npm 上标记为 deprecated，指向这里。它们原来的 GitHub 仓库已删除，本仓是唯一的源码位置。
 
 ## License
 

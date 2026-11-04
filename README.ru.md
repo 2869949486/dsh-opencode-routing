@@ -151,10 +151,7 @@ node test.mjs
 ## Связь со старыми пакетами
 
 `dsh-opencode-quota-router` и `dsh-opencode-usage-settings` — его предшественники; всё, что они умели, объединено
-здесь. Оба помечены на npm как deprecated и указывают на этот пакет. Репозитории:
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing) (текущий),
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router),
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage).
+здесь. Оба помечены на npm как deprecated и указывают на этот пакет. Прежние репозитории удалены, этот — единственный источник.
 
 ## Участие
 

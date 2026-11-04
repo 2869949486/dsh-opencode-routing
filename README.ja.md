@@ -97,10 +97,7 @@ node test.mjs
 
 ## 旧パッケージとの関係
 
-`dsh-opencode-quota-router` と `dsh-opencode-usage-settings` はその前身であり、それらが行っていたことはすべてここに統合されています。どちらも npm で非推奨とマークされ、このパッケージを指しています。リポジトリ:
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)（現行）、
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router)、
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage)。
+`dsh-opencode-quota-router` と `dsh-opencode-usage-settings` はその前身であり、それらが行っていたことはすべてここに統合されています。どちらも npm で非推奨とマークされ、このパッケージを指しています。旧リポジトリは削除済みで、ここが唯一のソースです。
 
 ## コントリビュート
 

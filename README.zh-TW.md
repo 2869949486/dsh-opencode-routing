@@ -97,10 +97,7 @@ node test.mjs
 
 ## 與舊套件的關係
 
-`dsh-opencode-quota-router` 與 `dsh-opencode-usage-settings` 是它的前身；它們所做的一切都合併到這裡。兩者在 npm 上都標記為已棄用並指向這個套件。儲存庫：
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)（目前版本）、
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router)、
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage)。
+`dsh-opencode-quota-router` 與 `dsh-opencode-usage-settings` 是它的前身；它們所做的一切都合併到這裡。兩者在 npm 上都標記為已棄用並指向這個套件。它們原本的 GitHub 儲存庫已刪除，本倉是唯一的原始碼位置。
 
 ## 貢獻
 

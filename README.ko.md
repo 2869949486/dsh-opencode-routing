@@ -139,10 +139,7 @@ node test.mjs
 ## 이전 패키지와의 관계
 
 `dsh-opencode-quota-router`와 `dsh-opencode-usage-settings`가 전신이며, 두 패키지가 하던 모든 일이 이곳에
-병합되었습니다. 둘 다 npm에서 deprecated로 표시되어 이 패키지를 가리킵니다. 저장소:
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing)(현재),
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router),
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage).
+병합되었습니다. 둘 다 npm에서 deprecated로 표시되어 이 패키지를 가리킵니다. 예전 저장소는 삭제되었고, 이곳이 유일한 소스입니다.
 
 ## 기여
 

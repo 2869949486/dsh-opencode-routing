@@ -152,10 +152,8 @@ tags, unlimited models, peak/off-peak maths, billing lines) and the single-accou
 ## Relation to the old packages
 
 `dsh-opencode-quota-router` and `dsh-opencode-usage-settings` are its predecessors; everything they did is merged
-here. Both are marked deprecated on npm and point at this package. Repositories:
-[`2869949486/dsh-opencode-routing`](https://github.com/2869949486/dsh-opencode-routing) (current),
-[`dsh-opencode-quota-router`](https://github.com/2869949486/dsh-opencode-quota-router),
-[`dsh-opencode-usage`](https://github.com/2869949486/dsh-opencode-usage).
+here. Both are marked deprecated on npm and point at this package. Their GitHub repositories are retired; this one is
+the single source.
 
 ## Contributing
 
