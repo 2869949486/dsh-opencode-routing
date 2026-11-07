@@ -1362,7 +1362,7 @@ export function apply(ctx, config = {}) {
       }
     }
     if (match.side === desired) {
-      yield* relay(next(), match.route, options, 0, desired === 'primary')
+      yield* forward(next(), match.route, options, desired === 'primary')
       return
     }
     const target = targetFor(match.route, desired)
@@ -1373,7 +1373,39 @@ export function apply(ctx, config = {}) {
     const reasoningEffort = await effortFor(target, options.reasoningEffort)
     log.info(`route ${match.side} -> ${desired}: ${target.provider}/${target.model}${reasoningEffort === undefined ? '' : ` @ ${reasoningEffort}`}`)
     const dispatched = rerouted(options, target, reasoningEffort)
-    yield* relay(ctx.llm.stream(dispatched), match.route, dispatched, 0, desired === 'primary')
+    yield* forward(ctx.llm.stream(dispatched), match.route, dispatched, desired === 'primary')
+  }
+
+  /**
+   * Forward one dispatched stream and, if it failed *after* producing output, let
+   * the quota plan move anyway.
+   *
+   * A late failure cannot be retried inside `relay` — the caller already received
+   * those tokens, and replaying them would duplicate the answer. But leaving the
+   * plan untouched is worse: the agent retries the step, `primaryBlocked()` still
+   * says primary, and the retry walks into the same wall. Planning here means the
+   * retry lands on the fallback side, so the step continues one attempt later.
+   */
+  async function* forward(stream, route, options, recoverable) {
+    let sawOutput = false
+    let failure
+    for await (const chunk of relay(stream, route, options, 0, recoverable)) {
+      if (chunk.type === 'finish') {
+        if (chunk.reason?.kind === 'error') failure = chunk.reason.failure
+      } else {
+        sawOutput = true
+      }
+      yield chunk
+    }
+    // `relay` already moved the plan when it could retry; only a stream that got
+    // past its first chunk and is still on primary needs the late decision.
+    if (sawOutput && failure !== undefined && recoverable && state.mode !== 'fallback') {
+      try {
+        await recoverStream(route, failure)
+      } catch (error) {
+        log.warn(`could not plan around a late stream failure: ${describeError(error)}`)
+      }
+    }
   }
 
   const disposeRoute = ctx.on('llm/stream', (options, next) => {

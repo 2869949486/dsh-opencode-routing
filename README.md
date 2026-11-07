@@ -71,8 +71,9 @@ change: `resolveApiKey` runs on every streaming call, after the `llm/stream` rou
   `POST /opencode-quota-router.json {"action":"fallback"}` and `{"action":"primary"}`.
 - **A failure mid-step does not lose the step**: the retry happens inside the same `llm/stream` call, so only a
   primary attempt that has not produced a single chunk is rerouted. Once the first token is out, the stream belongs
-  to the caller and its failure is passed through unchanged (a half-written answer is never silently restarted).
-  Later steps follow the route through `agent.model.select()` alignment.
+  to the caller and its failure is passed through unchanged (a half-written answer is never silently restarted) —
+  but the plan still moves, so the step *retry* lands on the official subscription instead of walking into the same
+  wall. Later steps follow the route through `agent.model.select()` alignment.
 - **Recovery needs ten clean minutes**: while in fallback the router probes every `router.recoveryProbeIntervalMs`
   (60 s), and only hands the traffic back after `router.recoverStableMs` (10 min) of *consecutive* successful probes.
   One failed probe resets the window to zero. This is what stops a flapping upstream from switching back and forth on
@@ -100,6 +101,12 @@ by default) and renders a second card above the local probe:
 - **刷新官方状态** re-reads the feed (and the local probe) on demand; the page also re-reads it every 60 s while it
   is open, so the badge tracks the upstream instead of the last page load.
 - **打开状态页** opens `status.opencode.ai` when the tooltip is not enough.
+- **When it offers to switch**: only an outright outage, or a *model you actually use* that is not operational,
+  shows the 「切到官方订阅」 button. A Go plan marked degraded while your model stays operational does not — the
+  feed is telling you the outage is next door, and switching would burn official quota for nothing.
+- **A green probe is not enough to come back**: while the published feed still marks the model degraded, the
+  ten-clean-minute recovery window does not even start; the tooltip says which half is holding it back
+  (`recovery.blocked`: `probe` or `published`).
 
 This is the difference between "my requests are failing" and "OpenCode says Go is degraded because of an upstream
 provider": the local probe knows *that* it failed, the published feed knows *why*, and only the second one tells you
@@ -230,9 +237,11 @@ No model quota is required: fake context, fake credential store, fake webServer,
 answers per API key. Coverage: composite mounting, account adoption, single-model quarantine, A→B failover with key
 mirroring, per-account probing, whole-pool fallback, reset, settings-action validation, the usage view (capability
 tags, unlimited models, peak/off-peak maths, billing lines), the single-account degradation, the status card
-(classification of a 429 as a rate limit, the kept raw message, the failure counter) and the recovery window (one
-clean probe is not enough, a failed probe restarts it, a full window switches back and the next request goes to the
-pool again).
+(classification of a 429 as a rate limit, the kept raw message, the failure counter), the published-status half
+(services, per-model rows, a broken feed costing freshness but not routing) and the recovery window (one
+clean probe is not enough, a failed probe restarts it, a degraded feed does not even start it, a full window switches
+back and the next request goes to the pool again), plus a limit that lands after the first token (not retried in
+place, but the step retry continues on the fallback route).
 
 ## Relation to the old packages
 

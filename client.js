@@ -219,7 +219,7 @@ window.__ModuleLoader__.load({
         officialRefresh: '刷新官方状态',
         officialRefreshHint: '重新读一次 status.opencode.ai（OpenCode 自己大约每分钟更新一次），同时刷新本地探测结果。',
         officialSource: 'status.opencode.ai · 更新于 {time}',
-        officialStale: '数据已过期（{age} 前读取）',
+        officialStale: '数据已过期，{age}更新',
         officialUnavailable: '拿不到官方状态：{error}',
         officialOpenStatus: '打开状态页',
         officialStatusOperational: '正常',
@@ -458,7 +458,7 @@ window.__ModuleLoader__.load({
         officialRefresh: 'Refresh status',
         officialRefreshHint: 'Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.',
         officialSource: 'status.opencode.ai · updated {time}',
-        officialStale: 'Stale reading (fetched {age} ago)',
+        officialStale: 'Stale reading (updated {age})',
         officialUnavailable: 'Could not read the published status: {error}',
         officialOpenStatus: 'Open the status page',
         officialStatusOperational: 'Operational',
@@ -694,7 +694,7 @@ window.__ModuleLoader__.load({
         officialRefresh: '重新整理官方狀態',
         officialRefreshHint: '重新讀一次 status.opencode.ai（OpenCode 自己大約每分鐘更新一次），同時重新整理本地探測結果。',
         officialSource: 'status.opencode.ai · 更新於 {time}',
-        officialStale: '資料已過期（{age} 前讀取）',
+        officialStale: '資料已過期，{age}更新',
         officialUnavailable: '拿不到官方狀態：{error}',
         officialOpenStatus: '開啟狀態頁',
         officialStatusOperational: '正常',
@@ -938,7 +938,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -1177,7 +1177,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -1416,7 +1416,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -1655,7 +1655,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -1894,7 +1894,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -2133,7 +2133,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -2372,7 +2372,7 @@ window.__ModuleLoader__.load({
     "officialRefresh": "Refresh status",
     "officialRefreshHint": "Re-reads status.opencode.ai (OpenCode refreshes it about once a minute) together with the local probe result.",
     "officialSource": "status.opencode.ai · updated {time}",
-    "officialStale": "Stale reading (fetched {age} ago)",
+    "officialStale": "Stale reading (updated {age})",
     "officialUnavailable": "Could not read the published status: {error}",
     "officialOpenStatus": "Open the status page",
     "officialStatusOperational": "Operational",
@@ -2460,6 +2460,18 @@ window.__ModuleLoader__.load({
           : `${Math.round(minutes / 60)} 小时后`
         : new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       return relative;
+    };
+    /** The other direction: `when` counts down, this says how long ago. */
+    const ago = (ms) => {
+      if (!ms) return t('none');
+      const delta = Math.max(0, Date.now() - ms);
+      const zh = LANG === 'zh' || LANG === 'zh-tw';
+      if (delta < 45_000) return zh ? '刚刚' : 'just now';
+      const minutes = Math.floor(delta / 60000);
+      if (minutes < 60) return zh ? `${minutes} 分钟前` : `${minutes} min ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return zh ? `${hours} 小时前` : `${hours} h ago`;
+      return clock(ms);
     };
 
     // The dialog floats over the page, so it cannot inherit a translucent surface:
@@ -3191,7 +3203,7 @@ window.__ModuleLoader__.load({
       const upstreamMeta = (() => {
         if (!upstream) return null;
         const minutes = (ms) => Math.max(1, Math.round((ms ?? 0) / 60000));
-        const stable = minutes(upstream.recoverStableMs);
+        const stable = minutes(upstream.recovery?.requiredMs);
         const windowMin = minutes(upstream.windowMs);
         const states = {
           healthy: [t('statusStateHealthy'), '#3c9d5d'],
@@ -3216,7 +3228,11 @@ window.__ModuleLoader__.load({
         } else {
           hint = t('statusHintUnknown');
         }
-        return { label, color, hint: `${hint}${upstream.recovery?.blocked === 'published' ? ` ${t('statusBlockedPublished')}` : upstream.recovery?.blocked === 'probe' ? ` ${t('statusBlockedProbe')}` : ''}`, stable, windowMin };
+        // `blocked` only ever matters while the window is stopped; a recovering
+        // state means the Host already cleared it.
+        const blockedNote = upstream.state === 'fallback' && upstream.recovery?.blocked === 'published' ? ` ${t('statusBlockedPublished')}`
+          : upstream.state === 'fallback' && upstream.recovery?.blocked === 'probe' ? ` ${t('statusBlockedProbe')}` : '';
+        return { label, color, hint: `${hint}${blockedNote}`, stable, windowMin };
       })();
       const chip = (text, color, tip) => h('span', {
         title: tip,
@@ -3245,9 +3261,9 @@ window.__ModuleLoader__.load({
       // OpenCode's own verdict, straight from status.opencode.ai. It is the
       // authority on "is this them or me", so it gets its own card above the
       // local probe, and a refresh button of its own.
-      const official = router?.official ?? null;
-      const officialMeta = (() => {
-        if (!official) return null;
+      const published = router?.official ?? null;
+      const publishedMeta = (() => {
+        if (!published) return null;
         const states = {
           operational: [t('officialStatusOperational'), '#3c9d5d'],
           degraded: [t('officialStatusDegraded'), '#e0a030'],
@@ -3255,13 +3271,13 @@ window.__ModuleLoader__.load({
           maintenance: [t('officialStatusMaintenance'), '#4d6bfe'],
           unknown: [t('officialStatusUnknown'), '#8a8f98'],
         };
-        const [label, color] = states[official.status] ?? states.unknown;
-        const open = (official.services ?? []).filter((entry) => entry.status !== 'operational');
+        const [label, color] = states[published.status] ?? states.unknown;
+        const open = (published.services ?? []).filter((entry) => entry.status !== 'operational');
         const reasons = [...new Set(open.map((entry) => entry.reason).filter((reason) => reason && reason !== 'none'))];
         // A degraded plan does not mean *your* model is degraded: OpenCode marks
         // the whole Go plan, then each model on its own. Only the model rows
-        // decide whether switching to the official subscription would help.
-        const ours = (official.models ?? []).filter((entry) => entry.status !== 'unknown');
+        // decide whether switching to the published subscription would help.
+        const ours = (published.models ?? []).filter((entry) => entry.status !== 'unknown');
         const oursBad = ours.some((entry) => entry.status !== 'operational');
         const byReason = {
           upstream: 'officialHintUpstream',
@@ -3270,20 +3286,21 @@ window.__ModuleLoader__.load({
           outage: 'officialHintOutage',
           maintenance: 'officialHintMaintenance',
         };
-        const hint = official.status === 'operational' ? t('officialHintOperational')
-          : official.status === 'outage' ? t('officialHintOutage')
-            : official.status === 'maintenance' ? t('officialHintMaintenance')
+        const hint = published.status === 'operational' ? t('officialHintOperational')
+          : published.status === 'outage' ? t('officialHintOutage')
+            : published.status === 'maintenance' ? t('officialHintMaintenance')
               : ours.length > 0 && !oursBad ? t('officialHintPartial')
                 : reasons.length === 0 ? t('officialHintUnknown')
                   : t(byReason[reasons[0]] ?? 'officialHintUnknown');
-        return { label, color, hint, help: official.status === 'outage' || oursBad };
+        return { label, color, hint, help: published.status === 'outage' || oursBad };
       })();
-      const officialCard = official && officialMeta
+      const officialCard = published && publishedMeta
         ? card(
-            cardHead(
-              t('officialTitle'),
-              chip(officialMeta.label, officialMeta.color, officialMeta.hint),
-              official.fetchedAt ? h('span', { style: { fontSize: 11, opacity: .5 } }, t('officialSource', { time: when(official.fetchedAt) })) : null,
+            cardHead(t('officialTitle'), chip(publishedMeta.label, publishedMeta.color, publishedMeta.hint)),
+            // `cardHead` carries one badge, so the source line and the two buttons
+            // get their own row.
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11 } },
+              published.fetchedAt ? h('span', { style: { opacity: .5 } }, t('officialSource', { time: ago(published.fetchedAt) })) : null,
               h('span', { style: { flex: 1 } }),
               h('a', {
                 href: 'https://status.opencode.ai/',
@@ -3302,8 +3319,8 @@ window.__ModuleLoader__.load({
               }, busy ? t('statusRefreshing') : t('officialRefresh')),
             ),
             h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' } },
-              h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, officialMeta.hint),
-              officialMeta.help
+              h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, publishedMeta.hint),
+              publishedMeta.help
                 ? h('button', {
                     type: 'button',
                     className: 'ocr-btn',
@@ -3318,10 +3335,10 @@ window.__ModuleLoader__.load({
               h('span', null, t('officialModelsTitle')),
             ),
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-              (official.models ?? []).map((entry) => (entry.status === 'unknown' && entry.ttftMs === null
+              (published.models ?? []).map((entry) => (entry.status === 'unknown' && entry.ttftMs === null
                 ? h('div', { key: entry.model, style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 } },
                     h('span', { style: { fontWeight: 600 } }, entry.model),
-                    chip(t('officialStatusUnknown'), '#8a8f98', official.stale ? t('officialStale', { age: when(official.fetchedAt) }) : t('officialHintUnknown')),
+                    chip(t('officialStatusUnknown'), '#8a8f98', published.stale ? t('officialStale', { age: ago(published.fetchedAt) }) : t('officialHintUnknown')),
                     h('span', { style: { opacity: .5 } }, t('officialModelMissing')),
                   )
                 : h('div', { key: entry.model, style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 } },
@@ -3339,10 +3356,10 @@ window.__ModuleLoader__.load({
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
               h('span', null, t('officialIncidentsTitle')),
             ),
-            (official.active ?? []).length === 0
+            (published.active ?? []).length === 0
               ? h('div', { style: { fontSize: 12, opacity: .6 } }, t('officialNoIncidents'))
               : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 } },
-                  (official.active ?? []).map((incident) => h('div', {
+                  (published.active ?? []).map((incident) => h('div', {
                     key: incident.id,
                     style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
                   },
@@ -3351,20 +3368,19 @@ window.__ModuleLoader__.load({
                     h('span', { style: { opacity: .55 } }, t('officialIncident', { age: span(Date.now() - incident.startedAt) })),
                   )),
                 ),
-            official.ok === false
-              ? h('div', { style: { fontSize: 11, color: '#d9534f', lineHeight: 1.7 } }, t('officialUnavailable', { error: official.error ?? t('officialStatusUnknown') }))
+            published.ok === false
+              ? h('div', { style: { fontSize: 11, color: '#d9534f', lineHeight: 1.7 } }, t('officialUnavailable', { error: published.error ?? t('officialStatusUnknown') }))
               : null,
-            official.stale && official.ok !== false
-              ? h('div', { style: { fontSize: 11, opacity: .6 } }, t('officialStale', { age: when(official.fetchedAt) }))
+            published.stale && published.ok !== false
+              ? h('div', { style: { fontSize: 11, opacity: .6 } }, t('officialStale', { age: ago(published.fetchedAt) }))
               : null,
           )
         : null;
       const upstreamCard = upstream && upstreamMeta
         ? card(
-            cardHead(
-              t('statusTitle'),
-              chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint),
-              upstream.since ? h('span', { style: { fontSize: 11, opacity: .5 } }, `${t('statusSince')} ${clock(upstream.since)}`) : null,
+            cardHead(t('statusTitle'), chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint)),
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11 } },
+              upstream.since ? h('span', { style: { opacity: .5 } }, `${t('statusSince')} ${clock(upstream.since)}`) : null,
               h('span', { style: { flex: 1 } }),
               h('button', {
                 type: 'button',
@@ -3391,11 +3407,10 @@ window.__ModuleLoader__.load({
                 : null,
             ),
             h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
-              stat(t('statusChecked'), upstream.checkedAt ? when(upstream.checkedAt) : t('none')),
-              stat(t('nextProbe'), router?.nextProbeAt ? when(router.nextProbeAt) : t('none')),
+              stat(t('statusChecked'), upstream.checkedAt ? ago(upstream.checkedAt) : t('none')),
               stat(t('statusStableWindow'), upstream.recovery?.active
                 ? `${t('statusWindowLeft', { remaining: left(upstream.recovery.remainingMs) })}`
-                : `${upstreamMeta.stable} min`),
+                : chinese ? `${upstreamMeta.stable} 分钟` : `${upstreamMeta.stable} min`),
             ),
             upstream.recovery?.active
               ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },

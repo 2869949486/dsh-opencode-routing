@@ -266,10 +266,20 @@ const scopeEffect = (factory) => {
 // The router now routes the actual streaming call. `llm.stream` re-enters the
 // registered `llm/stream` waterfall, just like the real LLM service does.
 let primaryFailure
+let partialFailure
 const adapterStream = (options) => (async function* () {
   if (primaryFailure !== undefined && options.provider === 'opencode-go' && options.model === primaryFailure.model) {
     const failure = primaryFailure.failure
     primaryFailure = undefined
+    yield { type: 'finish', reason: { kind: 'error', failure } }
+    return
+  }
+  // A limit that only shows up once tokens are already flowing: the step cannot
+  // be retried under the caller, but the plan still has to move.
+  if (partialFailure !== undefined && options.provider === 'opencode-go' && options.model === partialFailure.model) {
+    const failure = partialFailure.failure
+    partialFailure = undefined
+    yield { type: 'text-delta', index: 0, text: 'half-answer ' }
     yield { type: 'finish', reason: { kind: 'error', failure } }
     return
   }
@@ -335,6 +345,11 @@ async function call(config) {
 /** Make the next adapter attempt for one primary model fail once. */
 const failNext = (model, failure) => {
   primaryFailure = { model, failure }
+}
+
+/** Same, but only after the first token has already been handed to the caller. */
+const failAfterFirstToken = (model, failure) => {
+  partialFailure = { model, failure }
 }
 
 /** Drive the Settings API over the fake webserver. */
@@ -562,6 +577,25 @@ console.log('official status ok')
   assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash', 'the agent keeps working on OpenCode')
 }
 console.log('recovery window ok')
+
+// A limit that lands mid-step: the tokens already went to the caller, so the
+// step cannot be replayed — but the plan still moves, and the step retry lands
+// on the official subscription instead of walking into the same wall.
+{
+  failAfterFirstToken('deepseek-v4.1-flash', {
+    code: 'RATE_LIMIT',
+    status: 429,
+    message: 'Upstream request failed: [prefill_cap_refused] the cell is at capacity',
+  })
+  assert.equal(await call(flash), 'half-answer error:RATE_LIMIT', 'the partial answer fails through to the caller')
+  assert.equal(readState().mode, 'fallback', 'the plan moves even though the step could not be retried in place')
+  assert.equal(await call(flash), 'deepseek-account/deepseek-flash', 'the retried step continues on the official subscription')
+
+  const primary = await api('POST', { action: 'primary' })
+  assert.equal(primary.body.mode, 'primary', 'Settings can hand the traffic back')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
+}
+console.log('mid-step failure ok')
 
 
 // ---- usage half -----------------------------------------------------------
