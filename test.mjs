@@ -843,13 +843,21 @@ console.log('reveal key ok')
     walk(tree)
 
     // The first thing on the page names the route, in words and in colour.
-    const banner = nodes.find((node) => flatten(node).includes('当前路由'))
+    const banner = nodes.find((node) => typeof node.props?.title === 'string' && node.props?.style?.boxSizing === 'border-box')
     assert.ok(banner, 'the page opens with a route banner')
-    const headline = nodes.find((node) => node.props?.style?.fontSize === 15 && node.props?.style?.fontWeight === 700)
+    const headline = nodes.find((node) => node.props?.style?.fontSize === 14 && node.props?.style?.fontWeight === 700)
     assert.ok(headline, 'the banner carries a headline')
     assert.equal(label(headline), routeOf[mode], 'the headline names the route that is answering')
     assert.equal(headline.props.style.color, mode === 'fallback' ? '#e0a030' : '#3c9d5d', 'and colours it by route')
     assert.ok(flat.indexOf('当前路由') < flat.indexOf('本地上游探测'), 'the banner sits above the status card')
+
+    // Compact: two rows, a capped width, and a hint that truncates instead of
+    // wrapping the banner into a paragraph.
+    assert.equal(banner.children.length, 2, 'the banner is a verdict row and one hint line')
+    assert.ok(banner.props.style.maxWidth <= 560, 'the banner does not stretch the full page width')
+    assert.equal(banner.children[1].props.style.whiteSpace, 'nowrap', 'the hint stays on one line')
+    assert.equal(banner.children[1].props.style.textOverflow, 'ellipsis', 'and truncates rather than growing')
+    assert.equal(count(flatten(banner), mode === 'fallback' ? '额度用尽' : '额度已恢复'), 0, 'the banner leaves the reason to the status card')
 
     // Two authorities, one card, one refresh button.
     const heads = nodes.filter((node) => node.props?.style?.fontSize === 12.5)

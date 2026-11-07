@@ -3598,7 +3598,12 @@ window.__ModuleLoader__.load({
               published?.fetchedAt ? h('span', null, t('officialSource', { time: ago(published.fetchedAt) })) : null,
             ),
             router?.reason
-              ? h('div', { style: { fontSize: 12, opacity: .75, lineHeight: 1.7 } }, t('statusSwitchWhy', { reason: reasonText(router.reason) }))
+              ? h('div', { style: { fontSize: 12, lineHeight: 1.7 } },
+                  h('span', { style: { opacity: .85 } }, reasonText(router.reason)),
+                  router.mode === 'fallback'
+                    ? h('span', { style: { opacity: .55 } }, ` · ${t('statusSwitchWhy')}`)
+                    : null,
+                )
               : null,
             h('div', { style: { display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' } },
               localSection,
@@ -3611,34 +3616,45 @@ window.__ModuleLoader__.load({
       // reader: everything below it is detail about that one fact.
       const routeColor = router ? (router.mode === 'fallback' ? '#e0a030' : '#3c9d5d') : '#8a8f98';
 
+      // One compact strip, not a paragraph: a label, the verdict, and the next
+      // probe, with the explanation kept to a single truncated line. The switch
+      // reason lives on the status card below, so repeating it here only made the
+      // banner taller than the thing it announces.
+      const routeHint = router
+        ? (router.mode === 'fallback'
+            ? t('routeOfficialHint')
+            : t('routeOpencodeHint', { account: router.activeLabel ?? t('none') }))
+        : t('routerMissing');
+
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', {
+          title: routeHint,
           style: {
             display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-            padding: '12px 14px',
-            borderRadius: 10,
-            border: `1px solid ${routeColor}66`,
-            background: `${routeColor}18`,
+            flexDirection: 'column',
+            gap: 3,
+            padding: '7px 12px',
+            borderRadius: 8,
+            border: `1px solid ${routeColor}55`,
+            background: `${routeColor}14`,
+            maxWidth: 520,
+            boxSizing: 'border-box',
           },
         },
-          h('span', { style: { fontSize: 11, opacity: .7, letterSpacing: '.04em' } }, t('routeNow')),
-          h('span', { style: { fontSize: 15, fontWeight: 700, color: routeColor } }, router
-            ? (router.mode === 'fallback' ? t('routeOfficial') : t('routeOpencode'))
-            : t('none')),
-          h('span', { style: { fontSize: 12, opacity: .82 } }, router
-            ? (router.mode === 'fallback'
-                ? t('routeOfficialHint')
-                : t('routeOpencodeHint', { account: router.activeLabel ?? t('none') }))
-            : t('routerMissing')),
-          router?.reason ? h('span', { style: { fontSize: 11, opacity: .6 } }, `· ${reasonText(router.reason)}`) : null,
-          h('span', { style: { flex: 1 } }),
-          router
-            ? h('span', { style: { fontSize: 11, opacity: .6 } },
-                `${t('nextProbe')} ${when(router.nextProbeAt ?? Date.now() + (router.probeIntervalMs ?? 0))}`)
-            : null,
+          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' } },
+            h('span', { style: { fontSize: 10.5, opacity: .65, letterSpacing: '.06em' } }, t('routeNow')),
+            h('span', { style: { fontSize: 14, fontWeight: 700, color: routeColor } }, router
+              ? (router.mode === 'fallback' ? t('routeOfficial') : t('routeOpencode'))
+              : t('none')),
+            h('span', { style: { flex: 1 } }),
+            router
+              ? h('span', { style: { fontSize: 10.5, opacity: .55, whiteSpace: 'nowrap' } },
+                  `${t('nextProbe')} ${when(router.nextProbeAt ?? Date.now() + (router.probeIntervalMs ?? 0))}`)
+              : null,
+          ),
+          h('div', {
+            style: { fontSize: 11.5, opacity: .7, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+          }, routeHint),
         ),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
           h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
@@ -3659,18 +3675,12 @@ window.__ModuleLoader__.load({
 
         statusCard,
 
+        // The banner already says which route, who serves it, why, and when the next
+        // probe runs; repeating those three stats here only made the page longer.
         card(
           cardHead(t('routerTitle'), router
             ? pill(router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'), router.mode === 'fallback' ? '#e0a030' : '#3c9d5d')
             : h('span', { style: { opacity: .7, fontSize: 12 } }, t('routerMissing'))),
-          router?.reason ? h('div', { style: { fontSize: 12, opacity: .65 } }, t('modeReason', { reason: reasonText(router.reason) })) : null,
-          router
-            ? h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
-                stat(t('activeAccount'), router.activeLabel ?? t('none')),
-                stat(t('nextProbe'), router.nextProbeAt ? when(router.nextProbeAt) : when(Date.now() + (router.probeIntervalMs ?? 0))),
-                stat(t('colStatus'), router.mode === 'fallback' ? t('modeFallback') : t('modePrimary')),
-              )
-            : null,
           router
             ? tools(
                 h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),

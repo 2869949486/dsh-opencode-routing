@@ -116,13 +116,18 @@ whether switching to the official subscription would help.
 
 ## Page header: which route is answering
 
-The first row of the Settings page is the route banner, and it answers "whose money did the sentence I just sent spend":
+The first row of the Settings page is a narrow banner (520px at most), and it answers "whose money did the sentence I just
+sent spend":
 
-- **One of two values** — 「OpenCode 账户池」 or 「DeepSeek 官方订阅」, green for the pool and amber for the subscription.
-- **One sentence of context** — on the pool it names the active account and says no subscription allowance is spent;
-  on the subscription it says the official API is being billed and that the router moves back once OpenCode is stable.
-- **The reason** rides the same row, e.g. *out of allowance, using the official API for now* — never the raw enum.
-- **Next probe** — a countdown, so "when will it try to switch back" has an answer.
+- **First line** — 「当前路由」 plus **one of two values**: 「OpenCode 账户池」 or 「DeepSeek 官方订阅」, green for the pool
+  and amber for the subscription, with the next-probe countdown on the right.
+- **Second line, one sentence** — on the pool it names the active account and says no subscription allowance is spent; on
+  the subscription it says the official API is being billed and that the router moves back once OpenCode is stable. It is
+  clamped to a single line and truncated with an ellipsis; hover for the full text. The banner states the fact, it does not
+  unfold it.
+- **The reason is not here** — the status card below carries it (*out of allowance, using the official API for now*).
+  Repeating it in the banner only made the banner taller than the thing it announces.
+- The router control card also dropped its *active account / next probe / status* stats: the banner already shows all three.
 
 ## Switch notice (frame overlay)
 
