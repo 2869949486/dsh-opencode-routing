@@ -37,7 +37,7 @@ npm i dsh-opencode-routing
 
 ## 帳戶池與容錯切換
 
-池的順序就是使用順序。任一時刻只有一個帳戶是「當前」帳戶，它的金鑰會被鏡射到 provider 讀取的憑證參考（預設 `OPENCODE_API_KEY`）。因此切換帳戶不需要更改 provider 設定：`resolveApiKey` 在 `agent/request` 勾子之後、每一次串流呼叫時執行。
+池的順序就是使用順序。任一時刻只有一個帳戶是「當前」帳戶，它的金鑰會被鏡射到 provider 讀取的憑證參考（預設 `OPENCODE_API_KEY`）。因此切換帳戶不需要更改 provider 設定：`resolveApiKey` 在 `llm/stream` 路由器選定帳戶之後、每一次串流呼叫時執行。
 
 - **A 用盡，B 接手**：當官方額度確認用完時遇到 `QUOTA` / `ACCOUNT_QUOTA` / 429，或遇到驗證類錯誤（`AUTH`、`INVALID_CREDENTIAL`、`MISSING_CREDENTIAL`、`ACCOUNT_SIGN_IN_REQUIRED`、`CLIENT_UPGRADE_REQUIRED`），當前帳戶會被標記為不可用（直到視窗重置，驗證失敗則為 30 分鐘），路由移到下一個已啟用的帳戶並**重試同一個步驟** —— 該回合永遠不會被降級。
 - **單一模型隔離**：當只有一個模型超出額度而池仍有預算時，只有該模型被隔離（預設 30 分鐘）；其他每個模型繼續使用方案。

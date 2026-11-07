@@ -17,12 +17,13 @@
  * - `mode` — a plan-wide fallback for a failure that no account can serve;
  *   every primary model falls back.
  *
- * Both seams act at step boundaries of one agent: `agent/request` rewrites the
- * call config, `agent/request-error` quarantines and retries the failed step in
- * the same turn. Streaming requests and other agents are never interrupted.
- * Both listeners register with `prepend: true`: a Cordis waterfall returns the
- * outermost listener's value, so an observer appended later could otherwise
- * shadow the rewrite.
+ * The `llm/stream` waterfall is the routing seam: the agent fixes provider and
+ * model when a step is prepared, so the plugin intercepts the actual streaming
+ * call instead of rewriting the request config. A failed primary attempt before
+ * the first chunk can be retried on another account or on the route's fallback
+ * side. The listener registers with `prepend: true`: a Cordis waterfall returns
+ * the outermost listener's value, so an observer appended later could otherwise
+ * shadow the route.
  *
  * The Settings page talks to this module over two JSON routes served on the
  * host webserver: `GET <path>.json` returns a secret-free snapshot, and
@@ -59,6 +60,15 @@ const AUTH_CODES = new Set([
   'CLIENT_UPGRADE_REQUIRED',
 ])
 const QUOTA_MESSAGE = /allowance|usage limit|quota|limit reached|exceed/i
+// Upstream capacity refusals are not quota exhaustion: the allowance is intact
+// but the provider's serving cell is full. They are transient at the provider
+// level and can outlast the provider retry policy, so they get their own
+// fallback trigger instead of being treated as an ordinary rate limit.
+const CAPACITY_MESSAGE = /overloaded|at capacity|prefill_cap_refused|ttft_admission_refused|capacity refused/i
+// Marks a stream this plugin re-dispatched itself, so the routing listener
+// passes it straight to the adapter instead of resolving the route again.
+const ROUTED = Symbol('opencode-quota-router.routed')
+const MAX_STREAM_ATTEMPTS = 3
 
 function routePair(raw) {
   const primary = raw?.primary
@@ -78,6 +88,8 @@ function normalize(config) {
     probeIntervalMs: Number.isFinite(config?.probeIntervalMs) && config.probeIntervalMs >= 1000 ? config.probeIntervalMs : DEFAULT_PROBE_INTERVAL_MS,
     minProbeDelayMs: Number.isFinite(config?.minProbeDelayMs) && config.minProbeDelayMs >= 1000 ? config.minProbeDelayMs : MIN_PROBE_DELAY_MS,
     unconfirmedDelayMs: Number.isFinite(config?.unconfirmedDelayMs) && config.unconfirmedDelayMs >= 1000 ? config.unconfirmedDelayMs : UNCONFIRMED_DELAY_MS,
+    fallbackOnCapacity: config?.fallbackOnCapacity === true,
+    capacityFallbackDelayMs: Number.isFinite(config?.capacityFallbackDelayMs) && config.capacityFallbackDelayMs >= 1000 ? config.capacityFallbackDelayMs : DEFAULT_PROBE_INTERVAL_MS,
     modelQuarantineMs: Number.isFinite(config?.modelQuarantineMs) && config.modelQuarantineMs >= 1000 ? config.modelQuarantineMs : MODEL_QUARANTINE_MS,
     authCooldownMs: Number.isFinite(config?.authCooldownMs) && config.authCooldownMs >= 1000 ? config.authCooldownMs : AUTH_COOLDOWN_MS,
     statePath: typeof config?.statePath === 'string' && config.statePath.length > 0 ? config.statePath : path.join(dshHome(), 'opencode-quota-router.json'),
@@ -200,16 +212,6 @@ function mtimeOf(target) {
     return fs.statSync(target).mtimeMs
   } catch {
     return 0
-  }
-}
-
-function retarget(config, target, reasoningEffort) {
-  const { reasoningEffort: _dropped, ...rest } = config
-  return {
-    ...rest,
-    provider: target.provider,
-    model: target.model,
-    ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
   }
 }
 
@@ -523,8 +525,9 @@ export function apply(ctx, config = {}) {
     if (state.mode === 'fallback') {
       const usable = usableAccount(now)
       if (usable !== undefined) {
-        await switchTo(usable, 'allowance recovered')
-        resume('allowance recovered')
+        const reason = /^OpenCode upstream capacity\/overload|^manual fallback/i.test(String(state.reason ?? '')) ? 'capacity probe' : 'allowance recovered'
+        await switchTo(usable, reason)
+        resume(reason)
         return
       }
       const usage = activeAccount()?.usage
@@ -614,48 +617,35 @@ export function apply(ctx, config = {}) {
     return entry !== undefined && entry.until > Date.now()
   }
 
-  async function route(config) {
-    if (typeof config?.provider !== 'string' || typeof config?.model !== 'string') return config
-    refreshStateFromDisk()
-    expireQuarantine()
-    const match = matchRoute(config)
-    if (match === undefined) return config
-    const desired = primaryBlocked(match.route) ? 'fallback' : 'primary'
-    if (match.side === desired) {
-      if (desired === 'primary') await mirrorActive(false)
-      return config
-    }
-    const target = desired === 'primary' ? match.route.primary : match.route.fallback
-    if (!providerRegistered(target.provider)) return config
-    if (desired === 'primary') {
-      const mirrored = await mirrorActive(false)
-      if (!mirrored || !hasKey) return config
-    }
-    const reasoningEffort = await effortFor(target, config.reasoningEffort)
-    log.info(`route ${match.side} -> ${desired}: ${target.provider}/${target.model}${reasoningEffort === undefined ? '' : ` @ ${reasoningEffort}`}`)
-    return retarget(config, target, reasoningEffort)
+  /** The primary or fallback side of one configured route pair. */
+  function targetFor(route, side) {
+    return side === 'primary' ? route.primary : route.fallback
   }
 
-  /** The model the failed attempt actually used, from the durable request header. */
-  function failedModel(payload) {
-    try {
-      const header = payload?.agent?.session?.requestHeader?.()
-      const config = header?.config ?? header?.header?.config
-      if (typeof config?.model === 'string' && typeof config?.provider === 'string' && config.provider === cfg.routes.find((route) => route.primary.provider === payload.provider)?.primary.provider) return config.model
-      return typeof config?.model === 'string' ? config.model : undefined
-    } catch {
-      return undefined
+  /**
+   * Re-dispatch a request at another route. The marker keeps this plugin's own
+   * `llm/stream` listener from resolving the route again, which would otherwise
+   * bounce between the two sides forever.
+   */
+  function rerouted(options, target, reasoningEffort) {
+    const { reasoningEffort: _dropped, ...rest } = options
+    return {
+      ...rest,
+      provider: target.provider,
+      model: target.model,
+      ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
+      [ROUTED]: true,
     }
   }
 
-  async function recover(payload, next) {
-    const failure = payload?.failure
-    if (failure === undefined || failure === null) return next()
-    const provider = payload.provider
-    const routes = cfg.routes.filter((route) => route.primary.provider === provider)
-    if (routes.length === 0) return next()
+  /**
+   * Decide what a failed primary attempt should do next: retry the same route
+   * after account failover (`'same'`), move to the route's fallback side
+   * (`'fallback'`), or let the failure propagate (`undefined`).
+   */
+  async function recoverStream(route, failure) {
+    if (failure === undefined || failure === null) return undefined
     const code = String(failure.code ?? '').toUpperCase()
-    const model = failedModel(payload)
 
     if (AUTH_CODES.has(code)) {
       const current = activeAccount()
@@ -669,15 +659,15 @@ export function apply(ctx, config = {}) {
       const alternative = usableAccount()
       if (alternative !== undefined && alternative.id !== current?.id) {
         await switchTo(alternative, `account failover after ${code}`)
-        return { kind: 'retry' }
+        return { kind: 'same' }
       }
       planFallback(`OpenCode authentication failed (${code})`, failure, cfg.unconfirmedDelayMs)
-      return { kind: 'retry' }
+      return { kind: 'fallback' }
     }
 
     const hard = code === 'QUOTA' || code === 'ACCOUNT_QUOTA'
     const soft = code === 'RATE_LIMIT' || failure.status === 429
-    if (!hard && !soft) return next()
+    if (!hard && !soft) return undefined
 
     await probeAll({ force: true })
     const now = Date.now()
@@ -686,57 +676,178 @@ export function apply(ctx, config = {}) {
     const alternative = usableAccount(now)
     const quoted = QUOTA_MESSAGE.test(String(failure.message ?? ''))
 
-    // Another account still has allowance: switch to it and retry this step.
+    // Another account still has allowance: switch to it and retry the model.
     if (currentBlocked && alternative !== undefined && alternative.id !== current?.id) {
       await switchTo(alternative, `quota failover from ${current?.id ?? 'none'}`)
-      return { kind: 'retry' }
+      return { kind: 'same' }
     }
 
     const usage = current?.usage ?? state.usage
     const usageExhausted = usage !== undefined && usage !== null && isExhausted(usage)
 
+    // A capacity/overload refusal is not a quota problem: the allowance is
+    // intact, but the provider's serving cell is full. When enabled, go to the
+    // fallback subscription instead of letting the provider retry policy burn
+    // its whole budget against a full cell.
+    if (soft && cfg.fallbackOnCapacity && !usageExhausted && CAPACITY_MESSAGE.test(String(failure.message ?? ''))) {
+      planFallback('OpenCode upstream capacity/overload', failure, cfg.capacityFallbackDelayMs)
+      return { kind: 'fallback' }
+    }
+
     // A transient rate limit with room left belongs to the provider retry policy.
-    if (!hard && !usageExhausted && !quoted) return next()
+    if (!hard && !usageExhausted && !quoted) return undefined
 
     if (alternative === undefined) {
       const delay = usage === undefined ? cfg.unconfirmedDelayMs : Math.max(cfg.minProbeDelayMs, nextProbeAt(usage, Date.now(), cfg.probeIntervalMs) - Date.now())
       planFallback(hard ? 'every OpenCode account is out of allowance' : 'OpenCode quota window exhausted', failure, delay)
-      return { kind: 'retry' }
+      return { kind: 'fallback' }
     }
 
-    if (model !== undefined) {
-      const delay = usage === undefined ? cfg.modelQuarantineMs : Math.max(cfg.minProbeDelayMs, nextProbeAt(usage, Date.now(), cfg.probeIntervalMs) - Date.now())
-      quarantineModel(model, hard ? 'reported quota exhaustion' : 'quota window exhausted', Date.now() + Math.min(delay, cfg.modelQuarantineMs))
-      return { kind: 'retry' }
-    }
-
-    const delay = usage === undefined ? cfg.unconfirmedDelayMs : nextProbeAt(usage, Date.now(), cfg.probeIntervalMs) - Date.now()
-    planFallback(hard ? 'OpenCode quota exhausted' : 'OpenCode quota window exhausted', failure, delay)
-    return { kind: 'retry' }
+    const model = route.primary.model
+    const delay = usage === undefined ? cfg.modelQuarantineMs : Math.max(cfg.minProbeDelayMs, nextProbeAt(usage, Date.now(), cfg.probeIntervalMs) - Date.now())
+    quarantineModel(model, hard ? 'reported quota exhaustion' : 'quota window exhausted', Date.now() + Math.min(delay, cfg.modelQuarantineMs))
+    return { kind: 'fallback' }
   }
 
-  const disposeRoute = ctx.on('agent/request', async (payload, next) => {
-    const base = await next()
+  /**
+   * Forward one adapter stream. A primary attempt that fails before yielding
+   * any chunk may be retried on another account or on the fallback route; after
+   * the first chunk the failure belongs to the caller and is passed through.
+   */
+  async function* relay(stream, route, options, attempt, recoverable) {
+    let chunks = 0
+    for await (const chunk of stream) {
+      if (chunk.type === 'finish') {
+        if (recoverable && !disposed && !lifetime.signal.aborted && attempt < MAX_STREAM_ATTEMPTS && chunks === 0 && chunk.reason?.kind === 'error') {
+          let action
+          try {
+            action = await recoverStream(route, chunk.reason.failure)
+          } catch (error) {
+            log.warn(`stream recovery failed: ${describeError(error)}`)
+          }
+          if (action?.kind === 'same') {
+            log.info(`retry ${options.provider}/${options.model} after ${String(chunk.reason.failure?.code ?? 'error')}`)
+            const same = { provider: options.provider, model: options.model }
+            yield* relay(ctx.llm.stream(rerouted(options, same, options.reasoningEffort)), route, options, attempt + 1, true)
+            return
+          }
+          if (action?.kind === 'fallback') {
+            const target = route.fallback
+            if (providerRegistered(target.provider)) {
+              const reasoningEffort = await effortFor(target, options.reasoningEffort)
+              log.info(`route retry -> fallback: ${target.provider}/${target.model}${reasoningEffort === undefined ? '' : ` @ ${reasoningEffort}`}`)
+              yield* relay(ctx.llm.stream(rerouted(options, target, reasoningEffort)), route, options, attempt + 1, false)
+              return
+            }
+          }
+        }
+        yield chunk
+        return
+      }
+      chunks += 1
+      yield chunk
+    }
+  }
+
+  /**
+   * Move the Session's recorded selection to the side quota state prefers
+   * before the next step captures it. Same-step failures are still relayed by
+   * `llm/stream`; this keeps the durable request header and the assistant
+   * source aligned in the common case.
+   */
+  function alignSelection(agent) {
+    if (disposed || lifetime.signal.aborted) return
     try {
-      return await route(base)
+      refreshStateFromDisk()
+      expireQuarantine()
+      const current = agent?.model?.current?.()
+      if (current === undefined) return
+      const match = matchRoute(current)
+      if (match === undefined) return
+      const desired = primaryBlocked(match.route) ? 'fallback' : 'primary'
+      const target = targetFor(match.route, desired)
+      if (target.provider === current.provider && target.model === current.model) return
+      if (!providerRegistered(target.provider)) return
+      agent.model.select(target)
     } catch (error) {
-      log.warn(`could not rewrite the request route: ${describeError(error)}`)
-      return base
+      log.warn(`could not align the model selection: ${describeError(error)}`)
+    }
+  }
+
+  /**
+   * Resolve the route for one streaming call before dispatch. The model is
+   * fixed for a step, so `llm/stream` is the seam where quota state can still
+   * choose the primary or fallback side and account failover can be applied.
+   */
+  async function* routeStream(options, next) {
+    if (options === null || typeof options !== 'object' || options[ROUTED] === true || disposed || lifetime.signal.aborted) {
+      yield* next()
+      return
+    }
+    let plan
+    try {
+      refreshStateFromDisk()
+      expireQuarantine()
+      const match = matchRoute(options)
+      if (match !== undefined) {
+        const desired = primaryBlocked(match.route) ? 'fallback' : 'primary'
+        plan = { match, desired }
+      }
+    } catch (error) {
+      log.warn(`could not resolve the request route: ${describeError(error)}`)
+    }
+    if (plan === undefined) {
+      yield* next()
+      return
+    }
+    const { match, desired } = plan
+    if (desired === 'primary') {
+      const mirrored = await mirrorActive(false)
+      if (!mirrored || !hasKey) {
+        yield* next()
+        return
+      }
+    }
+    if (match.side === desired) {
+      yield* relay(next(), match.route, options, 0, desired === 'primary')
+      return
+    }
+    const target = targetFor(match.route, desired)
+    if (!providerRegistered(target.provider)) {
+      yield* next()
+      return
+    }
+    const reasoningEffort = await effortFor(target, options.reasoningEffort)
+    log.info(`route ${match.side} -> ${desired}: ${target.provider}/${target.model}${reasoningEffort === undefined ? '' : ` @ ${reasoningEffort}`}`)
+    const dispatched = rerouted(options, target, reasoningEffort)
+    yield* relay(ctx.llm.stream(dispatched), match.route, dispatched, 0, desired === 'primary')
+  }
+
+  const disposeRoute = ctx.on('llm/stream', (options, next) => {
+    try {
+      return routeStream(options, next)
+    } catch (error) {
+      log.warn(`could not route the model request: ${describeError(error)}`)
+      return next()
     }
   }, { prepend: true })
 
-  const disposeRecover = ctx.on('agent/request-error', (payload, next) => {
-    if (disposed || lifetime.signal.aborted) return Promise.resolve(undefined)
-    return recover(payload, next).catch((error) => {
-      log.warn(`request recovery failed: ${describeError(error)}`)
-      return next()
-    })
-  }, { prepend: true })
+  const disposeSelection = [
+    ctx.on('agent/created', ({ agent }) => alignSelection(agent)),
+    ctx.on('agent/status', ({ agent, status }) => {
+      if (status === 'running') alignSelection(agent)
+    }),
+    ctx.on('agent/pre-step', async (payload, next) => {
+      const decision = await next()
+      if (decision.kind === 'enter') alignSelection(payload.agent)
+      return decision
+    }),
+  ]
 
   ctx.effect(() => () => {
     disposed = true
     disposeRoute()
-    disposeRecover()
+    for (const dispose of disposeSelection) dispose()
     clearTimer()
     if (bootTimer !== undefined) clearTimeout(bootTimer)
     lifetime.abort(new Error('opencode-quota-router disposed'))
@@ -949,6 +1060,17 @@ export function apply(ctx, config = {}) {
         : undefined
       if (wanted !== undefined && only === undefined) throw new Error(`没有账户 ${wanted}`)
       await probeAll({ force: true, ...(only === undefined ? {} : { only }) })
+      return { ok: true }
+    }
+
+    if (action === 'fallback') {
+      planFallback('manual fallback in Settings', undefined, cfg.probeIntervalMs)
+      return { ok: true }
+    }
+
+    if (action === 'primary') {
+      resume('manual primary in Settings')
+      schedule()
       return { ok: true }
     }
 

@@ -38,11 +38,18 @@ npm i dsh-opencode-routing
 
 顶层键对两半都生效（`usageUrl`、`apiKeyRef`、`probeIntervalMs` 之类），子对象里的键只覆盖自己那一半。
 
+### DSH 兼容性
+
+- **dsh >= 0.2.0-rc.1**：所有流式调用都通过公开的 `llm/stream` waterfall 路由。
+- **dsh >= 0.2.2-rc.1**：额外在每一步之前用 `agent.model.select()` 对齐 Session 记录的模型选择，让持久请求头和
+  assistant 来源跟随实际选择的一侧。
+- 旧版会自动跳过对齐，不需要版本开关或额外配置。
+
 ## 账户池与轮替
 
 账户顺序就是使用顺序。任何时候只有一个「当前账户」，它的密钥会被镜像到 provider 读取的那个凭据引用
 （默认 `OPENCODE_API_KEY`），因此切换账户不需要改任何 provider 配置：`resolveApiKey` 是在
-`agent/request` 钩子之后、每次流式请求时现取的。
+`llm/stream` 路由选定账户之后、每次流式请求时现取的。
 
 - **A 用完自动用 B**：出现 `QUOTA` / `ACCOUNT_QUOTA` / 429 且官方额度确认耗尽，或出现鉴权类错误
   （`AUTH`、`INVALID_CREDENTIAL`、`MISSING_CREDENTIAL`、`ACCOUNT_SIGN_IN_REQUIRED`、`CLIENT_UPGRADE_REQUIRED`）时，
@@ -51,6 +58,10 @@ npm i dsh-opencode-routing
 - **单模型隔离**：只有一个模型报耗尽、池里还有额度时，只隔离这个模型（默认 30 分钟），其它模型继续走套餐。
 - **整池耗尽**：才把这条路整体回退到 `fallback`（默认 DeepSeek 账户），并每 30 分钟（或 rolling 窗口重置时刻）
   用零 token 的 `GET /inference/go/v1/usage` 探测，恢复后自动回到套餐。
+- **上游容量/过载**：`router.fallbackOnCapacity: true` 时，额度没耗尽但上游返回容量/过载类 429
+  （`overloaded` / `at capacity` / `prefill_cap_refused` / `ttft_admission_refused`）也会回退到官方订阅；
+  默认保持 `router.capacityFallbackDelayMs`（30 分钟）后再探测。设置页新增「立刻切到官方订阅 / 切回 OpenCode」，
+  也可直接 `POST /opencode-quota-router.json {"action":"fallback"}` / `{"action":"primary"}`。
 - **重置**：设置页的「重置封禁标记」清空所有「额度用尽 / 鉴权失败」标记并立刻回到账户池，不动账户与密钥。
 
 ## 用量看板
@@ -125,8 +136,8 @@ node test.mjs
 ```
 
 不需要任何模型额度：假 context、假凭据库、假 webServer，本地起一个 usage 端点按 API key 返回不同百分比，
-覆盖组合插件挂载、账户收养、单模型隔离、A→B 切换与密钥镜像、按账户探测、整池耗尽回退、重置、设置动作校验、
-用量视图（能力标签、无限额度、峰谷换算）与单账户退化。
+覆盖组合插件挂载、账户收养、单模型隔离、A→B 切换与密钥镜像、按账户探测、整池耗尽回退、上游容量回退、
+手动切换官方订阅、重置、设置动作校验、用量视图（能力标签、无限额度、峰谷换算）与单账户退化。
 
 ## 与旧包的关系
 

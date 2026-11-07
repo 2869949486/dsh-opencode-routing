@@ -41,11 +41,18 @@ halves own a `path`, so they cannot share one flat namespace).
 Top-level keys apply to both halves (`usageUrl`, `apiKeyRef`, `probeIntervalMs`, …); keys inside a sub-object only
 override that half.
 
+### DSH compatibility
+
+- **dsh >= 0.2.0-rc.1** — every streaming call is routed through the public `llm/stream` waterfall.
+- **dsh >= 0.2.2-rc.1** — routing additionally aligns the Session's recorded model selection before each step
+  (`agent.model.select()`), so the durable request header and assistant source follow the chosen side.
+- Older builds skip the alignment automatically; there is no version switch or extra configuration.
+
 ## Account pool and failover
 
 Pool order is usage order. Exactly one account is "current" at any time, and its key is mirrored into the credential
 reference the provider reads (default `OPENCODE_API_KEY`). Switching accounts therefore needs no provider config
-change: `resolveApiKey` runs after the `agent/request` hook, on every streaming call.
+change: `resolveApiKey` runs on every streaming call, after the `llm/stream` router selects the account.
 
 - **A runs dry, B takes over**: on `QUOTA` / `ACCOUNT_QUOTA` / 429 once the official allowance is confirmed spent, or
   on an auth-class error (`AUTH`, `INVALID_CREDENTIAL`, `MISSING_CREDENTIAL`, `ACCOUNT_SIGN_IN_REQUIRED`,
@@ -56,6 +63,12 @@ change: `resolveApiKey` runs after the `agent/request` hook, on every streaming 
 - **Whole pool dry**: only then does the route fall back to its `fallback` (DeepSeek account by default), with a
   zero-token `GET /inference/go/v1/usage` probe every 30 minutes (or at the rolling window reset) that returns to the
   plan automatically.
+- **Upstream capacity/overload**: with `router.fallbackOnCapacity: true`, a 429 whose message matches
+  `overloaded` / `at capacity` / `prefill_cap_refused` / `ttft_admission_refused` falls back to the official
+  subscription even while the allowance is intact. The fallback is held for `router.capacityFallbackDelayMs`
+  (default 30 minutes) before the next probe. The Settings page has a **Switch to the official subscription /
+  Switch back to OpenCode** button; the same actions are available as
+  `POST /opencode-quota-router.json {"action":"fallback"}` and `{"action":"primary"}`.
 - **Reset**: "重置封禁标记" in Settings clears every exhausted/auth mark and returns to the pool immediately. Accounts and
   keys are untouched.
 
@@ -128,6 +141,8 @@ account keys are always masked (`hint`). `POST` to the same path with `{action, 
 | `move` | `id`, `direction: up\|down` | reorder |
 | `probe` | `id?` | probe every account, or just one |
 | `reset` | — | clear the exhausted/auth marks and return to the pool |
+| `fallback` | — | switch routing to the official subscription now |
+| `primary` | — | switch routing back to the OpenCode pool now |
 
 `GET /opencode-usage.json` returns `{plan, configuredPlan, detectedPlan, holidayAware, peak, usage, accounts[],
 activeAccount, models[], totals}`; `?refresh=1` forces a fresh official snapshot first.

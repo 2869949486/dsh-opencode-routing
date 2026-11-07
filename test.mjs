@@ -196,6 +196,19 @@ const scopeEffect = (factory) => {
   const dispose = factory()
   if (typeof dispose === 'function') disposers.push(dispose)
 }
+// The router now routes the actual streaming call. `llm.stream` re-enters the
+// registered `llm/stream` waterfall, just like the real LLM service does.
+let primaryFailure
+const adapterStream = (options) => (async function* () {
+  if (primaryFailure !== undefined && options.provider === 'opencode-go' && options.model === primaryFailure.model) {
+    const failure = primaryFailure.failure
+    primaryFailure = undefined
+    yield { type: 'finish', reason: { kind: 'error', failure } }
+    return
+  }
+  yield { type: 'text-delta', index: 0, text: `${options.provider}/${options.model}` }
+  yield { type: 'finish', reason: { kind: 'stop' } }
+})()
 const llm = {
   listProviders: () => [{ id: 'opencode-go' }, { id: 'deepseek-account' }, { id: 'opencode-free' }],
   resolveModelInfo: async (provider, model) => ({
@@ -203,6 +216,10 @@ const llm = {
       efforts: provider === 'opencode-go' ? [{ id: 'low' }, { id: 'high' }, { id: 'max' }] : [{ id: 'off' }, { id: 'low' }],
     },
   }),
+  stream: (options) => {
+    const listener = listeners.get('llm/stream')
+    return listener === undefined ? adapterStream(options) : listener(options, () => adapterStream(options))
+  },
 }
 const on = (event, listener) => {
   listeners.set(event, listener)
@@ -231,17 +248,27 @@ applyRouter({
     })
   },
   llm,
-}, { routes, usageUrl, statePath, probeIntervalMs: 1200, minProbeDelayMs: 1000, unconfirmedDelayMs: 1000, modelQuarantineMs: 2500 })
+}, { routes, usageUrl, statePath, probeIntervalMs: 1200, minProbeDelayMs: 1000, unconfirmedDelayMs: 1000, modelQuarantineMs: 2500, fallbackOnCapacity: true, capacityFallbackDelayMs: 60000 })
 
-const ask = listeners.get('agent/request')
-const fail = listeners.get('agent/request-error')
-let headerModel = 'deepseek-v4-pro'
-const agent = { id: 's1', session: { requestHeader: () => ({ config: { provider: 'opencode-go', model: headerModel } }) } }
-const call = (config) => ask({ agent, turn: 1, step: 1, signal: new AbortController().signal }, async () => config)
-const crash = (provider, failure) => fail({ agent, turn: 1, step: 1, provider, failure, signal: new AbortController().signal }, async () => undefined)
 const readState = () => JSON.parse(fs.readFileSync(statePath, 'utf8'))
 const flash = { provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'off' }
 const pro = { provider: 'deepseek-account', model: 'deepseek-v4-pro', reasoningEffort: 'low' }
+
+/** Run one request through the router and report the model its adapter stream saw. */
+async function call(config) {
+  const options = { ...config, messages: [], signal: new AbortController().signal }
+  let result = ''
+  for await (const chunk of llm.stream(options)) {
+    if (chunk.type === 'text-delta') result += chunk.text
+    else if (chunk.type === 'finish' && chunk.reason.kind === 'error') result += `error:${chunk.reason.failure.code}`
+  }
+  return result
+}
+
+/** Make the next adapter attempt for one primary model fail once. */
+const failNext = (model, failure) => {
+  primaryFailure = { model, failure }
+}
 
 /** Drive the Settings API over the fake webserver. */
 async function api(method, payload) {
@@ -265,7 +292,7 @@ async function api(method, payload) {
 }
 
 await sleep(1800)
-assert.equal((await call(flash)).provider, 'opencode-go')
+assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
 {
   const state = readState()
   assert.equal(state.version, 3)
@@ -276,16 +303,14 @@ assert.equal((await call(flash)).provider, 'opencode-go')
 console.log('router startup ok')
 
 // per-model quarantine keeps the plan for the other models
-headerModel = 'deepseek-v4-pro'
-assert.deepEqual(await crash('opencode-go', { code: 'QUOTA', status: 429, message: 'usage limit reached' }), { kind: 'retry' })
+failNext('deepseek-v4-pro', { code: 'QUOTA', status: 429, message: 'usage limit reached' })
 {
-  assert.equal((await call(flash)).provider, 'opencode-go', 'Flash keeps the plan while Pro is quarantined')
-  const routed = await call(pro)
-  assert.equal(routed.provider, 'deepseek-account')
+  assert.equal(await call(pro), 'deepseek-account/deepseek-v4-pro', 'the spent primary model falls back')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash', 'Flash keeps the plan while Pro is quarantined')
   assert.equal(readState().mode, 'primary')
 }
 await sleep(3200)
-assert.equal((await call(pro)).provider, 'opencode-go')
+assert.equal(await call(pro), 'opencode-go/deepseek-v4-pro')
 console.log('per-model quarantine ok')
 
 // A spent account hands over to the backup
@@ -297,14 +322,14 @@ console.log('per-model quarantine ok')
   assert.equal(JSON.stringify(added.body).includes('oc_sk_backup'), false, 'the snapshot never carries a plaintext key')
 }
 exhaustedKeys.add('oc_sk_test')
-headerModel = 'deepseek-v4.1-flash'
-assert.deepEqual(await crash('opencode-go', { code: 'QUOTA', status: 429, message: 'usage limit reached' }), { kind: 'retry' })
+failNext('deepseek-v4.1-flash', { code: 'QUOTA', status: 429, message: 'usage limit reached' })
 {
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash', 'the retried request uses the backup account')
   const state = readState()
   assert.equal(state.active, 'a2', 'the spent account hands over to the backup')
   assert.equal(state.mode, 'primary', 'an account failover is not a plan-wide fallback')
   assert.equal(store.get('OPENCODE_API_KEY'), 'oc_sk_backup', 'the active key is mirrored into the provider reference')
-  assert.equal((await call(flash)).provider, 'opencode-go')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
 }
 console.log('account failover ok')
 
@@ -327,24 +352,54 @@ console.log('targeted probe ok')
 
 // Every account spent is a plan-wide fallback, and Settings can reset it
 exhaustedKeys.add('oc_sk_backup')
-headerModel = 'deepseek-v4.1-flash'
-await crash('opencode-go', { code: 'QUOTA', status: 429, message: 'usage limit reached' })
+failNext('deepseek-v4.1-flash', { code: 'QUOTA', status: 429, message: 'usage limit reached' })
 {
+  assert.equal(await call(flash), 'deepseek-account/deepseek-flash', 'the failed request continues on the fallback route')
   assert.equal(readState().mode, 'fallback', 'no usable account left: every primary model falls back')
-  assert.equal((await call(flash)).provider, 'deepseek-account')
   const reset = await api('POST', { action: 'reset' })
   assert.equal(reset.body.mode, 'primary')
   // Nothing is quarantined after a reset, but the periodic probe still has a
   // next run: the page must show a time instead of a dash.
   assert.equal(typeof reset.body.nextProbeAt, 'number', 'nextProbeAt is a timestamp, not null')
   assert.ok(reset.body.nextProbeAt > Date.now(), 'nextProbeAt is in the future')
-  assert.equal((await call(flash)).provider, 'opencode-go')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
 }
 console.log('plan-wide fallback ok')
 
 exhaustedKeys.clear()
-assert.equal(await crash('deepseek-account', { code: 'QUOTA', message: 'no' }), undefined, 'other providers are never claimed')
-assert.equal(await crash('opencode-go', { code: 'RATE_LIMIT', status: 429, message: 'slow down' }), undefined, 'a plain rate limit stays with the provider')
+
+// Capacity/overload refusals fall back even while the allowance is intact.
+failNext('deepseek-v4.1-flash', {
+  code: 'RATE_LIMIT',
+  status: 429,
+  message: 'Upstream request failed: [prefill_cap_refused] the cell is at capacity; retry shortly (after 30 s)',
+})
+{
+  assert.equal(await call(flash), 'deepseek-account/deepseek-flash', 'a capacity refusal falls back instead of burning the retry budget')
+  assert.equal(readState().mode, 'fallback', 'the plan-wide fallback is armed')
+  const primary = await api('POST', { action: 'primary' })
+  assert.equal(primary.status, 200)
+  assert.equal(primary.body.mode, 'primary')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
+}
+console.log('capacity fallback ok')
+
+// Manual switch actions for the Settings page.
+{
+  const forced = await api('POST', { action: 'fallback' })
+  assert.equal(forced.status, 200)
+  assert.equal(forced.body.mode, 'fallback')
+  assert.equal(await call(flash), 'deepseek-account/deepseek-flash')
+  const back = await api('POST', { action: 'primary' })
+  assert.equal(back.status, 200)
+  assert.equal(back.body.mode, 'primary')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
+}
+console.log('manual fallback ok')
+
+assert.equal(await call({ provider: 'other', model: 'x' }), 'other/x', 'other providers are never claimed')
+failNext('deepseek-v4.1-flash', { code: 'RATE_LIMIT', status: 429, message: 'slow down' })
+assert.equal(await call(flash), 'error:RATE_LIMIT', 'a plain rate limit stays with the provider')
 console.log('delegation ok')
 
 // ---- usage half -----------------------------------------------------------

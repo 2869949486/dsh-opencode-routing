@@ -23,6 +23,9 @@ window.__ModuleLoader__.load({
         modePrimary: '正常路由',
         modeFallback: '已回退到官方订阅',
         modeReason: '原因：{reason}',
+        forceFallback: '立刻切到官方订阅',
+        forcePrimary: '切回 OpenCode',
+        forceFallbackHint: 'OpenCode 上游故障时可手动切到 DeepSeek 官方 API；会消耗官方额度。',
         activeAccount: '当前账户',
         nextProbe: '下次探测',
         probeAll: '立即探测',
@@ -150,6 +153,9 @@ window.__ModuleLoader__.load({
         modePrimary: 'Routing normally',
         modeFallback: 'Fell back to the official subscription',
         modeReason: 'Reason: {reason}',
+        forceFallback: 'Switch to the official subscription now',
+        forcePrimary: 'Switch back to OpenCode',
+        forceFallbackHint: 'Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.',
         activeAccount: 'Active account',
         nextProbe: 'Next probe',
         probeAll: 'Probe now',
@@ -1706,6 +1712,10 @@ window.__ModuleLoader__.load({
           [/^OpenCode authentication failed \((\w+)\)/i, pick('OpenCode 鉴权失败（$1），暂时走官方直连', 'OpenCode authentication failed ($1), using the official API for now')],
           [/^OpenCode quota window exhausted/i, pick('本窗口额度用尽，暂时走官方直连', 'this allowance window is used up, using the official API for now')],
           [/^OpenCode quota exhausted/i, pick('额度用尽，暂时走官方直连', 'out of allowance, using the official API for now')],
+          [/^OpenCode upstream capacity\/overload/i, pick('OpenCode 上游容量不足/过载，暂时走官方直连', 'OpenCode upstream capacity/overload, using the official API for now')],
+          [/^manual fallback in Settings/i, pick('在设置里手动切到官方直连', 'switched to the official API manually in Settings')],
+          [/^manual primary in Settings/i, pick('在设置里手动切回 OpenCode', 'switched back to OpenCode manually in Settings')],
+          [/^capacity probe/i, pick('自动探测后切回 OpenCode（若仍失败会再次回退）', 'probed and returned to OpenCode (falls back again if it still fails)')],
           [/^active account (\S+) removed/i, pick('当前账户被删除，已自动换下一个', 'the active account was deleted, switched to the next one')],
           [/^auth \((.+)\)/i, pick('鉴权失败：$1', 'authentication failed: $1')],
         ];
@@ -2056,8 +2066,16 @@ window.__ModuleLoader__.load({
           router
             ? tools(
                 h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),
+                h('button', {
+                  type: 'button',
+                  className: 'ocr-btn',
+                  style: btn,
+                  disabled: busy,
+                  onClick: () => void act({ action: router.mode === 'fallback' ? 'primary' : 'fallback' }),
+                }, router.mode === 'fallback' ? t('forcePrimary') : t('forceFallback')),
                 h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'reset' }) }, t('resetMarks')),
                 h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('resetHint')),
+                h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('forceFallbackHint')),
               )
             : null,
         ),

@@ -45,7 +45,7 @@ npm i dsh-opencode-routing
 
 풀 순서가 곧 사용 순서입니다. 어느 시점이든 정확히 하나의 계정이 "current"이며, 그 키는 프로바이더가 읽는
 자격 증명 참조(기본값 `OPENCODE_API_KEY`)로 미러링됩니다. 따라서 계정 전환에는 프로바이더 설정 변경이 필요하지
-않습니다: `resolveApiKey`는 매 스트리밍 호출마다 `agent/request` 훅 이후에 실행됩니다.
+않습니다: `resolveApiKey`는 `llm/stream` 라우터가 계정을 선택한 뒤 매 스트리밍 호출마다 실행됩니다.
 
 - **A가 고갈되면 B가 넘겨받습니다**: 공식 허용량 소진이 확인된 `QUOTA` / `ACCOUNT_QUOTA` / 429, 또는 인증 계열
   오류(`AUTH`, `INVALID_CREDENTIAL`, `MISSING_CREDENTIAL`, `ACCOUNT_SIGN_IN_REQUIRED`,

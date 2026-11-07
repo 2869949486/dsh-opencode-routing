@@ -78,6 +78,8 @@
         router:
           path: /opencode-quota-router
           probeIntervalMs: 1800000
+          fallbackOnCapacity: true
+          capacityFallbackDelayMs: 1800000
           routes:
             - primary:
                 provider: opencode-go
