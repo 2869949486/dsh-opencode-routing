@@ -123,5 +123,18 @@
   "backToTop": "Voltar ao topo",
   "subscribe": "Assinar o OpenCode",
   "copyKey": "Copiar",
-  "copied": "Copiado"
+  "copied": "Copiado",
+  "routeNow": "Rota atual",
+  "routeOpencode": "o pool de contas do OpenCode",
+  "routeOfficial": "a assinatura DeepSeek",
+  "routeOpencodeHint": "As requisições passam pelo OpenCode ({account}) e não gastam cota da assinatura.",
+  "routeOfficialHint": "As requisições vão direto para a API da DeepSeek e gastam cota da assinatura; o roteador volta quando o OpenCode estiver estável.",
+  "statusLocalTitle": "Sonda local",
+  "statusCheckedAt": "sonda local {time}",
+  "officialChip": "oficial {status}",
+  "statusSwitchWhy": "Trocar para a assinatura contorna o OpenCode por completo; o roteador volta quando o OpenCode estiver estável.",
+  "switchNoticeTitle": "Alterado para a assinatura DeepSeek; a tarefa continua.",
+  "switchNoticeBack": "De volta à rota OpenCode; a tarefa continua.",
+  "switchNoticeTime": "alterado {time}",
+  "switchNoticeClose": "Fechar"
 }

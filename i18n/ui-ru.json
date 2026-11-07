@@ -123,5 +123,18 @@
   "backToTop": "Наверх",
   "subscribe": "Оформить подписку на OpenCode",
   "copyKey": "Копировать",
-  "copied": "Скопировано"
+  "copied": "Скопировано",
+  "routeNow": "Текущий маршрут",
+  "routeOpencode": "пул аккаунтов OpenCode",
+  "routeOfficial": "подписка DeepSeek",
+  "routeOpencodeHint": "Запросы идут через OpenCode ({account}) и не расходуют лимит подписки.",
+  "routeOfficialHint": "Запросы идут напрямую в API DeepSeek и расходуют лимит подписки; роутер вернётся, когда OpenCode стабилизируется.",
+  "statusLocalTitle": "Локальная проверка",
+  "statusCheckedAt": "локальная проверка {time}",
+  "officialChip": "официально {status}",
+  "statusSwitchWhy": "Переключение на подписку полностью обходит OpenCode; роутер вернётся, когда OpenCode стабилизируется.",
+  "switchNoticeTitle": "Переключено на подписку DeepSeek; задача продолжается.",
+  "switchNoticeBack": "Снова на маршруте OpenCode; задача продолжается.",
+  "switchNoticeTime": "переключено {time}",
+  "switchNoticeClose": "Закрыть"
 }

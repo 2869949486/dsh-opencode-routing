@@ -721,6 +721,178 @@ console.log('single-account fallback ok')
 }
 console.log('reveal key ok')
 
+// The Settings page and the frame notice are createElement trees, so a stand-in
+// React renders them with no browser and no network: hooks hand back a seeded
+// value, effects never run, and the tree is flattened back to text. This is what
+// keeps "one status card, one refresh button, a banner that names the route" from
+// silently regressing into the two-card layout it replaced.
+{
+  const source = fs.readFileSync(new URL('./client.js', import.meta.url), 'utf8')
+
+  /** Load client.js against a stand-in React and return the registered slots. */
+  const load = (seed) => {
+    const React = {
+      createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }),
+      Fragment: 'Fragment',
+      useState: (init) => {
+        const value = typeof init === 'function' ? init() : init
+        const replaced = seed === undefined ? undefined : seed(value)
+        return [replaced === undefined ? value : replaced, () => {}]
+      },
+      useRef: (value) => ({ current: value ?? null }),
+      useEffect: () => {},
+      useMemo: (fn) => fn(),
+      useCallback: (fn) => fn(),
+      useLayoutEffect: () => {},
+    }
+    const requireFake = (name) => {
+      if (name === 'react') return React
+      throw new Error(`client asked for an unexpected module: ${name}`)
+    }
+    const registered = new Map()
+    const previous = globalThis.window
+    let definition
+    globalThis.window = { __ModuleLoader__: { load: (entry) => { definition = entry } } }
+    try {
+      new Function('window', 'require', source)(globalThis.window, requireFake)
+      assert.equal(definition.id, 'dsh-opencode-routing')
+      definition.factory(requireFake).apply({
+        slots: {
+          inject: (name, factory) => factory(),
+          register: (registration, component) => {
+            registered.set(registration.id, component)
+            return () => {}
+          },
+        },
+      })
+    } finally {
+      if (previous === undefined) delete globalThis.window
+      else globalThis.window = previous
+    }
+    return registered
+  }
+
+  /** Every string a tree renders, tooltips included. */
+  const strings = (node, out = []) => {
+    if (node === null || node === undefined || node === false) return out
+    if (Array.isArray(node)) {
+      for (const child of node) strings(child, out)
+      return out
+    }
+    if (typeof node !== 'object') {
+      out.push(String(node))
+      return out
+    }
+    for (const value of [node.props?.title, node.props?.placeholder]) {
+      if (typeof value === 'string') out.push(value)
+    }
+    for (const child of node.children ?? []) strings(child, out)
+    return out
+  }
+  const flatten = (node) => strings(node).join(' ').replace(/\s+/g, ' ')
+  const count = (haystack, needle) => haystack.split(needle).length - 1
+  /** A node's own visible text, tooltips excluded. */
+  const label = (node) => {
+    if (node === null || node === undefined || node === false) return ''
+    if (Array.isArray(node)) return node.map(label).join('')
+    if (typeof node !== 'object') return String(node)
+    return (node.children ?? []).map(label).join('')
+  }
+  /** Buttons whose visible label is exactly `text`. */
+  const buttons = (node, text, out = []) => {
+    if (Array.isArray(node)) {
+      for (const child of node) buttons(child, text, out)
+      return out
+    }
+    if (node === null || node === undefined || typeof node !== 'object') return out
+    if (node.type === 'button' && label(node).trim() === text) out.push(node)
+    for (const child of node.children ?? []) buttons(child, text, out)
+    return out
+  }
+
+  const usage = await request('?refresh=1')
+  const snapshot = await api('GET')
+  assert.equal(snapshot.status, 200)
+  assert.ok(snapshot.body.upstream && snapshot.body.official, 'the snapshot carries both halves')
+
+  const routeOf = { primary: 'OpenCode 账户池', fallback: 'DeepSeek 官方订阅' }
+  for (const mode of ['primary', 'fallback']) {
+    const router = {
+      ...snapshot.body,
+      mode,
+      reason: mode === 'fallback' ? 'OpenCode quota exhausted' : 'allowance recovered',
+    }
+    const registered = load((value) => (value && typeof value === 'object' && 'phase' in value
+      ? { phase: 'ready', usage, router, error: null }
+      : undefined))
+    const page = registered.get('opencode-router')
+    assert.equal(typeof page, 'function', 'the settings section registers under its id')
+    const tree = page()
+    const flat = flatten(tree)
+
+    const nodes = []
+    const walk = (node) => {
+      if (Array.isArray(node)) {
+        for (const child of node) walk(child)
+        return
+      }
+      if (node === null || node === undefined || typeof node !== 'object') return
+      nodes.push(node)
+      for (const child of node.children ?? []) walk(child)
+    }
+    walk(tree)
+
+    // The first thing on the page names the route, in words and in colour.
+    const banner = nodes.find((node) => flatten(node).includes('当前路由'))
+    assert.ok(banner, 'the page opens with a route banner')
+    const headline = nodes.find((node) => node.props?.style?.fontSize === 15 && node.props?.style?.fontWeight === 700)
+    assert.ok(headline, 'the banner carries a headline')
+    assert.equal(label(headline), routeOf[mode], 'the headline names the route that is answering')
+    assert.equal(headline.props.style.color, mode === 'fallback' ? '#e0a030' : '#3c9d5d', 'and colours it by route')
+    assert.ok(flat.indexOf('当前路由') < flat.indexOf('本地上游探测'), 'the banner sits above the status card')
+
+    // Two authorities, one card, one refresh button.
+    const heads = nodes.filter((node) => node.props?.style?.fontSize === 12.5)
+    assert.equal(heads.length, 2, 'the card holds exactly two section heads: local probe and published')
+    assert.equal(count(flatten(heads[0]), '本地上游探测'), 1)
+    assert.equal(count(flatten(heads[1]), 'OpenCode 官方状态'), 1)
+    assert.equal(buttons(tree, '刷新状态').length, 1, 'the merged card keeps exactly one refresh button')
+    assert.equal(buttons(tree, '刷新').length, 1, 'and the page keeps its own refresh')
+    assert.equal(/\{|\}|undefined|NaN/.test(flat), false, 'no template placeholder or undefined leaked into the text')
+
+    // The reason is translated, never the raw enum.
+    assert.ok(flat.includes(mode === 'fallback' ? '额度用尽' : '额度已恢复'), 'the switch reason is spelled out')
+    assert.equal(/quota exhausted|allowance recovered/.test(flat), false, 'raw reasons stay in the payload')
+
+    // The card inherits both verdict chips.
+    const chips = strings(tree).filter((entry) => entry.length > 0)
+    assert.ok(chips.length > 8, 'the card renders its chips and rows')
+  }
+
+  // The frame notice: opaque, timestamped, dismissed by hand.
+  const noticeRegistered = load((value) => (Array.isArray(value) && value.length === 0
+    ? [{ id: 'n1', at: Date.UTC(2026, 10, 7, 14, 31, 5), mode: 'fallback', reason: 'OpenCode upstream capacity/overload' }]
+    : undefined))
+  const notice = noticeRegistered.get('opencode-route-notice')
+  assert.equal(typeof notice, 'function', 'the notice registers on the shell overlay')
+
+  const empty = load((value) => (Array.isArray(value) ? value : undefined)).get('opencode-route-notice')
+  assert.equal(empty(), null, 'no switch, no notice')
+
+  const tree = notice()
+  const flat = flatten(tree)
+  assert.equal(count(flat, '已切到 DeepSeek 官方订阅'), 1, 'the notice says which way it went')
+  assert.ok(flat.includes('上游容量不足'), 'and why, in words')
+  assert.match(flat, /\d{1,2}:\d{2}/, 'the notice carries its wall clock')
+  assert.equal(tree.props.style.position, 'fixed', 'the notice floats above every column')
+  assert.ok(tree.props.style.top >= 48, 'it clears the DSH logo')
+  const panel = tree.children[0]
+  assert.equal(/rgba|transparent|opacity/.test(String(panel.props.style.background)), false, 'the panel is opaque')
+  assert.ok(panel.props.style.boxShadow, 'and separable from the page behind it')
+  assert.equal(buttons(tree, '✕').length, 1, 'exactly one dismiss control')
+  console.log('client render ok')
+}
+
 for (const dispose of disposers) await dispose()
 server.close()
 console.log('all accounts checks passed')

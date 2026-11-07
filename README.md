@@ -90,7 +90,9 @@ OpenCode publishes the same verdict its status page shows as JSON: `GET https://
 no authentication, refreshed about once a minute. It carries the overall verdict, one row per plan (Console, logs,
 inference, Go, pay-as-you-go, free inference), one row per model with the **reason** and the live speed, and every
 incident with its start time. The plugin reads it directly (Host side, cached for `router.statusRefreshMs`, 60 s
-by default) and renders a second card above the local probe:
+by default) and puts it beside the local probe in **one** upstream status card — probe on the left, published verdict
+on the right, one refresh button in the head. The two cards of the previous version covered the same ground and are now
+merged:
 
 - **The verdict chip** — 正常 / 降级 / 中断 / 维护 — with a tooltip that says what it means *for you*: an
   `upstream` reason reads *"the upstream provider is degraded — not your key and not your allowance, switch to the
@@ -112,11 +114,38 @@ This is the difference between "my requests are failing" and "OpenCode says Go i
 provider": the local probe knows *that* it failed, the published feed knows *why*, and only the second one tells you
 whether switching to the official subscription would help.
 
+## Page header: which route is answering
+
+The first row of the Settings page is the route banner, and it answers "whose money did the sentence I just sent spend":
+
+- **One of two values** — 「OpenCode 账户池」 or 「DeepSeek 官方订阅」, green for the pool and amber for the subscription.
+- **One sentence of context** — on the pool it names the active account and says no subscription allowance is spent;
+  on the subscription it says the official API is being billed and that the router moves back once OpenCode is stable.
+- **The reason** rides the same row, e.g. *out of allowance, using the official API for now* — never the raw enum.
+- **Next probe** — a countdown, so "when will it try to switch back" has an answer.
+
+## Switch notice (frame overlay)
+
+An automatic switch — in either direction — drops a notice in the top-left corner of the main UI, under the logo, so
+nobody has to sit on the Settings page to find out:
+
+- **Opaque panel with a shadow**: solid background, no translucency, and it clears the DSH logo and the shell's own
+  quota strip.
+- **Timestamped** — 「22:31:05 切换」 uses the local clock, so it lines up with the logs.
+- **Dismissed only by ✕** — it never fades out and never asks for confirmation; up to three stack, oldest yields.
+- **The body is the reason**, not the enum, e.g. *OpenCode upstream capacity/overload, using the official API for now*.
+
+It reads the same `GET /opencode-quota-router.json` every 20 seconds and only reacts to a change of `mode`, so the
+first poll after a page load is not treated as a switch and refreshing never fabricates a notice.
+
 ## Upstream status card
 
-The Settings section opens with a status card for the upstream itself, above the account and model tables:
-- **A verdict chip** — 正常 / 降级 (Degraded) / 回退中 / 恢复观察 / 未知. Hovering it (and the model pills below it)
-  explains in one sentence what that state means and what to do about it, e.g. *rate limited — wait 1–10 minutes, use
+The Settings page opens with one status card for the upstream itself — local probe on the left, OpenCode's published
+verdict on the right, one refresh button in the shared head — above the account and model tables:
+
+- **Two verdict chips** — the local probe (正常 / 降级 (Degraded) / 回退中 / 恢复观察 / 未知) and the published one
+  (正常 / 降级 / 中断 / 维护, rendered as 「官方 降级」). Hovering either (and the model pills below) explains in one
+  sentence what that state means and what to do about it, e.g. *rate limited — wait 1–10 minutes, use
   another account, or switch to the official subscription and keep working*.
 - **刷新** re-reads every account's usage and re-probes the upstream (`POST {"action":"status"}`). Opening the page
   never probes, so the card shows the snapshot as of the last check.

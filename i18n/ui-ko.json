@@ -123,5 +123,18 @@
   "backToTop": "맨 위로",
   "subscribe": "OpenCode 구독하기",
   "copyKey": "복사",
-  "copied": "복사됨"
+  "copied": "복사됨",
+  "routeNow": "현재 라우트",
+  "routeOpencode": "OpenCode 계정 풀",
+  "routeOfficial": "DeepSeek 공식 구독",
+  "routeOpencodeHint": "요청은 OpenCode({account})를 거치며 공식 구독 한도를 쓰지 않습니다.",
+  "routeOfficialHint": "요청은 DeepSeek 공식 API로 직접 가며 공식 구독 한도를 씁니다. OpenCode가 안정되면 자동으로 되돌아갑니다.",
+  "statusLocalTitle": "로컬 점검",
+  "statusCheckedAt": "로컬 점검 {time}",
+  "officialChip": "공식 {status}",
+  "statusSwitchWhy": "공식 구독으로 전환하면 OpenCode를 완전히 우회합니다. OpenCode가 안정되면 자동으로 되돌아갑니다.",
+  "switchNoticeTitle": "DeepSeek 공식 구독으로 전환했습니다. 작업은 계속됩니다.",
+  "switchNoticeBack": "OpenCode 라우트로 되돌렸습니다. 작업은 계속됩니다.",
+  "switchNoticeTime": "{time} 전환",
+  "switchNoticeClose": "닫기"
 }

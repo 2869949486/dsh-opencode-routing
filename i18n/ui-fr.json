@@ -123,5 +123,18 @@
   "backToTop": "Retour en haut",
   "subscribe": "S’abonner à OpenCode",
   "copyKey": "Copier",
-  "copied": "Copié"
+  "copied": "Copié",
+  "routeNow": "Route actuelle",
+  "routeOpencode": "le pool de comptes OpenCode",
+  "routeOfficial": "l'abonnement DeepSeek",
+  "routeOpencodeHint": "Les requêtes passent par OpenCode ({account}) et ne consomment pas le quota de l'abonnement.",
+  "routeOfficialHint": "Les requêtes vont directement à l'API DeepSeek et consomment le quota de l'abonnement ; le routeur revient dès qu'OpenCode est stable.",
+  "statusLocalTitle": "Sonde locale",
+  "statusCheckedAt": "sonde locale {time}",
+  "officialChip": "officiel {status}",
+  "statusSwitchWhy": "Basculer sur l'abonnement contourne entièrement OpenCode ; le routeur revient dès qu'OpenCode est stable.",
+  "switchNoticeTitle": "Basculé sur l'abonnement DeepSeek ; la tâche continue.",
+  "switchNoticeBack": "De retour sur la route OpenCode ; la tâche continue.",
+  "switchNoticeTime": "basculé {time}",
+  "switchNoticeClose": "Fermer"
 }

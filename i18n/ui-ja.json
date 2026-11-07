@@ -123,5 +123,18 @@
   "backToTop": "トップへ戻る",
   "subscribe": "OpenCode を購読する",
   "copyKey": "コピー",
-  "copied": "コピーしました"
+  "copied": "コピーしました",
+  "routeNow": "現在のルート",
+  "routeOpencode": "OpenCode のアカウントプール",
+  "routeOfficial": "DeepSeek 公式サブスク",
+  "routeOpencodeHint": "リクエストは OpenCode（{account}）経由で、公式サブスクの枠を消費しません。",
+  "routeOfficialHint": "リクエストは DeepSeek 公式 API に直接送られ、公式サブスクの枠を消費します。OpenCode が安定すると自動で戻ります。",
+  "statusLocalTitle": "ローカル疎通確認",
+  "statusCheckedAt": "ローカル確認 {time}",
+  "officialChip": "公式 {status}",
+  "statusSwitchWhy": "公式サブスクに切り替えると OpenCode を完全に迂回できます。OpenCode が安定すると自動で戻ります。",
+  "switchNoticeTitle": "DeepSeek 公式サブスクに切り替えました。タスクは継続します。",
+  "switchNoticeBack": "OpenCode ルートに戻しました。タスクは継続します。",
+  "switchNoticeTime": "{time} に切り替え",
+  "switchNoticeClose": "閉じる"
 }

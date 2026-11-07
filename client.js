@@ -251,6 +251,19 @@ window.__ModuleLoader__.load({
         officialServiceInference: '推理接口',
         officialServicePayg: '按量付费',
         officialServiceFree: '免费推理',
+        routeNow: '当前路由',
+        routeOpencode: 'OpenCode 账户池',
+        routeOfficial: 'DeepSeek 官方订阅',
+        routeOpencodeHint: '请求走 OpenCode（{account}），不花官方订阅额度。',
+        routeOfficialHint: '请求直连 DeepSeek 官方 API，按官方订阅额度计费；OpenCode 恢复并稳定后会自动切回。',
+        statusLocalTitle: '本地上游探测',
+        statusCheckedAt: '本地探测于 {time}',
+        officialChip: '官方 {status}',
+        statusSwitchWhy: '切到官方订阅可以立刻绕过 OpenCode 这一层；它恢复并稳定后会自动切回。',
+        switchNoticeTitle: '已切到 DeepSeek 官方订阅，任务继续执行。',
+        switchNoticeBack: '已切回 OpenCode 路由，任务继续执行。',
+        switchNoticeTime: '{time} 切换',
+        switchNoticeClose: '关闭',
       },
       en: {
         title: 'OpenCode accounts & usage',
@@ -490,6 +503,19 @@ window.__ModuleLoader__.load({
         officialServiceInference: 'Inference API',
         officialServicePayg: 'Pay-as-you-go',
         officialServiceFree: 'Free inference',
+        routeNow: 'Current route',
+        routeOpencode: 'the OpenCode pool',
+        routeOfficial: 'the DeepSeek subscription',
+        routeOpencodeHint: 'Requests run through OpenCode ({account}) and spend no subscription allowance.',
+        routeOfficialHint: 'Requests go straight to the DeepSeek API and spend subscription allowance; the router moves back once OpenCode is stable again.',
+        statusLocalTitle: 'Local probe',
+        statusCheckedAt: 'local probe {time}',
+        officialChip: 'official {status}',
+        statusSwitchWhy: 'Switching to the published subscription steps around OpenCode entirely; it moves back once OpenCode is stable again.',
+        switchNoticeTitle: 'Switched to the DeepSeek subscription; the task keeps running.',
+        switchNoticeBack: 'Back on the OpenCode route; the task keeps running.',
+        switchNoticeTime: 'switched {time}',
+        switchNoticeClose: 'Dismiss',
       },
       'zh-tw': {
         title: 'OpenCode 帳號與用量',
@@ -726,6 +752,19 @@ window.__ModuleLoader__.load({
         officialServiceInference: '推理介面',
         officialServicePayg: '按量付費',
         officialServiceFree: '免費推理',
+        routeNow: '目前路由',
+        routeOpencode: 'OpenCode 帳號池',
+        routeOfficial: 'DeepSeek 官方訂閱',
+        routeOpencodeHint: '請求走 OpenCode（{account}），不花官方訂閱額度。',
+        routeOfficialHint: '請求直連 DeepSeek 官方 API，按官方訂閱額度計費；OpenCode 恢復並穩定後會自動切回。',
+        statusLocalTitle: '本地上游探測',
+        statusCheckedAt: '本地探測於 {time}',
+        officialChip: '官方 {status}',
+        statusSwitchWhy: '切到官方訂閱可以立刻繞過 OpenCode 這一層；它恢復並穩定後會自動切回。',
+        switchNoticeTitle: '已切到 DeepSeek 官方訂閱，任務繼續執行。',
+        switchNoticeBack: '已切回 OpenCode 路由，任務繼續執行。',
+        switchNoticeTime: '{time} 切換',
+        switchNoticeClose: '關閉',
       },
     };
 
@@ -858,6 +897,19 @@ window.__ModuleLoader__.load({
     "subscribe": "OpenCode abonnieren",
     "copyKey": "Kopieren",
     "copied": "Kopiert",
+    "routeNow": "Aktuelle Route",
+    "routeOpencode": "der OpenCode-Kontenpool",
+    "routeOfficial": "das DeepSeek-Abo",
+    "routeOpencodeHint": "Anfragen laufen über OpenCode ({account}) und verbrauchen kein Abo-Kontingent.",
+    "routeOfficialHint": "Anfragen gehen direkt an die DeepSeek-API und verbrauchen Abo-Kontingent; sobald OpenCode stabil ist, wird zurückgeschaltet.",
+    "statusLocalTitle": "Lokale Prüfung",
+    "statusCheckedAt": "lokale Prüfung {time}",
+    "officialChip": "offiziell {status}",
+    "statusSwitchWhy": "Der Wechsel zum Abo umgeht OpenCode vollständig; sobald OpenCode stabil ist, wird zurückgeschaltet.",
+    "switchNoticeTitle": "Auf das DeepSeek-Abo gewechselt; die Aufgabe läuft weiter.",
+    "switchNoticeBack": "Zurück auf der OpenCode-Route; die Aufgabe läuft weiter.",
+    "switchNoticeTime": "gewechselt {time}",
+    "switchNoticeClose": "Schließen",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1097,6 +1149,19 @@ window.__ModuleLoader__.load({
     "subscribe": "Suscribirse a OpenCode",
     "copyKey": "Copiar",
     "copied": "Copiado",
+    "routeNow": "Ruta actual",
+    "routeOpencode": "el pool de cuentas de OpenCode",
+    "routeOfficial": "la suscripción de DeepSeek",
+    "routeOpencodeHint": "Las peticiones van por OpenCode ({account}) y no gastan cuota de la suscripción.",
+    "routeOfficialHint": "Las peticiones van directas a la API de DeepSeek y gastan cuota de la suscripción; el router vuelve cuando OpenCode esté estable.",
+    "statusLocalTitle": "Sonda local",
+    "statusCheckedAt": "sonda local {time}",
+    "officialChip": "oficial {status}",
+    "statusSwitchWhy": "Cambiar a la suscripción rodea OpenCode por completo; el router vuelve cuando OpenCode esté estable.",
+    "switchNoticeTitle": "Cambiado a la suscripción de DeepSeek; la tarea sigue.",
+    "switchNoticeBack": "De vuelta en la ruta de OpenCode; la tarea sigue.",
+    "switchNoticeTime": "cambiado {time}",
+    "switchNoticeClose": "Cerrar",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1336,6 +1401,19 @@ window.__ModuleLoader__.load({
     "subscribe": "S’abonner à OpenCode",
     "copyKey": "Copier",
     "copied": "Copié",
+    "routeNow": "Route actuelle",
+    "routeOpencode": "le pool de comptes OpenCode",
+    "routeOfficial": "l'abonnement DeepSeek",
+    "routeOpencodeHint": "Les requêtes passent par OpenCode ({account}) et ne consomment pas le quota de l'abonnement.",
+    "routeOfficialHint": "Les requêtes vont directement à l'API DeepSeek et consomment le quota de l'abonnement ; le routeur revient dès qu'OpenCode est stable.",
+    "statusLocalTitle": "Sonde locale",
+    "statusCheckedAt": "sonde locale {time}",
+    "officialChip": "officiel {status}",
+    "statusSwitchWhy": "Basculer sur l'abonnement contourne entièrement OpenCode ; le routeur revient dès qu'OpenCode est stable.",
+    "switchNoticeTitle": "Basculé sur l'abonnement DeepSeek ; la tâche continue.",
+    "switchNoticeBack": "De retour sur la route OpenCode ; la tâche continue.",
+    "switchNoticeTime": "basculé {time}",
+    "switchNoticeClose": "Fermer",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1575,6 +1653,19 @@ window.__ModuleLoader__.load({
     "subscribe": "OpenCode を購読する",
     "copyKey": "コピー",
     "copied": "コピーしました",
+    "routeNow": "現在のルート",
+    "routeOpencode": "OpenCode のアカウントプール",
+    "routeOfficial": "DeepSeek 公式サブスク",
+    "routeOpencodeHint": "リクエストは OpenCode（{account}）経由で、公式サブスクの枠を消費しません。",
+    "routeOfficialHint": "リクエストは DeepSeek 公式 API に直接送られ、公式サブスクの枠を消費します。OpenCode が安定すると自動で戻ります。",
+    "statusLocalTitle": "ローカル疎通確認",
+    "statusCheckedAt": "ローカル確認 {time}",
+    "officialChip": "公式 {status}",
+    "statusSwitchWhy": "公式サブスクに切り替えると OpenCode を完全に迂回できます。OpenCode が安定すると自動で戻ります。",
+    "switchNoticeTitle": "DeepSeek 公式サブスクに切り替えました。タスクは継続します。",
+    "switchNoticeBack": "OpenCode ルートに戻しました。タスクは継続します。",
+    "switchNoticeTime": "{time} に切り替え",
+    "switchNoticeClose": "閉じる",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1814,6 +1905,19 @@ window.__ModuleLoader__.load({
     "subscribe": "OpenCode 구독하기",
     "copyKey": "복사",
     "copied": "복사됨",
+    "routeNow": "현재 라우트",
+    "routeOpencode": "OpenCode 계정 풀",
+    "routeOfficial": "DeepSeek 공식 구독",
+    "routeOpencodeHint": "요청은 OpenCode({account})를 거치며 공식 구독 한도를 쓰지 않습니다.",
+    "routeOfficialHint": "요청은 DeepSeek 공식 API로 직접 가며 공식 구독 한도를 씁니다. OpenCode가 안정되면 자동으로 되돌아갑니다.",
+    "statusLocalTitle": "로컬 점검",
+    "statusCheckedAt": "로컬 점검 {time}",
+    "officialChip": "공식 {status}",
+    "statusSwitchWhy": "공식 구독으로 전환하면 OpenCode를 완전히 우회합니다. OpenCode가 안정되면 자동으로 되돌아갑니다.",
+    "switchNoticeTitle": "DeepSeek 공식 구독으로 전환했습니다. 작업은 계속됩니다.",
+    "switchNoticeBack": "OpenCode 라우트로 되돌렸습니다. 작업은 계속됩니다.",
+    "switchNoticeTime": "{time} 전환",
+    "switchNoticeClose": "닫기",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2053,6 +2157,19 @@ window.__ModuleLoader__.load({
     "subscribe": "Assinar o OpenCode",
     "copyKey": "Copiar",
     "copied": "Copiado",
+    "routeNow": "Rota atual",
+    "routeOpencode": "o pool de contas do OpenCode",
+    "routeOfficial": "a assinatura DeepSeek",
+    "routeOpencodeHint": "As requisições passam pelo OpenCode ({account}) e não gastam cota da assinatura.",
+    "routeOfficialHint": "As requisições vão direto para a API da DeepSeek e gastam cota da assinatura; o roteador volta quando o OpenCode estiver estável.",
+    "statusLocalTitle": "Sonda local",
+    "statusCheckedAt": "sonda local {time}",
+    "officialChip": "oficial {status}",
+    "statusSwitchWhy": "Trocar para a assinatura contorna o OpenCode por completo; o roteador volta quando o OpenCode estiver estável.",
+    "switchNoticeTitle": "Alterado para a assinatura DeepSeek; a tarefa continua.",
+    "switchNoticeBack": "De volta à rota OpenCode; a tarefa continua.",
+    "switchNoticeTime": "alterado {time}",
+    "switchNoticeClose": "Fechar",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2292,6 +2409,19 @@ window.__ModuleLoader__.load({
     "subscribe": "Оформить подписку на OpenCode",
     "copyKey": "Копировать",
     "copied": "Скопировано",
+    "routeNow": "Текущий маршрут",
+    "routeOpencode": "пул аккаунтов OpenCode",
+    "routeOfficial": "подписка DeepSeek",
+    "routeOpencodeHint": "Запросы идут через OpenCode ({account}) и не расходуют лимит подписки.",
+    "routeOfficialHint": "Запросы идут напрямую в API DeepSeek и расходуют лимит подписки; роутер вернётся, когда OpenCode стабилизируется.",
+    "statusLocalTitle": "Локальная проверка",
+    "statusCheckedAt": "локальная проверка {time}",
+    "officialChip": "официально {status}",
+    "statusSwitchWhy": "Переключение на подписку полностью обходит OpenCode; роутер вернётся, когда OpenCode стабилизируется.",
+    "switchNoticeTitle": "Переключено на подписку DeepSeek; задача продолжается.",
+    "switchNoticeBack": "Снова на маршруте OpenCode; задача продолжается.",
+    "switchNoticeTime": "переключено {time}",
+    "switchNoticeClose": "Закрыть",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2421,6 +2551,44 @@ window.__ModuleLoader__.load({
       if (vars === undefined) return template;
       return template.replace(/\{(\w+)\}/g, (match, name) => (vars[name] === undefined ? match : String(vars[name])));
     };
+
+    // The router stores machine reasons ("allowance recovered"); both the
+    // settings page and the floating switch notice say what actually happened
+    // instead of echoing the enum, so the mapping lives at module scope.
+    const reasonText = (reason) => {
+      const raw = String(reason ?? '');
+      const zh = LANG === 'zh' || LANG === 'zh-tw';
+      const pick = (zhText, enText) => (zh ? zhText : enText);
+      const rules = [
+        [/^allowance recovered/i, pick('额度已恢复，已切回 OpenCode 账户池', 'allowance recovered, back on the OpenCode pool')],
+        [/^reset in Settings/i, pick('在设置里重置了封禁标记', 'marks were reset in Settings')],
+        [/^selected in Settings/i, pick('在设置里手动设为当前账户', 'selected by hand in Settings')],
+        [/^first account added/i, pick('首个账户已启用', 'the first account was enabled')],
+        [/^initial$/i, pick('初始状态', 'initial')],
+        [/^loaded$/i, pick('从状态文件恢复', 'restored from the state file')],
+        [/^failover: (\S+) unavailable/i, pick('上一个账户不可用，已自动换下一个', 'the previous account went unavailable, switched to the next one')],
+        [/^account failover after (\w+)/i, pick('鉴权失败（$1），已换下一个账户', 'authentication failed ($1), switched to the next account')],
+        [/^quota failover from (\S+)/i, pick('$1 额度用尽，已换下一个账户', '$1 ran out of allowance, switched to the next account')],
+        [/^every OpenCode account is out of allowance/i, pick('所有账户额度都用完了，暂时走官方直连', 'every account is out of allowance, using the official API for now')],
+        [/^OpenCode authentication failed \((\w+)\)/i, pick('OpenCode 鉴权失败（$1），暂时走官方直连', 'OpenCode authentication failed ($1), using the official API for now')],
+        [/^OpenCode quota window exhausted/i, pick('本窗口额度用尽，暂时走官方直连', 'this allowance window is used up, using the official API for now')],
+        [/^OpenCode quota exhausted/i, pick('额度用尽，暂时走官方直连', 'out of allowance, using the official API for now')],
+        [/^OpenCode upstream capacity\/overload/i, pick('OpenCode 上游容量不足/过载，暂时走官方直连', 'OpenCode upstream capacity/overload, using the official API for now')],
+        [/^manual fallback in Settings/i, pick('在设置里手动切到官方直连', 'switched to the official API manually in Settings')],
+        [/^manual primary in Settings/i, pick('在设置里手动切回 OpenCode', 'switched back to OpenCode manually in Settings')],
+        [/^capacity probe/i, pick('自动探测后切回 OpenCode（若仍失败会再次回退）', 'probed and returned to OpenCode (falls back again if it still fails)')],
+        [/^stable for (.+)$/i, pick('上游连续稳定 $1，已自动切回 OpenCode', 'upstream stayed clean for $1, switched back to OpenCode')],
+        [/^probe failed/i, pick('探测失败，恢复观察窗口重新计时', 'the probe failed, the recovery window restarted')],
+        [/^active account (\S+) removed/i, pick('当前账户被删除，已自动换下一个', 'the active account was deleted, switched to the next one')],
+        [/^auth \((.+)\)/i, pick('鉴权失败：$1', 'authentication failed: $1')],
+      ];
+      for (const [pattern, text] of rules) {
+        if (pattern.test(raw)) return raw.replace(pattern, text);
+      }
+      return raw;
+    };
+    // Wall clock for a notice that has to be checkable ("what time did it flip").
+    const stamp = (ms) => (ms ? new Date(ms).toLocaleTimeString() : t('none'));
 
     const money = (value) => {
       if (value === undefined || value === null) return t('none');
@@ -2816,40 +2984,6 @@ window.__ModuleLoader__.load({
       const statusText = STATUS();
       const chinese = LANG === 'zh' || LANG === 'zh-tw';
 
-      // The router stores machine reasons ("allowance recovered"); the page says
-      // what actually happened instead of echoing the enum.
-      const reasonText = (reason) => {
-        const raw = String(reason ?? '');
-        const pick = (zh, en) => (chinese ? zh : en);
-        const rules = [
-          [/^allowance recovered/i, pick('额度已恢复，已切回 OpenCode 账户池', 'allowance recovered, back on the OpenCode pool')],
-          [/^reset in Settings/i, pick('在设置里重置了封禁标记', 'marks were reset in Settings')],
-          [/^selected in Settings/i, pick('在设置里手动设为当前账户', 'selected by hand in Settings')],
-          [/^first account added/i, pick('首个账户已启用', 'the first account was enabled')],
-          [/^initial$/i, pick('初始状态', 'initial')],
-          [/^loaded$/i, pick('从状态文件恢复', 'restored from the state file')],
-          [/^failover: (\S+) unavailable/i, pick('上一个账户不可用，已自动换下一个', 'the previous account went unavailable, switched to the next one')],
-          [/^account failover after (\w+)/i, pick('鉴权失败（$1），已换下一个账户', 'authentication failed ($1), switched to the next account')],
-          [/^quota failover from (\S+)/i, pick('$1 额度用尽，已换下一个账户', '$1 ran out of allowance, switched to the next account')],
-          [/^every OpenCode account is out of allowance/i, pick('所有账户额度都用完了，暂时走官方直连', 'every account is out of allowance, using the official API for now')],
-          [/^OpenCode authentication failed \((\w+)\)/i, pick('OpenCode 鉴权失败（$1），暂时走官方直连', 'OpenCode authentication failed ($1), using the official API for now')],
-          [/^OpenCode quota window exhausted/i, pick('本窗口额度用尽，暂时走官方直连', 'this allowance window is used up, using the official API for now')],
-          [/^OpenCode quota exhausted/i, pick('额度用尽，暂时走官方直连', 'out of allowance, using the official API for now')],
-          [/^OpenCode upstream capacity\/overload/i, pick('OpenCode 上游容量不足/过载，暂时走官方直连', 'OpenCode upstream capacity/overload, using the official API for now')],
-          [/^manual fallback in Settings/i, pick('在设置里手动切到官方直连', 'switched to the official API manually in Settings')],
-          [/^manual primary in Settings/i, pick('在设置里手动切回 OpenCode', 'switched back to OpenCode manually in Settings')],
-          [/^capacity probe/i, pick('自动探测后切回 OpenCode（若仍失败会再次回退）', 'probed and returned to OpenCode (falls back again if it still fails)')],
-          [/^stable for (.+)$/i, pick('上游连续稳定 $1，已自动切回 OpenCode', 'upstream stayed clean for $1, switched back to OpenCode')],
-          [/^probe failed/i, pick('探测失败，恢复观察窗口重新计时', 'the probe failed, the recovery window restarted')],
-          [/^active account (\S+) removed/i, pick('当前账户被删除，已自动换下一个', 'the active account was deleted, switched to the next one')],
-          [/^auth \((.+)\)/i, pick('鉴权失败：$1', 'authentication failed: $1')],
-        ];
-        for (const [pattern, text] of rules) {
-          if (pattern.test(raw)) return raw.replace(pattern, text);
-        }
-        return raw;
-      };
-
       // A vendor badge per model family: the mark and the tint both come from the
       // family, so a card's gradient matches its avatar.
       const LOGOS = {
@@ -2928,6 +3062,18 @@ window.__ModuleLoader__.load({
         style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
       },
         h('span', { style: { fontWeight: 600, fontSize: 13 } }, text),
+        extra ?? null,
+      );
+
+      // The status card carries two authorities side by side, so a section is a
+      // column with its own small head rather than a card nested in a card.
+      const section = (...children) => h('div', {
+        style: { display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 360px', minWidth: 0 },
+      }, ...children);
+      const sectionHead = (text, extra) => h('div', {
+        style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+      },
+        h('span', { style: { fontWeight: 600, fontSize: 12.5, opacity: .9 } }, text),
         extra ?? null,
       );
 
@@ -3294,43 +3440,12 @@ window.__ModuleLoader__.load({
                   : t(byReason[reasons[0]] ?? 'officialHintUnknown');
         return { label, color, hint, help: published.status === 'outage' || oursBad };
       })();
-      const officialCard = published && publishedMeta
-        ? card(
-            cardHead(t('officialTitle'), chip(publishedMeta.label, publishedMeta.color, publishedMeta.hint)),
-            // `cardHead` carries one badge, so the source line and the two buttons
-            // get their own row.
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11 } },
-              published.fetchedAt ? h('span', { style: { opacity: .5 } }, t('officialSource', { time: ago(published.fetchedAt) })) : null,
-              h('span', { style: { flex: 1 } }),
-              h('a', {
-                href: 'https://status.opencode.ai/',
-                target: '_blank',
-                rel: 'noreferrer',
-                className: 'ocr-btn',
-                style: { ...btn, textDecoration: 'none', display: 'inline-block' },
-              }, t('officialOpenStatus')),
-              h('button', {
-                type: 'button',
-                className: 'ocr-btn',
-                style: btn,
-                disabled: busy,
-                title: t('officialRefreshHint'),
-                onClick: () => void act({ action: 'status' }),
-              }, busy ? t('statusRefreshing') : t('officialRefresh')),
-            ),
-            h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' } },
-              h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, publishedMeta.hint),
-              publishedMeta.help
-                ? h('button', {
-                    type: 'button',
-                    className: 'ocr-btn',
-                    style: btn,
-                    disabled: busy,
-                    title: t('forceFallbackHint'),
-                    onClick: () => void act({ action: 'fallback' }),
-                  }, t('statusSwitchOfficial'))
-                : null,
-            ),
+      // Both authorities answer "is it them or me", so they share one card: this
+      // half is OpenCode's own verdict, the other half is our probe.
+      const officialSection = published && publishedMeta
+        ? section(
+            sectionHead(t('officialTitle'), chip(publishedMeta.label, publishedMeta.color, publishedMeta.hint)),
+            h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, publishedMeta.hint),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
               h('span', null, t('officialModelsTitle')),
             ),
@@ -3376,38 +3491,12 @@ window.__ModuleLoader__.load({
               : null,
           )
         : null;
-      const upstreamCard = upstream && upstreamMeta
-        ? card(
-            cardHead(t('statusTitle'), chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint)),
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 11 } },
-              upstream.since ? h('span', { style: { opacity: .5 } }, `${t('statusSince')} ${clock(upstream.since)}`) : null,
-              h('span', { style: { flex: 1 } }),
-              h('button', {
-                type: 'button',
-                className: 'ocr-btn',
-                style: btn,
-                disabled: busy,
-                title: t('statusRefreshHint'),
-                onClick: () => void act({ action: 'status' }),
-              }, busy ? t('statusRefreshing') : t('statusRefresh')),
-            ),
-            h('div', {
-              style: { display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' },
-            },
-              h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, upstreamMeta.hint),
-              upstream.state === 'degraded'
-                ? h('button', {
-                    type: 'button',
-                    className: 'ocr-btn',
-                    style: btn,
-                    disabled: busy,
-                    title: t('forceFallbackHint'),
-                    onClick: () => void act({ action: 'fallback' }),
-                  }, t('statusSwitchOfficial'))
-                : null,
-            ),
+      const localSection = upstream && upstreamMeta
+        ? section(
+            sectionHead(t('statusLocalTitle'), chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint)),
+            h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, upstreamMeta.hint),
             h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
-              stat(t('statusChecked'), upstream.checkedAt ? ago(upstream.checkedAt) : t('none')),
+              stat(t('statusSince'), upstream.since ? clock(upstream.since) : t('none')),
               stat(t('statusStableWindow'), upstream.recovery?.active
                 ? `${t('statusWindowLeft', { remaining: left(upstream.recovery.remainingMs) })}`
                 : chinese ? `${upstreamMeta.stable} 分钟` : `${upstreamMeta.stable} min`),
@@ -3467,7 +3556,90 @@ window.__ModuleLoader__.load({
           )
         : null;
 
+      // Both authorities answer "is it them or me": OpenCode's own status page and
+      // our probe are the same question from both ends, so they share one card and
+      // one refresh button. The open-source layout of the old two-card page is
+      // preserved as two sections inside it.
+      const statusCard = localSection || officialSection
+        ? card(
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+              h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('statusTitle')),
+              upstreamMeta ? chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint) : null,
+              publishedMeta ? chip(t('officialChip', { status: publishedMeta.label }), publishedMeta.color, publishedMeta.hint) : null,
+              upstream?.state === 'degraded' || publishedMeta?.help
+                ? h('button', {
+                    type: 'button',
+                    className: 'ocr-btn',
+                    style: btn,
+                    disabled: busy,
+                    title: t('forceFallbackHint'),
+                    onClick: () => void act({ action: 'fallback' }),
+                  }, t('statusSwitchOfficial'))
+                : null,
+              h('span', { style: { flex: 1 } }),
+              h('a', {
+                href: 'https://status.opencode.ai/',
+                target: '_blank',
+                rel: 'noreferrer',
+                className: 'ocr-btn',
+                style: { ...btn, textDecoration: 'none', display: 'inline-block' },
+              }, t('officialOpenStatus')),
+              h('button', {
+                type: 'button',
+                className: 'ocr-btn',
+                style: btn,
+                disabled: busy,
+                title: t('statusRefreshHint'),
+                onClick: () => void act({ action: 'status' }),
+              }, busy ? t('statusRefreshing') : t('statusRefresh')),
+            ),
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
+              upstream?.checkedAt ? h('span', null, t('statusCheckedAt', { time: ago(upstream.checkedAt) })) : null,
+              published?.fetchedAt ? h('span', null, t('officialSource', { time: ago(published.fetchedAt) })) : null,
+            ),
+            router?.reason
+              ? h('div', { style: { fontSize: 12, opacity: .75, lineHeight: 1.7 } }, t('statusSwitchWhy', { reason: reasonText(router.reason) }))
+              : null,
+            h('div', { style: { display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' } },
+              localSection,
+              officialSection,
+            ),
+          )
+        : null;
+
+      // Which route is answering right now is the first thing the page owes the
+      // reader: everything below it is detail about that one fact.
+      const routeColor = router ? (router.mode === 'fallback' ? '#e0a030' : '#3c9d5d') : '#8a8f98';
+
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '12px 14px',
+            borderRadius: 10,
+            border: `1px solid ${routeColor}66`,
+            background: `${routeColor}18`,
+          },
+        },
+          h('span', { style: { fontSize: 11, opacity: .7, letterSpacing: '.04em' } }, t('routeNow')),
+          h('span', { style: { fontSize: 15, fontWeight: 700, color: routeColor } }, router
+            ? (router.mode === 'fallback' ? t('routeOfficial') : t('routeOpencode'))
+            : t('none')),
+          h('span', { style: { fontSize: 12, opacity: .82 } }, router
+            ? (router.mode === 'fallback'
+                ? t('routeOfficialHint')
+                : t('routeOpencodeHint', { account: router.activeLabel ?? t('none') }))
+            : t('routerMissing')),
+          router?.reason ? h('span', { style: { fontSize: 11, opacity: .6 } }, `· ${reasonText(router.reason)}`) : null,
+          h('span', { style: { flex: 1 } }),
+          router
+            ? h('span', { style: { fontSize: 11, opacity: .6 } },
+                `${t('nextProbe')} ${when(router.nextProbeAt ?? Date.now() + (router.probeIntervalMs ?? 0))}`)
+            : null,
+        ),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
           h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
           state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 } }, t('updatedAt', { time: clock(data?.checkedAt) })) : null,
@@ -3485,9 +3657,7 @@ window.__ModuleLoader__.load({
         actionError ? h('div', { style: { color: '#d9534f', fontSize: 13 } }, actionError) : null,
         notice ? h('div', { style: { color: '#3c9d5d', fontSize: 13 } }, notice) : null,
 
-        officialCard,
-
-        upstreamCard,
+        statusCard,
 
         card(
           cardHead(t('routerTitle'), router
@@ -3637,6 +3807,117 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // A route switch happens to a task nobody is watching, so the shell carries a
+    // notice: opaque, timestamped, and it stays on screen until it is dismissed.
+    // It polls the router instead of receiving an event because the router is a
+    // server-side file and the settings page may not be open at all.
+    function RouteNotice() {
+      const [items, setItems] = React.useState([]);
+      const [skin, setSkin] = React.useState(theme);
+      const seen = React.useRef(null);
+
+      React.useEffect(() => {
+        let alive = true;
+        const poll = async () => {
+          try {
+            const response = await fetch(ROUTER_API, { headers: { accept: 'application/json' } });
+            if (!response.ok) return;
+            const next = await response.json();
+            if (!alive || !next || typeof next !== 'object') return;
+            const mode = next.mode === 'fallback' ? 'fallback' : 'primary';
+            // The first poll only records where we started: a page load is not a switch.
+            if (seen.current === null) {
+              seen.current = mode;
+              return;
+            }
+            if (seen.current === mode) return;
+            seen.current = mode;
+            setItems((prev) => [...prev.slice(-2), {
+              id: `${Date.now()}-${mode}`,
+              at: Date.now(),
+              mode,
+              reason: typeof next.reason === 'string' ? next.reason : '',
+            }]);
+          } catch {
+            // No router endpoint means the plugin is off; a notice with nothing to
+            // say is worse than none.
+          }
+        };
+        void poll();
+        const pollTimer = setInterval(() => void poll(), 20000);
+        const skinTimer = setInterval(() => setSkin(theme()), 5000);
+        return () => {
+          alive = false;
+          clearInterval(pollTimer);
+          clearInterval(skinTimer);
+        };
+      }, []);
+
+      if (items.length === 0) return null;
+      const dismiss = (id) => setItems((prev) => prev.filter((item) => item.id !== id));
+
+      return h('div', {
+        style: {
+          position: 'fixed',
+          top: 64,
+          left: 12,
+          zIndex: 1200,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          width: 360,
+          maxWidth: 'min(360px, calc(100vw - 24px))',
+        },
+      }, items.map((item) => {
+        const accent = item.mode === 'fallback' ? '#e0a030' : '#3c9d5d';
+        return h('div', {
+          key: item.id,
+          style: {
+            background: skin.panel,
+            color: skin.text,
+            border: `1px solid ${skin.line}`,
+            borderLeft: `3px solid ${accent}`,
+            borderRadius: 10,
+            boxShadow: '0 10px 28px rgba(0,0,0,.32)',
+            padding: '10px 12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            fontSize: 12,
+            lineHeight: 1.65,
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+            h('span', { style: { flex: 1, fontWeight: 700, fontSize: 12.5, color: accent } },
+              item.mode === 'fallback' ? t('switchNoticeTitle') : t('switchNoticeBack')),
+            h('span', { style: { fontSize: 11, opacity: .6, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' } },
+              t('switchNoticeTime', { time: stamp(item.at) })),
+            h('button', {
+              type: 'button',
+              className: 'ocr-btn',
+              title: t('switchNoticeClose'),
+              'aria-label': t('switchNoticeClose'),
+              onClick: () => dismiss(item.id),
+              style: {
+                flex: '0 0 auto',
+                width: 22,
+                height: 22,
+                padding: 0,
+                borderRadius: 6,
+                border: `1px solid ${skin.line}`,
+                background: 'transparent',
+                color: skin.text,
+                cursor: 'pointer',
+                fontSize: 12,
+                lineHeight: 1,
+              },
+            }, '✕'),
+          ),
+          item.reason ? h('div', { style: { opacity: .8 } }, reasonText(item.reason)) : null,
+        );
+      }));
+    }
+
     // Hover and press feedback cannot live in an inline style object, so the
     // bundle ships one small stylesheet for its buttons.
     const CSS = [
@@ -3664,6 +3945,14 @@ window.__ModuleLoader__.load({
           order: 18,
           label: 'OpenCode 路由与用量',
         }, UsageSection));
+        // The frame-wide overlay is where a switch can reach someone who is not on
+        // the settings page.
+        ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+          name: 'shell.overlay',
+          id: 'opencode-route-notice',
+          order: 60,
+          label: 'OpenCode 路由切换通知',
+        }, RouteNotice));
       },
     };
   },

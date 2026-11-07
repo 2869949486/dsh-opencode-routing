@@ -123,5 +123,18 @@
   "backToTop": "Volver arriba",
   "subscribe": "Suscribirse a OpenCode",
   "copyKey": "Copiar",
-  "copied": "Copiado"
+  "copied": "Copiado",
+  "routeNow": "Ruta actual",
+  "routeOpencode": "el pool de cuentas de OpenCode",
+  "routeOfficial": "la suscripción de DeepSeek",
+  "routeOpencodeHint": "Las peticiones van por OpenCode ({account}) y no gastan cuota de la suscripción.",
+  "routeOfficialHint": "Las peticiones van directas a la API de DeepSeek y gastan cuota de la suscripción; el router vuelve cuando OpenCode esté estable.",
+  "statusLocalTitle": "Sonda local",
+  "statusCheckedAt": "sonda local {time}",
+  "officialChip": "oficial {status}",
+  "statusSwitchWhy": "Cambiar a la suscripción rodea OpenCode por completo; el router vuelve cuando OpenCode esté estable.",
+  "switchNoticeTitle": "Cambiado a la suscripción de DeepSeek; la tarea sigue.",
+  "switchNoticeBack": "De vuelta en la ruta de OpenCode; la tarea sigue.",
+  "switchNoticeTime": "cambiado {time}",
+  "switchNoticeClose": "Cerrar"
 }
