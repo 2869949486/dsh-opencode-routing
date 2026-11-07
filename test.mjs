@@ -128,7 +128,16 @@ console.log('pure logic ok')
 const exhaustedKeys = new Set()
 /** How many usage requests each key produced, so a targeted probe is visible. */
 const probes = new Map()
+/** The published status feed the fake server answers with, and its hit count. */
+let statusFetches = 0
+const statusFeed = { status: 200, body: {} }
 const server = http.createServer((request, response) => {
+  if (request.url === '/status') {
+    statusFetches += 1
+    response.writeHead(statusFeed.status, { 'content-type': 'application/json' })
+    response.end(JSON.stringify(typeof statusFeed.body === 'string' ? statusFeed.body : statusFeed.body))
+    return
+  }
   if (request.url === '/models') {
     response.writeHead(200, { 'content-type': 'application/json' })
     response.end(JSON.stringify({
@@ -169,6 +178,64 @@ const server = http.createServer((request, response) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
 const base = `http://127.0.0.1:${server.address().port}`
 const usageUrl = `${base}/usage`
+
+// A trimmed copy of status.opencode.ai/api/status: one plan degraded for an
+// upstream reason, one model fine, one incident still open, one resolved.
+const feedDegraded = () => ({
+  updatedAt: Date.now(),
+  since: Date.now() - 4 * 3600_000,
+  stale: false,
+  status: 'degraded',
+  components: [
+    { service: 'console', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+    { service: 'inference', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+    {
+      service: 'go',
+      status: 'degraded',
+      reason: 'upstream',
+      since: Date.now() - 3600_000,
+      models: [{ id: 'deepseek-v4.1-flash', reason: 'upstream' }],
+      breakdown: [
+        { id: 'deepseek-v4.1-flash', status: 'degraded', reason: 'upstream', speed: { ttft: 2857, tps: 113 } },
+        { id: 'deepseek-v4-pro', status: 'operational', reason: 'none', speed: { ttft: 1500, tps: 200 } },
+      ],
+    },
+    { service: 'payg', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+  ],
+  incidents: [
+    { id: 'go-1', service: 'go', status: 'degraded', reason: 'upstream', startedAt: Date.now() - 3600_000, models: [{ id: 'deepseek-v4.1-flash', reason: 'upstream' }] },
+    { id: 'payg-old', service: 'payg', status: 'degraded', reason: 'upstream', startedAt: Date.now() - 7200_000, resolvedAt: Date.now() - 7000_000, models: [] },
+  ],
+  notes: [],
+  history: [],
+})
+// The same feed after OpenCode calls it fixed.
+const feedHealthy = () => ({
+  updatedAt: Date.now(),
+  since: Date.now() - 60_000,
+  stale: false,
+  status: 'operational',
+  components: [
+    { service: 'console', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+    { service: 'inference', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+    {
+      service: 'go',
+      status: 'operational',
+      reason: 'none',
+      since: Date.now() - 60_000,
+      models: [],
+      breakdown: [
+        { id: 'deepseek-v4.1-flash', status: 'operational', reason: 'none', speed: { ttft: 1200, tps: 260 } },
+        { id: 'deepseek-v4-pro', status: 'operational', reason: 'none', speed: { ttft: 1500, tps: 200 } },
+      ],
+    },
+    { service: 'payg', status: 'operational', reason: 'none', since: 0, models: [], breakdown: [] },
+  ],
+  incidents: [],
+  notes: [],
+  history: [],
+})
+statusFeed.body = feedDegraded()
 
 const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'accounts-'))
 const sessionsRoot = path.join(workdir, 'sessions')
@@ -248,7 +315,7 @@ applyRouter({
     })
   },
   llm,
-}, { routes, usageUrl, statePath, probeIntervalMs: 1200, minProbeDelayMs: 1000, unconfirmedDelayMs: 1000, modelQuarantineMs: 2500, fallbackOnCapacity: true, capacityFallbackDelayMs: 60000 })
+}, { routes, usageUrl, statusUrl: `${base}/status`, statusRefreshMs: 15_000, statePath, probeIntervalMs: 1200, minProbeDelayMs: 1000, unconfirmedDelayMs: 1000, modelQuarantineMs: 2500, fallbackOnCapacity: true, capacityFallbackDelayMs: 60000, recoveryProbeIntervalMs: 400, recoverStableMs: 1500 })
 
 const readState = () => JSON.parse(fs.readFileSync(statePath, 'utf8'))
 const flash = { provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'off' }
@@ -295,7 +362,7 @@ await sleep(1800)
 assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash')
 {
   const state = readState()
-  assert.equal(state.version, 3)
+  assert.equal(state.version, 4)
   assert.equal(state.accounts.length, 1, 'the configured key is adopted as the first account')
   assert.equal(state.accounts[0].keyRef, 'OPENCODE_API_KEY_A1')
   assert.equal(store.get('OPENCODE_API_KEY_A1'), 'oc_sk_test')
@@ -401,6 +468,101 @@ assert.equal(await call({ provider: 'other', model: 'x' }), 'other/x', 'other pr
 failNext('deepseek-v4.1-flash', { code: 'RATE_LIMIT', status: 429, message: 'slow down' })
 assert.equal(await call(flash), 'error:RATE_LIMIT', 'a plain rate limit stays with the provider')
 console.log('delegation ok')
+
+// The status card names the condition and keeps the upstream's own wording.
+{
+  const view = await api('GET')
+  assert.equal(view.status, 200)
+  assert.equal(view.body.upstream.state, 'degraded', 'a recent failure degrades the badge')
+  assert.equal(view.body.upstream.code, 'rate_limit', '429 is classified as a rate limit')
+  assert.equal(view.body.upstream.windowMs, 30 * 60_000)
+  const row = view.body.upstream.models.find((entry) => entry.model === 'deepseek-v4.1-flash')
+  assert.equal(row.code, 'rate_limit')
+  assert.equal(row.lastHttpStatus, 429)
+  assert.equal(row.lastMessage, 'slow down', 'the raw message is kept for the tooltip')
+  assert.ok(row.recentFails >= 1)
+  assert.equal('failRateLimitHint' in view.body, false, 'the copy lives in the client, not the payload')
+}
+console.log('status classification ok')
+
+// OpenCode publishes the same verdict itself; the snapshot carries it verbatim.
+{
+  const view = await api('GET')
+  assert.equal(view.body.official.ok, true)
+  assert.equal(view.body.official.status, 'degraded')
+  assert.equal(view.body.official.stale, false)
+  assert.deepEqual(view.body.official.services.map((entry) => entry.id), ['inference', 'go', 'payg'], 'console and logs are not inference')
+  const degraded = view.body.official.models.find((entry) => entry.model === 'deepseek-v4.1-flash')
+  assert.equal(degraded.status, 'degraded')
+  assert.equal(degraded.reason, 'upstream', 'the reason travels with the row')
+  assert.equal(degraded.ttftMs, 2857)
+  assert.equal(degraded.tps, 113)
+  const fine = view.body.official.models.find((entry) => entry.model === 'deepseek-v4-pro')
+  assert.equal(fine.status, 'operational')
+  assert.equal(view.body.official.active.length, 1, 'resolved incidents are not listed as active')
+  assert.equal(view.body.official.active[0].id, 'go-1')
+
+  const before = statusFetches
+  const refreshed = await api('POST', { action: 'status' })
+  assert.ok(statusFetches > before, 'the refresh button re-reads the published feed')
+  assert.equal(refreshed.body.official.status, 'degraded')
+
+  // A broken feed costs freshness, never routing.
+  statusFeed.status = 500
+  statusFeed.body = ''
+  const broken = await api('POST', { action: 'status' })
+  assert.equal(broken.status, 200)
+  assert.equal(broken.body.official.ok, false)
+  assert.match(broken.body.official.error, /HTTP 500/)
+  assert.equal(broken.body.official.status, 'degraded', 'the last good reading stays on the card')
+  statusFeed.status = 200
+  statusFeed.body = feedDegraded()
+  const back = await api('POST', { action: 'status' })
+  assert.equal(back.body.official.ok, true, 'a recovered feed clears the error')
+  assert.equal(back.body.official.error, null)
+}
+console.log('official status ok')
+
+// A fallback is only undone once the stability window has passed, never after
+// the first clean probe — otherwise a flapping upstream switches back and forth.
+{
+  const forced = await api('POST', { action: 'fallback' })
+  assert.equal(forced.body.mode, 'fallback')
+  assert.equal(forced.body.upstream.state, 'fallback')
+  assert.equal(forced.body.upstream.cause, 'manual')
+  assert.equal(await call(flash), 'deepseek-account/deepseek-flash', 'the task continues on the official route')
+
+  // Probes answer cleanly, but OpenCode still publishes our model as degraded:
+  // the window must not even start, or the router walks straight back into it.
+  const blocked = await api('POST', { action: 'status' })
+  assert.equal(blocked.body.mode, 'fallback', 'a degraded feed keeps the fallback')
+  assert.equal(blocked.body.upstream.state, 'fallback')
+  assert.equal(blocked.body.upstream.recovery.blocked, 'published')
+  assert.equal(blocked.body.upstream.recovery.stableSince, 0)
+  assert.equal(blocked.body.official.status, 'degraded')
+
+  statusFeed.body = feedHealthy()
+  const first = await api('POST', { action: 'status' })
+  assert.equal(first.body.mode, 'fallback', 'one clean probe does not switch back')
+  assert.equal(first.body.upstream.state, 'recovering')
+  assert.equal(first.body.upstream.recovery.active, true)
+  assert.equal(first.body.upstream.recovery.blocked, null, 'a healthy feed releases the window')
+  assert.ok(first.body.upstream.recovery.remainingMs > 0, 'the window is still counting')
+
+  await sleep(700)
+  const mid = await api('POST', { action: 'status' })
+  assert.equal(mid.body.mode, 'fallback', 'still inside the window')
+  assert.ok(mid.body.upstream.recovery.remainingMs < first.body.upstream.recovery.remainingMs, 'the countdown shrinks')
+
+  await sleep(900)
+  const back = await api('POST', { action: 'status' })
+  assert.equal(back.body.mode, 'primary', 'a full stability window hands the traffic back')
+  assert.match(back.body.reason, /^stable for /)
+  assert.equal(back.body.upstream.state, 'healthy', 'the recovery clears the degraded verdict')
+  assert.equal(await call(flash), 'opencode-go/deepseek-v4.1-flash', 'the agent keeps working on OpenCode')
+}
+console.log('recovery window ok')
+
 
 // ---- usage half -----------------------------------------------------------
 let handler

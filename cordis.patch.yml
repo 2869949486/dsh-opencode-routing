@@ -78,8 +78,19 @@
         router:
           path: /opencode-quota-router
           probeIntervalMs: 1800000
+          # OpenCode's own status feed: the verdict, the reason and the live
+          # speed per model. Public, no key, refreshed about once a minute.
+          statusUrl: https://status.opencode.ai/api/status
+          statusRefreshMs: 60000
           fallbackOnCapacity: true
-          capacityFallbackDelayMs: 1800000
+          # The first look after entering fallback decides how fast a recovery is
+          # noticed at all, so it is deliberately short; afterwards the recovery
+          # cadence below takes over.
+          capacityFallbackDelayMs: 60000
+          recoveryProbeIntervalMs: 60000
+          # OpenCode only gets the traffic back after ten minutes of clean probes,
+          # not after a single lucky one.
+          recoverStableMs: 600000
           routes:
             - primary:
                 provider: opencode-go

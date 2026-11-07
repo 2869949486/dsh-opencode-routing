@@ -65,12 +65,66 @@ change: `resolveApiKey` runs on every streaming call, after the `llm/stream` rou
   plan automatically.
 - **Upstream capacity/overload**: with `router.fallbackOnCapacity: true`, a 429 whose message matches
   `overloaded` / `at capacity` / `prefill_cap_refused` / `ttft_admission_refused` falls back to the official
-  subscription even while the allowance is intact. The fallback is held for `router.capacityFallbackDelayMs`
-  (default 30 minutes) before the next probe. The Settings page has a **Switch to the official subscription /
-  Switch back to OpenCode** button; the same actions are available as
+  subscription even while the allowance is intact. The first probe after that fallback runs after
+  `router.capacityFallbackDelayMs` (60 s), because a capacity refusal clears in seconds to minutes. The Settings page
+  has a **Switch to the official subscription / Switch back to OpenCode** button; the same actions are available as
   `POST /opencode-quota-router.json {"action":"fallback"}` and `{"action":"primary"}`.
+- **A failure mid-step does not lose the step**: the retry happens inside the same `llm/stream` call, so only a
+  primary attempt that has not produced a single chunk is rerouted. Once the first token is out, the stream belongs
+  to the caller and its failure is passed through unchanged (a half-written answer is never silently restarted).
+  Later steps follow the route through `agent.model.select()` alignment.
+- **Recovery needs ten clean minutes**: while in fallback the router probes every `router.recoveryProbeIntervalMs`
+  (60 s), and only hands the traffic back after `router.recoverStableMs` (10 min) of *consecutive* successful probes.
+  One failed probe resets the window to zero. This is what stops a flapping upstream from switching back and forth on
+  every other request. A probe only proves the *allowance* endpoint answers — a rate-limited upstream answers it
+  perfectly well — so the window also requires OpenCode's published status to stop reporting our model as degraded
+  (`recovery.blocked = "published"` says that is what is holding it). When the feed itself is unreachable the probe
+  is all there is, and the window proceeds.
 - **Reset**: "重置封禁标记" in Settings clears every exhausted/auth mark and returns to the pool immediately. Accounts and
   keys are untouched.
+
+## Official status (status.opencode.ai)
+
+OpenCode publishes the same verdict its status page shows as JSON: `GET https://status.opencode.ai/api/status`,
+no authentication, refreshed about once a minute. It carries the overall verdict, one row per plan (Console, logs,
+inference, Go, pay-as-you-go, free inference), one row per model with the **reason** and the live speed, and every
+incident with its start time. The plugin reads it directly (Host side, cached for `router.statusRefreshMs`, 60 s
+by default) and renders a second card above the local probe:
+
+- **The verdict chip** — 正常 / 降级 / 中断 / 维护 — with a tooltip that says what it means *for you*: an
+  `upstream` reason reads *"the upstream provider is degraded — not your key and not your allowance, switch to the
+  official subscription and keep working"*, because that is the actionable form of a Degraded badge.
+- **Your own models**: the routes' primary models, each with its published status, its reason, and the first-token
+  latency and throughput OpenCode measured. A model the feed does not list says so instead of guessing.
+- **进行中的事件 / Open incidents**, with how long each has been open.
+- **刷新官方状态** re-reads the feed (and the local probe) on demand; the page also re-reads it every 60 s while it
+  is open, so the badge tracks the upstream instead of the last page load.
+- **打开状态页** opens `status.opencode.ai` when the tooltip is not enough.
+
+This is the difference between "my requests are failing" and "OpenCode says Go is degraded because of an upstream
+provider": the local probe knows *that* it failed, the published feed knows *why*, and only the second one tells you
+whether switching to the official subscription would help.
+
+## Upstream status card
+
+The Settings section opens with a status card for the upstream itself, above the account and model tables:
+- **A verdict chip** — 正常 / 降级 (Degraded) / 回退中 / 恢复观察 / 未知. Hovering it (and the model pills below it)
+  explains in one sentence what that state means and what to do about it, e.g. *rate limited — wait 1–10 minutes, use
+  another account, or switch to the official subscription and keep working*.
+- **刷新** re-reads every account's usage and re-probes the upstream (`POST {"action":"status"}`). Opening the page
+  never probes, so the card shows the snapshot as of the last check.
+- **One row per model**: the classified code, how many failures happened this round, the HTTP status, and whether the
+  model is quarantined. The last raw upstream message is kept for the tooltip.
+- **The recovery countdown**: while in fallback the card shows the progress bar towards the ten clean minutes, so
+  "when do I get the plan back" has an actual number. A failed probe restarts the bar.
+- **错误码与解决办法**: a collapsible table listing every code the card can show, with the fix for each — rate limit,
+  capacity, quota, payment, auth, missing key, sign-in, client upgrade, model unavailable, bad request, context
+  overflow, timeout, server error, network error, content filter, and the unknown bucket.
+
+The verdict is deliberately sticky: two failures inside the 30-minute window read as 降级 even when a retry has
+already succeeded, because a model that fails and recovers on retry is exactly the flapping this card is meant to
+surface. Switching back to the pool (automatically or by hand) clears the marks and starts a fresh round.
+
 
 ## Usage dashboard
 
@@ -129,8 +183,20 @@ discount on the page is derived from those two numbers, so a plan change from Op
 
 ## Settings API
 
-`GET /opencode-quota-router.json` returns `{mode, reason, active, accounts[], quarantine[], routes[], lastFailure}`;
-account keys are always masked (`hint`). `POST` to the same path with `{action, ...}`:
+`GET /opencode-quota-router.json` returns `{version, mode, reason, cause, active, activeLabel, updatedAt, checkedAt,
+nextProbeAt, probeIntervalMs, usage, accounts[], quarantine[], routes[], lastFailure, upstream}`; account keys are
+always masked (`hint`). `upstream` is the status card's payload: `{state, code, mode, cause, since, checkedAt,
+windowMs, lastFailure, recovery, models[], recent[]}` where `state` is one of `healthy` / `degraded` / `fallback` /
+`recovering` / `unknown`, `code` is one of `rate_limit`, `capacity`, `quota`, `payment`, `auth`, `missing_key`,
+`sign_in`, `upgrade`, `not_found`, `bad_request`, `context`, `timeout`, `server`, `network`, `filter`, `error`, `ok`,
+and `recovery` is `{active, stableSince, stableForMs, requiredMs, remainingMs, attempts, lastProbeAt,
+probeIntervalMs}`. `official` is the published-status card's payload: `{ok, error, errorAt, url, fetchedAt, ageMs,
+stale, status, since, updatedAt, services[], active[], models[]}` — `status` is the overall verdict
+(`operational` / `degraded` / `outage` / `maintenance` / `unknown`), `services[]` is `{id, status, reason, since}`
+for `inference` / `go` / `payg` / `free` (Console and logs are left out), `models[]` is `{model, status, reason,
+service, ttftMs, tps}` for each route's primary model, and `active[]` lists the still-open incidents as `{id,
+service, status, reason, startedAt, models[]}`. When the feed cannot be read, `ok` is `false` and `error` says why;
+the card shows that and routing is untouched. `POST` to the same path with `{action, ...}`:
 
 | action | arguments | effect |
 | --- | --- | --- |
@@ -139,7 +205,8 @@ account keys are always masked (`hint`). `POST` to the same path with `{action, 
 | `remove` | `id` | delete an account and its key (one is always kept) |
 | `activate` | `id` | switch to it now |
 | `move` | `id`, `direction: up\|down` | reorder |
-| `probe` | `id?` | probe every account, or just one |
+| `probe` | `id?` | probe every account (and refresh the status), or just one |
+| `status` | — | re-probe the upstream and refresh the status card (the 刷新 button) |
 | `reset` | — | clear the exhausted/auth marks and return to the pool |
 | `fallback` | — | switch routing to the official subscription now |
 | `primary` | — | switch routing back to the OpenCode pool now |
@@ -162,7 +229,10 @@ node test.mjs
 No model quota is required: fake context, fake credential store, fake webServer, and a local usage endpoint that
 answers per API key. Coverage: composite mounting, account adoption, single-model quarantine, A→B failover with key
 mirroring, per-account probing, whole-pool fallback, reset, settings-action validation, the usage view (capability
-tags, unlimited models, peak/off-peak maths, billing lines) and the single-account degradation.
+tags, unlimited models, peak/off-peak maths, billing lines), the single-account degradation, the status card
+(classification of a 429 as a rate limit, the kept raw message, the failure counter) and the recovery window (one
+clean probe is not enough, a failed probe restarts it, a full window switches back and the next request goes to the
+pool again).
 
 ## Relation to the old packages
 
