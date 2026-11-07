@@ -866,6 +866,29 @@ console.log('reveal key ok')
     assert.equal(count(flatten(heads[1]), 'OpenCode 官方状态'), 1)
     assert.equal(buttons(tree, '刷新状态').length, 1, 'the merged card keeps exactly one refresh button')
     assert.equal(buttons(tree, '刷新').length, 1, 'and the page keeps its own refresh')
+    // One row per model, both verdicts on it: the local chip is bare, the
+    // published one is prefixed with 官方, and the model name appears once.
+    const modelRows = nodes.filter((node) => node.props?.['data-ocr'] === 'model-row')
+    assert.ok(modelRows.length >= 1, 'the card lists models once, not twice')
+    const flashRow = modelRows.find((node) => flatten(node).includes('deepseek-v4.1-flash'))
+    assert.ok(flashRow, 'the flash row survives the merge')
+    const flashText = flatten(flashRow)
+    assert.ok(flashText.includes('官方'), 'the same row carries the published verdict')
+    assert.equal(/undefine|NaN|\{|\}/.test(flashText), false, 'the merged row has no hole in it')
+
+    // The row owns both halves of what used to be two lists, and the per-section
+    // model headings are gone: only the cost card still says 按模型.
+    assert.equal(count(flat, '你正在用的模型'), 0, 'the published model list folded into the merged rows')
+    assert.equal(count(flat, '本地上游探测模型'), 0, 'and so did the local one')
+    assert.equal(strings(tree).filter((entry) => entry === '按模型').length, 0, 'the bare 按模型 heading is gone')
+
+    // Forms and the price table fold away instead of padding the first screen.
+    const details = nodes.filter((node) => node.type === 'details')
+    assert.ok(details.length >= 3, 'the error table, the add form and the prices are all collapsible')
+    const addForm = details.find((node) => flatten(node).includes('添加账户'))
+    assert.ok(addForm, 'adding an account sits behind a summary')
+    assert.ok(nodes.some((node) => node.type === 'details' && flatten(node).includes('走 OpenCode')), 'the price table hides behind the verdict')
+
     assert.equal(/\{|\}|undefined|NaN/.test(flat), false, 'no template placeholder or undefined leaked into the text')
 
     // The reason is translated, never the raw enum.

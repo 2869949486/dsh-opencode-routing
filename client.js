@@ -6,6 +6,10 @@ window.__ModuleLoader__.load({
 
     const USAGE_API = '/opencode-usage.json';
     const ROUTER_API = '/opencode-quota-router.json';
+    // Rendered next to the page title so a stale client bundle is visible at a
+    // glance: if this stamp is not the published version, the browser is still
+    // running the previous one.
+    const CLIENT_BUILD = 'v2.10.0';
 
     /**
      * UI strings. `zh` is the source; every other locale is a translation of the
@@ -3445,34 +3449,15 @@ window.__ModuleLoader__.load({
       const officialSection = published && publishedMeta
         ? section(
             sectionHead(t('officialTitle'), chip(publishedMeta.label, publishedMeta.color, publishedMeta.hint)),
-            h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, publishedMeta.hint),
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
-              h('span', null, t('officialModelsTitle')),
-            ),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-              (published.models ?? []).map((entry) => (entry.status === 'unknown' && entry.ttftMs === null
-                ? h('div', { key: entry.model, style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 } },
-                    h('span', { style: { fontWeight: 600 } }, entry.model),
-                    chip(t('officialStatusUnknown'), '#8a8f98', published.stale ? t('officialStale', { age: ago(published.fetchedAt) }) : t('officialHintUnknown')),
-                    h('span', { style: { opacity: .5 } }, t('officialModelMissing')),
-                  )
-                : h('div', { key: entry.model, style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 } },
-                    h('span', { style: { fontWeight: 600 } }, entry.model),
-                    chip(
-                      entry.status === 'operational' ? t('officialStatusOperational') : reasonLabel(entry.reason),
-                      entry.status === 'operational' ? '#3c9d5d' : '#e0a030',
-                      `${t('officialReason', { reason: reasonLabel(entry.reason) })}${entry.service ? ` · ${serviceLabel(entry.service)}` : ''}`,
-                    ),
-                    entry.ttftMs !== null && entry.tps !== null
-                      ? h('span', { style: { opacity: .55 } }, t('officialSpeed', { ttft: Math.round(entry.ttftMs), tps: Math.round(entry.tps) }))
-                      : null,
-                  ))),
-            ),
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
-              h('span', null, t('officialIncidentsTitle')),
-            ),
+            // The hint only earns space when the chip cannot carry the answer on
+            // its own: a degraded plan with healthy models, an outage, a stale read.
+            publishedMeta.help || published.status !== 'operational'
+              ? h('div', { style: { fontSize: 12, lineHeight: 1.75, opacity: .8 } }, publishedMeta.hint)
+              : null,
+            // Model verdicts moved into the one shared list below this pair of
+            // sections; an empty incident list is silence, not an empty heading.
             (published.active ?? []).length === 0
-              ? h('div', { style: { fontSize: 12, opacity: .6 } }, t('officialNoIncidents'))
+              ? null
               : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 } },
                   (published.active ?? []).map((incident) => h('div', {
                     key: incident.id,
@@ -3494,7 +3479,11 @@ window.__ModuleLoader__.load({
       const localSection = upstream && upstreamMeta
         ? section(
             sectionHead(t('statusLocalTitle'), chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint)),
-            h('div', { style: { flex: '1 1 340px', fontSize: 12, lineHeight: 1.75, opacity: .8 } }, upstreamMeta.hint),
+            // A healthy probe needs no sentence: the chip says it, and the old
+            // reassurance paragraph was the single biggest block of filler here.
+            upstream.code === 'ok'
+              ? null
+              : h('div', { style: { fontSize: 12, lineHeight: 1.75, opacity: .8 } }, upstreamMeta.hint),
             h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
               stat(t('statusSince'), upstream.since ? clock(upstream.since) : t('none')),
               stat(t('statusStableWindow'), upstream.recovery?.active
@@ -3518,27 +3507,9 @@ window.__ModuleLoader__.load({
                   ),
                 )
               : null,
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
-              h('span', null, t('statusModelsTitle')),
-            ),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-              (upstream.models ?? []).map((entry) => {
-                const meta = codeMeta(entry.code);
-                return h('div', {
-                  key: entry.model,
-                  style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 },
-                },
-                  h('span', { style: { fontWeight: 600 } }, entry.model),
-                  chip(meta.label, codeColor(entry.code), meta.hint),
-                  h('span', { style: { opacity: .6 } }, entry.recentFails > 0
-                    ? t('statusFails', { count: entry.recentFails })
-                    : t('statusNoFails')),
-                  entry.lastHttpStatus ? h('span', { style: { opacity: .5 } }, `HTTP ${entry.lastHttpStatus}`) : null,
-                  entry.quarantinedUntil ? h('span', { style: { opacity: .5 } }, t('statusQuarantined', { time: clock(entry.quarantinedUntil) })) : null,
-                );
-              }),
-            ),
-            upstream.lastFailure
+            // The per-model verdicts both live in the one shared list above, so
+            // this section keeps only the probe's own state.
+            upstream.lastFailure && upstream.code !== 'ok'
               ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, opacity: .7, lineHeight: 1.7 } },
                   h('div', null, `${codeMeta(upstream.lastFailure.cause ?? upstream.code).label} · ${clock(upstream.lastFailure.at)}${upstream.lastFailure.model ? ` · ${upstream.lastFailure.model}` : ''}`),
                   upstream.lastFailure.message ? h('div', { style: { opacity: .8, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', wordBreak: 'break-all' } }, t('errRaw', { message: upstream.lastFailure.message })) : null,
@@ -3555,6 +3526,55 @@ window.__ModuleLoader__.load({
             ),
           )
         : null;
+
+      // One row per model instead of two lists: the probe and the status page
+      // answer the same question about the same model, so they share a line —
+      // bare chip is what our probe saw, "官方 …" chip is what OpenCode says.
+      const modelVerdicts = (() => {
+        const rows = new Map();
+        for (const entry of upstream?.models ?? []) rows.set(entry.model, { model: entry.model, local: entry });
+        for (const entry of published?.models ?? []) {
+          const row = rows.get(entry.model) ?? { model: entry.model, local: null };
+          row.published = entry;
+          rows.set(entry.model, row);
+        }
+        return [...rows.values()];
+      })();
+
+      const modelRows = modelVerdicts.length === 0
+        ? null
+        : h('div', { 'data-ocr': 'model-verdicts', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            modelVerdicts.map(({ model, local, published: remote }) => {
+              const meta = local ? codeMeta(local.code) : null;
+              return h('div', {
+                key: model,
+                'data-ocr': 'model-row',
+                style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12 },
+              },
+                h('span', { style: { fontWeight: 600, minWidth: 132 } }, model),
+                local ? chip(meta.label, codeColor(local.code), meta.hint) : chip(t('none'), '#8a8f98'),
+                remote
+                  ? chip(
+                      t('officialChip', {
+                        status: remote.status === 'operational' ? t('officialStatusOperational')
+                          : remote.status === 'unknown' ? t('officialStatusUnknown')
+                            : reasonLabel(remote.reason),
+                      }),
+                      remote.status === 'operational' ? '#3c9d5d' : remote.status === 'unknown' ? '#8a8f98' : '#e0a030',
+                      `${t('officialReason', { reason: reasonLabel(remote.reason) })}${remote.service ? ` · ${serviceLabel(remote.service)}` : ''}`,
+                    )
+                  : null,
+                remote && remote.ttftMs !== null && remote.tps !== null
+                  ? h('span', { style: { opacity: .55 } }, t('officialSpeed', { ttft: Math.round(remote.ttftMs), tps: Math.round(remote.tps) }))
+                  : null,
+                local
+                  ? h('span', { style: { opacity: .6 } }, local.recentFails > 0 ? t('statusFails', { count: local.recentFails }) : t('statusNoFails'))
+                  : null,
+                local?.lastHttpStatus ? h('span', { style: { opacity: .5 } }, `HTTP ${local.lastHttpStatus}`) : null,
+                local?.quarantinedUntil ? h('span', { style: { opacity: .5 } }, t('statusQuarantined', { time: clock(local.quarantinedUntil) })) : null,
+              );
+            }),
+          );
 
       // Both authorities answer "is it them or me": OpenCode's own status page and
       // our probe are the same question from both ends, so they share one card and
@@ -3595,8 +3615,9 @@ window.__ModuleLoader__.load({
             ),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
               upstream?.checkedAt ? h('span', null, t('statusCheckedAt', { time: ago(upstream.checkedAt) })) : null,
-              published?.fetchedAt ? h('span', null, t('officialSource', { time: ago(published.fetchedAt) })) : null,
             ),
+            // The banner above already answered "which route"; this row only
+            // explains why it may have moved, so the mode pill is gone.
             router?.reason
               ? h('div', { style: { fontSize: 12, lineHeight: 1.7 } },
                   h('span', { style: { opacity: .85 } }, reasonText(router.reason)),
@@ -3609,6 +3630,7 @@ window.__ModuleLoader__.load({
               localSection,
               officialSection,
             ),
+            modelRows,
           )
         : null;
 
@@ -3658,6 +3680,7 @@ window.__ModuleLoader__.load({
         ),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
           h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
+          h('span', { style: { opacity: .4, fontSize: 10.5, letterSpacing: '.04em' } }, CLIENT_BUILD),
           state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 } }, t('updatedAt', { time: clock(data?.checkedAt) })) : null,
           h('span', { style: { flex: 1 } }),
           h('a', {
@@ -3678,9 +3701,7 @@ window.__ModuleLoader__.load({
         // The banner already says which route, who serves it, why, and when the next
         // probe runs; repeating those three stats here only made the page longer.
         card(
-          cardHead(t('routerTitle'), router
-            ? pill(router.mode === 'fallback' ? t('modeFallback') : t('modePrimary'), router.mode === 'fallback' ? '#e0a030' : '#3c9d5d')
-            : h('span', { style: { opacity: .7, fontSize: 12 } }, t('routerMissing'))),
+          cardHead(t('routerTitle')),
           router
             ? tools(
                 h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),
@@ -3692,8 +3713,9 @@ window.__ModuleLoader__.load({
                   onClick: () => void act({ action: router.mode === 'fallback' ? 'primary' : 'fallback' }),
                 }, router.mode === 'fallback' ? t('forcePrimary') : t('forceFallback')),
                 h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'reset' }) }, t('resetMarks')),
+                // One footnote instead of two: the second one repeats the
+                // force-switch button's own tooltip.
                 h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('resetHint')),
-                h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('forceFallbackHint')),
               )
             : null,
         ),
@@ -3707,74 +3729,85 @@ window.__ModuleLoader__.load({
           ),
         ),
 
+        // Adding an account happens once per key, so the form is folded away
+        // instead of taking a third of the first screen for the whole session.
         router
           ? card(
-              cardHead(t('addAccount')),
-              h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' } },
-                h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
-                  t('colAccount'),
-                  h('input', {
-                    style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
-                    onChange: (event) => setDraft({ ...draft, label: event.target.value }),
-                  }),
+              h('details', { style: { fontSize: 12 } },
+                h('summary', { style: { cursor: 'pointer', fontWeight: 600, fontSize: 13 } }, t('addAccount')),
+                h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 } },
+                  h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+                    t('colAccount'),
+                    h('input', {
+                      style: { ...input, minWidth: 200 }, placeholder: t('labelPlaceholder'), value: draft.label,
+                      onChange: (event) => setDraft({ ...draft, label: event.target.value }),
+                    }),
+                  ),
+                  h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
+                    t('colKey'),
+                    h('input', {
+                      style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
+                      onChange: (event) => setDraft({ ...draft, key: event.target.value }),
+                    }),
+                  ),
+                  h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy || draft.key.trim().length < 8, onClick: () => void addAccount() }, t('addAndProbe')),
                 ),
-                h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11, opacity: .8 } },
-                  t('colKey'),
-                  h('input', {
-                    style: { ...input, minWidth: 320 }, type: 'password', placeholder: t('keyPlaceholder'), value: draft.key,
-                    onChange: (event) => setDraft({ ...draft, key: event.target.value }),
-                  }),
-                ),
-                h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy || draft.key.trim().length < 8, onClick: () => void addAccount() }, t('addAndProbe')),
               ),
             )
           : null,
 
+        // The verdict is the headline, so it doubles as the summary: the page
+        // shows one sentence and the number table opens on demand.
         shown
           ? card(
-              h('div', {
-                style: {
-                  padding: '16px 18px', borderRadius: 10, fontSize: 18, fontWeight: 700, lineHeight: 1.5,
-                  color: verdictColor, background: `${verdictColor}22`, border: `1px solid ${verdictColor}80`,
-                },
-              }, verdict),
-              clockInfo
-                ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                    h('div', { style: { fontSize: 12, opacity: .6 } }, t('clockTitle')),
-                    clockLine(t('colOfficial'), clockInfo.official),
-                    clockLine(t('colOpenCode'), clockInfo.opencode),
-                    clockInfo.holiday
-                      ? h('div', { style: { fontSize: 11, opacity: .55 } }, t('clockHoliday'))
-                      : null,
-                  )
-                : null,
-              h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },                h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
-                h('thead', null,
-                  h('tr', null, [
-                    t('colModel'), t('colKind'),
-                    withPeriod(t('colOpenCode'), clockInfo?.opencode),
-                    withPeriod(t('colOfficial'), clockInfo?.official),
-                  ].map((title) => th(title))),
+              h('details', { style: { fontSize: 12 } },
+                h('summary', { style: { cursor: 'pointer', listStyle: 'none' } },
+                  h('div', {
+                    style: {
+                      padding: '16px 18px', borderRadius: 10, fontSize: 18, fontWeight: 700, lineHeight: 1.5,
+                      color: verdictColor, background: `${verdictColor}22`, border: `1px solid ${verdictColor}80`,
+                    },
+                  }, verdict),
                 ),
-                h('tbody', null, shown.models.flatMap((row) =>
-                  (row.rows ?? [{ kind: 'output', go: row.go, official: row.official, cheaper: row.cheaper, ratio: row.ratio }])
-                    .map((line, index) =>
-                      h('tr', {
-                        key: `${row.model}-${line.kind}`,
-                        // The cached-input line is the one that actually lands on
-                        // most requests, so it is highlighted instead of buried.
-                        style: line.kind === 'cacheRead'
-                          ? { background: 'rgba(60,157,93,.12)' }
-                          : index === 0 ? { borderTop: '1px solid rgba(127,127,127,.22)' } : undefined,
-                      },
-                        cell(index === 0 ? prettyModel(row.model) : '', { fontWeight: index === 0 ? 600 : 400 }),
-                        cell(t(`kind${line.kind[0].toUpperCase()}${line.kind.slice(1)}`),
-                          line.kind === 'cacheRead' ? { fontWeight: 600, color: '#3c9d5d' } : { opacity: .75 }),
-                        cell(priceCell(line.go.pay, line.go.factor > 1, line.cheaper === 'go')),
-                        cell(priceCell(line.official.pay, line.official.factor > 1, line.cheaper === 'official')),
-                      ),
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 } },
+                  clockInfo
+                    ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                        h('div', { style: { fontSize: 12, opacity: .6 } }, t('clockTitle')),
+                        clockLine(t('colOfficial'), clockInfo.official),
+                        clockLine(t('colOpenCode'), clockInfo.opencode),
+                        clockInfo.holiday
+                          ? h('div', { style: { fontSize: 11, opacity: .55 } }, t('clockHoliday'))
+                          : null,
+                      )
+                    : null,
+                  h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() }, h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
+                    h('thead', null,
+                      h('tr', null, [
+                        t('colModel'), t('colKind'),
+                        withPeriod(t('colOpenCode'), clockInfo?.opencode),
+                        withPeriod(t('colOfficial'), clockInfo?.official),
+                      ].map((title) => th(title))),
                     ),
-                )),
+                    h('tbody', null, shown.models.flatMap((row) =>
+                      (row.rows ?? [{ kind: 'output', go: row.go, official: row.official, cheaper: row.cheaper, ratio: row.ratio }])
+                        .map((line, index) =>
+                          h('tr', {
+                            key: `${row.model}-${line.kind}`,
+                            // The cached-input line is the one that actually lands on
+                            // most requests, so it is highlighted instead of buried.
+                            style: line.kind === 'cacheRead'
+                              ? { background: 'rgba(60,157,93,.12)' }
+                              : index === 0 ? { borderTop: '1px solid rgba(127,127,127,.22)' } : undefined,
+                          },
+                            cell(index === 0 ? prettyModel(row.model) : '', { fontWeight: index === 0 ? 600 : 400 }),
+                            cell(t(`kind${line.kind[0].toUpperCase()}${line.kind.slice(1)}`),
+                              line.kind === 'cacheRead' ? { fontWeight: 600, color: '#3c9d5d' } : { opacity: .75 }),
+                            cell(priceCell(line.go.pay, line.go.factor > 1, line.cheaper === 'go')),
+                            cell(priceCell(line.official.pay, line.official.factor > 1, line.cheaper === 'official')),
+                          ),
+                        ),
+                    )),
+                  )),
                 ),
               ),
             )

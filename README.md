@@ -97,9 +97,13 @@ merged:
 - **The verdict chip** — 正常 / 降级 / 中断 / 维护 — with a tooltip that says what it means *for you*: an
   `upstream` reason reads *"the upstream provider is degraded — not your key and not your allowance, switch to the
   official subscription and keep working"*, because that is the actionable form of a Degraded badge.
-- **Your own models**: the routes' primary models, each with its published status, its reason, and the first-token
-  latency and throughput OpenCode measured. A model the feed does not list says so instead of guessing.
-- **进行中的事件 / Open incidents**, with how long each has been open.
+- **One row per model**: each route's primary model is listed once. The bare chip is what the local probe saw (classified
+  code, failure count, HTTP status, quarantined until), and an 「官方 …」 chip right after it is what the published feed
+  says about the same model, followed by OpenCode's own first-token latency and throughput. The previous version had a
+  local list *and* a published list saying the same thing twice; a model the feed does not list still says so.
+- **Explanations only when something is wrong**: while the probe is green and the feed is normal, the "everything is
+  fine" sentence inside each half is not rendered — the chip already said it.
+- **Open incidents** show up only when there are some; an empty list is silence, not a row of filler.
 - **刷新官方状态** re-reads the feed (and the local probe) on demand; the page also re-reads it every 60 s while it
   is open, so the badge tracks the upstream instead of the last page load.
 - **打开状态页** opens `status.opencode.ai` when the tooltip is not enough.
@@ -113,6 +117,18 @@ merged:
 This is the difference between "my requests are failing" and "OpenCode says Go is degraded because of an upstream
 provider": the local probe knows *that* it failed, the published feed knows *why*, and only the second one tells you
 whether switching to the official subscription would help.
+
+### Trimming the page (2.10.0)
+
+The first screen keeps only "which route", "how is the upstream", "how much allowance": everything else folds or
+de-duplicates.
+
+- **Add an account** folds away — a key is entered once, it should not hold a third of the screen forever.
+- **The price table** folds under the verdict: the headline ("OpenCode is 89% cheaper") stays visible, the peak/off-peak,
+  cache-hit and output rows open on demand.
+- **The route card** drops the mode badge the banner already shows, and its two footnotes become one.
+- **The failure record** stays on the page only while the probe is unhealthy; once recovered it no longer sits there as
+  noise.
 
 ## Page header: which route is answering
 
