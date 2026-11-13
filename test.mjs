@@ -924,6 +924,151 @@ console.log('reveal key ok')
   console.log('client render ok')
 }
 
+// The shell's own toast cannot be restyled once: React writes its inline styles
+// back on every retry tick, which is how the red bar outlives a dismiss. This
+// stands up just enough DOM to prove the guard re-asserts and that a dismissed
+// notice leaves no painted wrapper behind.
+{
+  const makeNode = (tag, options = {}) => {
+    const node = {
+      nodeType: 1,
+      tagName: tag.toUpperCase(),
+      isConnected: true,
+      children: [],
+      parentElement: null,
+      textContent: options.text ?? '',
+      attrs: {},
+      listeners: {},
+      style: { display: '', left: '', maxWidth: '', opacity: '', pointerEvents: '', position: '' },
+      setAttribute (key, value) { this.attrs[key] = value },
+      getAttribute (key) { return this.attrs[key] ?? null },
+      addEventListener (type, handler) { this.listeners[type] = handler },
+      appendChild (child) {
+        child.parentElement = this
+        this.children.push(child)
+        this.textContent = `${this.textContent}${child.textContent ?? ''}`
+        return child
+      },
+      remove () {
+        const parent = this.parentElement
+        if (parent === null) return
+        parent.children = parent.children.filter((child) => child !== this)
+        this.parentElement = null
+        this.isConnected = false
+      },
+      getBoundingClientRect () {
+        return { left: options.left ?? 24, top: 64, width: options.width ?? 320, height: options.height ?? 40 }
+      },
+      closest (selector) {
+        let node = this
+        while (node !== null && node !== undefined) {
+          if (selector === '[data-ocr="route-notice"]' && node.attrs?.['data-ocr'] === 'route-notice') return node
+          if (selector === '[data-ocr]' && node.attrs?.['data-ocr'] !== undefined) return node
+          node = node.parentElement
+        }
+        return null
+      },
+      querySelector (selector) {
+        const wanted = selector.replace(/^\[data-ocr="?|"?\]$/g, '')
+        const walk = (node) => {
+          for (const child of node.children) {
+            if (child.attrs?.['data-ocr'] === wanted) return child
+            const found = walk(child)
+            if (found !== null) return found
+          }
+          return null
+        }
+        return walk(this)
+      },
+      querySelectorAll () { return [] },
+    }
+    return node
+  }
+
+  const body = makeNode('body')
+  const wrapper = makeNode('div', { text: '' })
+  const toast = makeNode('div', { text: '1 个上游不可用 opencode.ai: connect_timeout ×3 · 约 1s 后重试' })
+  wrapper.appendChild(toast)
+  body.appendChild(wrapper)
+
+  const document = {
+    body,
+    head: makeNode('head'),
+    createElement: (tag) => makeNode(tag),
+    getElementById: () => null,
+  }
+  let observerCallback = null
+  const previous = { document: globalThis.document, getComputedStyle: globalThis.getComputedStyle, MutationObserver: globalThis.MutationObserver }
+  globalThis.document = document
+  globalThis.getComputedStyle = () => ({
+    position: 'fixed',
+    opacity: '0.8',
+    pointerEvents: 'auto',
+    display: 'block',
+    backgroundColor: 'rgba(220, 80, 60, 0.14)',
+    borderTopColor: 'rgba(220, 80, 60, 1)',
+    borderTopWidth: '1px',
+  })
+  globalThis.MutationObserver = class {
+    constructor (callback) { observerCallback = callback }
+    observe () {}
+    disconnect () {}
+  }
+  body.querySelectorAll = () => [wrapper, toast]
+
+  const React = {
+    createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }),
+    Fragment: 'Fragment',
+    useState: (init) => [typeof init === 'function' ? init() : init, () => {}],
+    useRef: (value) => ({ current: value ?? null }),
+    useEffect: () => {},
+    useMemo: (fn) => fn(),
+    useCallback: (fn) => fn(),
+    useLayoutEffect: () => {},
+  }
+  const requireFake = (name) => {
+    if (name === 'react') return React
+    throw new Error(`client asked for an unexpected module: ${name}`)
+  }
+  const previousWindow = globalThis.window
+  let definition
+  globalThis.window = { __ModuleLoader__: { load: (entry) => { definition = entry } } }
+  try {
+    const source = fs.readFileSync(new URL('./client.js', import.meta.url), 'utf8')
+    new Function('window', 'require', source)(globalThis.window, requireFake)
+    definition.factory(requireFake).apply({
+      slots: { inject: (name, factory) => factory(), register: () => () => {} },
+    })
+
+    assert.equal(wrapper.style.opacity, '1', 'the translucent shell toast is made opaque')
+    assert.equal(wrapper.style.left, '112px', 'and moved off the brand mark')
+    assert.ok(toast.querySelector('[data-ocr="net-close"]') !== null || wrapper.querySelector('[data-ocr="net-close"]') !== null,
+      'a close control is attached')
+
+    const close = wrapper.querySelector('[data-ocr="net-close"]')
+    close.listeners.click({ stopPropagation () {}, preventDefault () {} })
+    assert.equal(wrapper.style.display, 'none', 'one click hides the toast')
+
+    // React puts the inline style back; the guard has to notice and hide it again.
+    wrapper.style.display = ''
+    wrapper.style.opacity = ''
+    observerCallback([{ type: 'attributes', target: wrapper, addedNodes: [] }])
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    assert.equal(wrapper.style.display, 'none', 'the dismissed toast stays hidden after a re-render')
+
+    console.log('foreign notice guard ok')
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window
+    else globalThis.window = previousWindow
+    if (previous.document === undefined) delete globalThis.document
+    else globalThis.document = previous.document
+    if (previous.getComputedStyle === undefined) delete globalThis.getComputedStyle
+    else globalThis.getComputedStyle = previous.getComputedStyle
+    if (previous.MutationObserver === undefined) delete globalThis.MutationObserver
+    else globalThis.MutationObserver = previous.MutationObserver
+  }
+}
+
 // Whose fault an outage is: the whole point of probing both sides.
 {
   const ok = { ok: true, status: 200, code: null }

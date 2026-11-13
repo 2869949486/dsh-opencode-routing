@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     // Rendered next to the page title so a stale client bundle is visible at a
     // glance: if this stamp is not the published version, the browser is still
     // running the previous one.
-    const CLIENT_BUILD = 'v2.11.0';
+    const CLIENT_BUILD = 'v2.11.1';
 
     /**
      * UI strings. `zh` is the source; every other locale is a translation of the
@@ -3951,21 +3951,25 @@ window.__ModuleLoader__.load({
       if (typeof document === 'undefined' || document.body === null) return;
       noticeGuardInstalled = true;
 
-      const touched = new WeakSet();
       const dismissed = new Map(); // notice text -> it stays closed until this time
+      const owned = new Map(); // box -> its key, re-checked on every pass
+      const hidden = new Set(); // painted wrappers we blanked out
+      let dismissals = 0; // nothing is hunted until the user has actually closed one
       const textOf = (node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim();
       const isOwn = (node) => (typeof node.closest === 'function' ? node.closest('[data-ocr="route-notice"]') !== null : false);
 
-      // The toast is the largest small box around the message: walk up while the
-      // parent is still an overlay-sized element, so we never restyle the page.
-      const boxOf = (node) => {
+      // The toast is the painted overlay box around the message. The pixel caps
+      // only stop it at the viewport edge; the real brake is the text budget —
+      // the moment a parent already holds other content, we have gone too far.
+      const rootOf = (node) => {
         let root = node;
-        for (let depth = 0; depth < 4; depth += 1) {
+        for (let depth = 0; depth < 6; depth += 1) {
           const parent = root.parentElement;
           if (parent === null || parent === document.body) break;
           if (typeof parent.getBoundingClientRect !== 'function') break;
           const rect = parent.getBoundingClientRect();
-          if (rect.height > 220 || rect.width > 760) break;
+          if (rect.height > 280 || rect.width > 1400) break;
+          if (textOf(parent).length > 400) break;
           if (typeof getComputedStyle === 'function') {
             const position = getComputedStyle(parent).position;
             if (position !== 'fixed' && position !== 'absolute' && position !== 'sticky') break;
@@ -3975,21 +3979,60 @@ window.__ModuleLoader__.load({
         return root;
       };
 
-      const adopt = (node) => {
-        const box = boxOf(node);
-        if (touched.has(box)) return;
-        touched.add(box);
-        const key = textOf(box).slice(0, 180);
+      const alphaOf = (color) => {
+        const match = /rgba?\(([^)]+)\)/.exec(String(color ?? ''));
+        if (match === null) return /transparent|^$/i.test(String(color ?? '')) ? 0 : 1;
+        const parts = match[1].split(',').map((part) => Number(part.trim()));
+        return parts.length === 4 ? parts[3] : 1;
+      };
+      const painted = (el) => {
+        if (typeof getComputedStyle !== 'function') return false;
+        const style = getComputedStyle(el);
+        if (alphaOf(style.backgroundColor) > 0.01) return true;
+        return style.borderTopWidth !== '0px' && alphaOf(style.borderTopColor) > 0.01;
+      };
+
+      // Hiding the text alone leaves the shell's red bar behind — an empty stripe
+      // is worse than the notice, so painted ancestors that hold nothing else go too.
+      const blank = (node) => {
+        if (node === null || node === undefined) return;
+        if (node.style.display !== 'none') node.style.display = 'none';
+        hidden.add(node);
+      };
+      const hideBox = (box) => {
+        blank(box);
+        let node = box.parentElement;
+        for (let depth = 0; depth < 3 && node !== null && node !== document.body; depth += 1) {
+          if (textOf(node).length > 0 || !painted(node)) break;
+          blank(node);
+          node = node.parentElement;
+        }
+      };
+
+      // React re-renders the shell toast and writes inline styles back, so every
+      // pass re-asserts instead of trusting the first application: a one-shot
+      // restyle is exactly how a leftover red bar survives a dismiss.
+      const styleBox = (box, key) => {
+        if (!box.isConnected) {
+          owned.delete(box);
+          return;
+        }
         if ((dismissed.get(key) ?? 0) > Date.now()) {
-          box.style.display = 'none';
+          hideBox(box);
+          return;
+        }
+        // The toast emptied out but its painted wrapper stayed: that is residue.
+        if (!FOREIGN_NOTICE.test(textOf(box))) {
+          hideBox(box);
           return;
         }
         let left = 0;
         if (typeof box.getBoundingClientRect === 'function') left = box.getBoundingClientRect().left;
-        if (left < 96) box.style.left = '112px'; // never cover the brand mark
-        box.style.maxWidth = 'min(560px, calc(100vw - 128px))';
-        box.style.opacity = '1'; // the shell ships it translucent
-        box.style.pointerEvents = 'auto'; // a pass-through container would eat the ✕
+        if (left < 96 && box.style.left !== '112px') box.style.left = '112px'; // never cover the brand mark
+        if (box.style.maxWidth === '') box.style.maxWidth = 'min(560px, calc(100vw - 128px))';
+        if (box.style.opacity !== '1') box.style.opacity = '1'; // the shell ships it translucent
+        if (box.style.pointerEvents !== 'auto') box.style.pointerEvents = 'auto'; // a pass-through container would eat the ✕
+        if (box.style.display === 'none') box.style.display = '';
         // A translucent wrapper makes an opaque child look transparent, so the
         // immediate parent is fixed up too.
         const parent = box.parentElement;
@@ -3998,32 +4041,63 @@ window.__ModuleLoader__.load({
           if (Number(style.opacity) < 1) parent.style.opacity = '1';
           if (style.pointerEvents === 'none') parent.style.pointerEvents = 'auto';
         }
-        if (typeof getComputedStyle === 'function' && getComputedStyle(box).position === 'static') box.style.position = 'relative';
+        if (typeof getComputedStyle === 'function'
+          && getComputedStyle(box).position === 'static'
+          && box.style.position === '') box.style.position = 'relative';
 
-        if (netSnapshot !== null) {
+        if (netSnapshot !== null && typeof box.querySelector === 'function') {
           const net = netVerdict(netSnapshot);
-          const hasLine = typeof box.querySelector === 'function' && box.querySelector('[data-ocr="net-suffix"]') !== null;
-          if (net.verdict !== 'ok' && !hasLine) {
-            const line = document.createElement('div');
-            line.setAttribute('data-ocr', 'net-suffix');
+          const line = box.querySelector('[data-ocr="net-suffix"]');
+          if (net.verdict === 'ok') {
+            if (line !== null) line.remove();
+          } else if (line === null) {
+            const fresh = document.createElement('div');
+            fresh.setAttribute('data-ocr', 'net-suffix');
+            fresh.textContent = t('netSuffix', { hint: net.hint });
+            fresh.style.cssText = 'margin-top:4px;font-size:11px;line-height:1.6;opacity:.78;';
+            box.appendChild(fresh);
+          } else if (line.textContent !== t('netSuffix', { hint: net.hint })) {
             line.textContent = t('netSuffix', { hint: net.hint });
-            line.style.cssText = 'margin-top:4px;font-size:11px;line-height:1.6;opacity:.78;';
-            box.appendChild(line);
           }
         }
 
+        if (typeof box.querySelector === 'function' && box.querySelector('[data-ocr="net-close"]') !== null) return;
         const close = document.createElement('button');
         close.type = 'button';
+        close.setAttribute('data-ocr', 'net-close');
         close.title = t('netClose');
         close.setAttribute('aria-label', t('netClose'));
         close.textContent = '✕';
         close.style.cssText = 'position:absolute;top:3px;right:5px;width:20px;height:20px;padding:0;line-height:1;border-radius:5px;cursor:pointer;font-size:11px;background:transparent;border:1px solid currentColor;color:inherit;opacity:.55;';
         close.addEventListener('click', (event) => {
           event.stopPropagation();
+          event.preventDefault();
+          dismissals += 1;
           dismissed.set(key, Date.now() + DISMISS_MS);
-          box.style.display = 'none';
+          hideBox(box);
         });
         box.appendChild(close);
+      };
+
+      const adopt = (node) => {
+        const box = rootOf(node);
+        const key = textOf(box).slice(0, 180);
+        if (!owned.has(box)) owned.set(box, key);
+        else if (owned.get(box) !== key && textOf(box).length > 0) owned.set(box, key);
+        styleBox(box, owned.get(box));
+      };
+
+      // Anything we already own gets re-asserted, because the shell re-renders its
+      // own toast on every retry tick and drops our inline styles doing it.
+      const reassert = () => {
+        for (const [box, key] of owned) styleBox(box, key);
+        for (const node of hidden) {
+          if (!node.isConnected) {
+            hidden.delete(node);
+            continue;
+          }
+          if (textOf(node).length === 0 && node.style.display !== 'none') node.style.display = 'none';
+        }
       };
 
       // Only nodes whose text already matches get adopted, and the deepest one
@@ -4041,9 +4115,35 @@ window.__ModuleLoader__.load({
         adopt(node);
       };
 
+      // The shell sometimes tears the text out of its toast and leaves the painted
+      // stripe behind: an empty red bar with no way to close it. Once the user has
+      // dismissed one notice, empty painted overlay boxes in the same top band are
+      // residue, so they go too. Nothing is hunted before that first dismissal —
+      // an empty panel elsewhere on the page is not ours to touch.
+      const huntStrays = () => {
+        if (dismissals === 0 || typeof document === 'undefined' || document.body === null) return;
+        for (const node of document.body.querySelectorAll('div,aside,section')) {
+          if (owned.has(node) || hidden.has(node)) continue;
+          if (textOf(node).length > 0) continue;
+          if (typeof node.closest === 'function' && node.closest('[data-ocr]') !== null) continue;
+          if (typeof node.querySelector === 'function' && node.querySelector('button,a,input,select,textarea') !== null) continue;
+          if (typeof node.getBoundingClientRect !== 'function' || typeof getComputedStyle !== 'function') continue;
+          const rect = node.getBoundingClientRect();
+          if (rect.top > 220 || rect.height < 8 || rect.height > 140 || rect.width < 120) continue;
+          const position = getComputedStyle(node).position;
+          if (position !== 'fixed' && position !== 'absolute') continue;
+          if (!painted(node)) continue;
+          if (hidden.has(node.parentElement)) continue;
+          blank(node);
+        }
+      };
+
       const sweep = () => {
+        if (typeof document === 'undefined' || document.body === null) return;
         const nodes = document.body.querySelectorAll('div,aside,section,p,span');
         for (const node of nodes) consider(node);
+        reassert();
+        huntStrays();
       };
 
       // Added subtrees are usually tiny (one toast); a full sweep is the safety
@@ -4052,26 +4152,52 @@ window.__ModuleLoader__.load({
       let timer = null;
       const flush = () => {
         timer = null;
+        if (typeof document === 'undefined' || document.body === null) return;
         const batch = pending;
         pending = [];
         for (const node of batch) {
+          if (node === null || node === undefined || node.isConnected === false) continue;
           if (typeof node.querySelectorAll === 'function') {
             for (const inner of node.querySelectorAll('div,aside,section,p,span')) consider(inner);
           }
           consider(node);
         }
+        reassert();
       };
       const schedule = (records) => {
+        let fresh = false;
         for (const record of records ?? []) {
-          for (const node of record.addedNodes ?? []) pending.push(node);
+          if (record.type === 'attributes') {
+            // A style the shell wrote back is exactly what we need to catch, and
+            // our own writes settle within one extra pass, so nothing is filtered.
+            const target = record.target;
+            if (target === null || target.nodeType !== 1) continue;
+            pending.push(target);
+            fresh = true;
+            continue;
+          }
+          for (const node of record.addedNodes ?? []) {
+            pending.push(node);
+            fresh = true;
+          }
         }
-        if (timer !== null) return;
-        timer = setTimeout(flush, 250);
+        if (!fresh || timer !== null) return;
+        timer = setTimeout(flush, 120);
       };
 
       if (typeof MutationObserver === 'function') {
-        new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-        setInterval(sweep, 15000);
+        // Attributes too: the shell rewrites its own inline styles on each retry
+        // tick, which is how the bar came back after being restyled once.
+        new MutationObserver(schedule).observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class'],
+        });
+        // The interval is a safety net, not the mechanism; keep it from holding a
+        // process open where there is no browser (tests import this file).
+        const sweeper = setInterval(sweep, 4000);
+        if (sweeper !== null && typeof sweeper === 'object' && typeof sweeper.unref === 'function') sweeper.unref();
       }
       sweep();
     }

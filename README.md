@@ -173,6 +173,16 @@ frame; it adopts that element in the DOM:
 Matching is textual (`上游不可用` / `upstream … unavailable` / `connect_timeout` / `后重试`), it only adopts the innermost
 matching node, and it only walks up to four levels looking for a small `fixed/absolute/sticky` box, so page text is safe.
 
+**2.11.1 adds two things**, both of them real failures seen in the wild:
+
+- **The frame writes its styles back.** React re-renders that toast on every retry and drops our `opacity` / `left`
+  with it, so the guard no longer applies a style once — it re-asserts on every mutation (including `attributes`), and a
+  dismissed notice cannot come back.
+- **The text can vanish while the stripe stays.** The frame sometimes removes the toast's text but leaves its painted
+  bar — a red strip nobody can close. Now a dismiss also hides painted ancestors that hold no other text, and once you
+  have dismissed at least one notice a 4-second sweep clears empty painted `fixed/absolute` strips in the top 220px
+  (no dismissal yet means no hunting, so unrelated empty panels are left alone).
+
 ## Upstream status card
 
 The Settings page opens with one status card for the upstream itself — local probe on the left, OpenCode's published
