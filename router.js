@@ -32,6 +32,7 @@
  */
 
 import fs from 'node:fs'
+import https from 'node:https'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -47,6 +48,12 @@ const DEFAULT_USAGE_URL = 'https://opencode.ai/inference/go/v1/usage'
 const DEFAULT_STATUS_URL = 'https://status.opencode.ai/api/status'
 const STATUS_REFRESH_MS = 60 * 1000
 const STATUS_STALE_MS = 5 * 60 * 1000
+// Reachability is what separates "the upstream is throttling me" from "my own
+// network or proxy is down". Both hosts are probed without credentials: any HTTP
+// answer, even 401, proves the route works; only a transport error does not.
+const OFFICIAL_REACH_URL = 'https://api.deepseek.com/models'
+const NET_PROBE_TIMEOUT_MS = 6000
+const NET_CACHE_MS = 30 * 1000
 const DEFAULT_API_KEY_REF = 'OPENCODE_API_KEY'
 const DEFAULT_PATH = '/opencode-quota-router'
 const DEFAULT_PROBE_INTERVAL_MS = 30 * 60 * 1000
@@ -161,6 +168,21 @@ export function maskKey(key) {
   if (typeof key !== 'string' || key.length === 0) return undefined
   if (key.length <= 12) return `${key.slice(0, 3)}…`
   return `${key.slice(0, 7)}…${key.slice(-4)}`
+}
+
+/**
+ * Which side an unreachable host belongs to. Both hosts down means the local
+ * route (or the proxy in front of it); one host down names that host, and that
+ * is the difference between "wait for OpenCode" and "fix my network".
+ */
+export function classifyNet(probe) {
+  const opencode = probe?.opencode
+  const official = probe?.official
+  const dns = (side) => side?.code === 'ENOTFOUND' || side?.code === 'EAI_AGAIN'
+  if (opencode?.ok === true && official?.ok === true) return 'ok'
+  if (opencode?.ok === false && official?.ok === false) return dns(opencode) && dns(official) ? 'dns' : 'local'
+  if (opencode?.ok === false) return 'upstream'
+  return 'official'
 }
 
 function normalizeAccount(raw) {
@@ -409,6 +431,72 @@ export function apply(ctx, config = {}) {
   const log = {
     info: (message) => safeLog(ctx, 'info', message),
     warn: (message) => safeLog(ctx, 'warn', message),
+  }
+
+  /** Any HTTP answer proves the route works, including the 401 a keyless probe gets. */
+  function reachOnce(url, timeoutMs) {
+    return new Promise((resolve) => {
+      const started = Date.now()
+      let settled = false
+      const done = (value) => {
+        if (settled) return
+        settled = true
+        resolve({ ...value, ms: Date.now() - started })
+      }
+      let request
+      try {
+        request = https.request(url, {
+          method: 'HEAD',
+          timeout: timeoutMs,
+          headers: { 'user-agent': 'dsh-opencode-routing/net-probe' },
+        }, (response) => {
+          response.resume()
+          done({ ok: true, status: response.statusCode ?? 0, code: null })
+        })
+      } catch (error) {
+        done({ ok: false, status: 0, code: String(error?.code ?? 'ERROR') })
+        return
+      }
+      request.on('timeout', () => {
+        // A socket that never answers is the shape of a dead proxy or a filtered
+        // route, so it must land in the same bucket as a refused connection.
+        request.destroy(Object.assign(new Error('net probe timed out'), { code: 'ETIMEDOUT' }))
+      })
+      request.on('error', (error) => done({ ok: false, status: 0, code: String(error?.code ?? 'ERROR') }))
+      request.end()
+    })
+  }
+
+  function hostOf(url) {
+    try {
+      return new URL(url).host
+    } catch {
+      return url
+    }
+  }
+
+  let netCache = { at: 0, value: null }
+
+  /**
+   * Whether the OpenCode host or the local route is at fault. Probing both sides
+   * is the whole trick: a single failing host says nothing about where the break
+   * is, and users cannot tell "throttled" from "my Clash died" without it.
+   */
+  async function networkView(force = false) {
+    const now = Date.now()
+    if (force !== true && netCache.value !== null && now - netCache.at < NET_CACHE_MS) return netCache.value
+    const [opencode, official] = await Promise.all([
+      reachOnce(cfg.usageUrl, NET_PROBE_TIMEOUT_MS),
+      reachOnce(OFFICIAL_REACH_URL, NET_PROBE_TIMEOUT_MS),
+    ])
+    const value = {
+      at: now,
+      verdict: classifyNet({ opencode, official }),
+      opencode: { host: hostOf(cfg.usageUrl), ...opencode },
+      official: { host: hostOf(OFFICIAL_REACH_URL), ...official },
+    }
+    netCache = { at: now, value }
+    return value
   }
 
   function saveState() {
@@ -1518,6 +1606,7 @@ export function apply(ctx, config = {}) {
       usage: active?.usage ?? state.usage,
       upstream: upstreamView(now),
       official: officialView(now),
+      net: await networkView(),
       accounts,
       quarantine: Object.entries(state.quarantine)
         .filter(([, entry]) => entry.until > now)
@@ -1557,6 +1646,11 @@ export function apply(ctx, config = {}) {
 
   async function applyAction(body) {
     const action = typeof body?.action === 'string' ? body.action : ''
+    if (action === 'netcheck') {
+      // The refresh button asks for a verdict taken now, not one cached from the
+      // last page load.
+      return { ok: true, net: await networkView(true) }
+    }
     if (action === 'add') {
       const key = String(body.key ?? '').trim()
       if (key.length < 8) throw new Error('密钥不完整：至少 8 个字符')

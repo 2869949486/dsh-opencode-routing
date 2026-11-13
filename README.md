@@ -159,6 +159,20 @@ nobody has to sit on the Settings page to find out:
 It reads the same `GET /opencode-quota-router.json` every 20 seconds and only reacts to a change of `mode`, so the
 first poll after a page load is not treated as a switch and refreshing never fabricates a notice.
 
+### Adopting the shell's own "upstream unavailable" strip (2.11.0)
+
+DSH also renders its own retry strip (「1 个上游不可用 / opencode.ai: connect_timeout ×3 · 约 1s 后重试」). It is drawn by
+the frame, it is translucent, it cannot be closed, and it lands on top of the brand mark. The plugin does not patch the
+frame; it adopts that element in the DOM:
+
+- moves it clear of the logo (`left: 112px`), makes it fully opaque, caps it at 560px;
+- adds a **✕** button — one click hides it, and the same text stays hidden for five minutes;
+- appends the reachability verdict underneath, so the strip finally answers "is this them or me", e.g.
+  *both hosts unreachable: the break is on this machine's way out (Clash / TUN / corporate network / DNS), not OpenCode*.
+
+Matching is textual (`上游不可用` / `upstream … unavailable` / `connect_timeout` / `后重试`), it only adopts the innermost
+matching node, and it only walks up to four levels looking for a small `fixed/absolute/sticky` box, so page text is safe.
+
 ## Upstream status card
 
 The Settings page opens with one status card for the upstream itself — local probe on the left, OpenCode's published
@@ -177,6 +191,18 @@ verdict on the right, one refresh button in the shared head — above the accoun
 - **错误码与解决办法**: a collapsible table listing every code the card can show, with the fix for each — rate limit,
   capacity, quota, payment, auth, missing key, sign-in, client upgrade, model unavailable, bad request, context
   overflow, timeout, server error, network error, content filter, and the unknown bucket.
+- **A local-network row** (2.11.0): it probes `opencode.ai` and `api.deepseek.com` side by side, states a verdict, and
+  carries a 重新自检 button (`POST {"action":"netcheck"}`, which bypasses the 30-second cache):
+
+  | Verdict | Meaning | What to do |
+  | --- | --- | --- |
+  | 本机能连通 | both hosts answer | any throttling right now is upstream's own |
+  | 本机网络/代理有问题 | neither host answers | the break is local: Clash / TUN / corporate network / proxy |
+  | 本机 DNS 解析失败 | neither host resolves | point DNS at 223.5.5.5 or 1.1.1.1, restart Clash's DNS |
+  | 只有 OpenCode 连不上 | published API answers, opencode.ai does not | the break is OpenCode's side; switching subscription is right |
+
+  The probe is a `HEAD` request, and **any HTTP answer counts as reachable** (401 included): the question is whether the
+  path works, not whether you hold a key.
 
 The verdict is deliberately sticky: two failures inside the 30-minute window read as 降级 even when a retry has
 already succeeded, because a model that fails and recovers on retry is exactly the flapping this card is meant to

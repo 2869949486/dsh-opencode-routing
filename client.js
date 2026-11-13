@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     // Rendered next to the page title so a stale client bundle is visible at a
     // glance: if this stamp is not the published version, the browser is still
     // running the previous one.
-    const CLIENT_BUILD = 'v2.10.0';
+    const CLIENT_BUILD = 'v2.11.0';
 
     /**
      * UI strings. `zh` is the source; every other locale is a translation of the
@@ -268,6 +268,21 @@ window.__ModuleLoader__.load({
         switchNoticeBack: '已切回 OpenCode 路由，任务继续执行。',
         switchNoticeTime: '{time} 切换',
         switchNoticeClose: '关闭',
+        netTitle: '本机网络',
+        netOk: '本机能连通',
+        netLocal: '本机网络/代理有问题',
+        netDns: '本机 DNS 解析失败',
+        netUpstream: '只有 OpenCode 连不上',
+        netOfficial: '只有官方 API 连不上',
+        netHintOk: 'opencode.ai 与 api.deepseek.com 都能连上；这时的限流、降级都是上游自己的问题，与你本机无关。',
+        netHintLocal: '两个域名都连不上：这是你本机到外网的路（Clash / TUN / 公司网 / DNS）出了问题，不是 OpenCode 的锅。先修本地网络，再谈切不切官方订阅。',
+        netHintDns: '两个域名都解析不出来：本机 DNS 挂了或被污染。换 DNS（223.5.5.5 / 1.1.1.1）或重启 Clash 的 DNS 后再试。',
+        netHintUpstream: '官方 API 通、opencode.ai 不通：断点在 OpenCode 这一侧（或到它的链路），切官方订阅是对的。',
+        netHintOfficial: 'opencode.ai 通、官方 API 不通：OpenCode 正常，问题在官方订阅那头（或你到它的链路）。',
+        netCheck: '重新自检',
+        netCheckedAt: '自检于 {time}',
+        netClose: '关掉这条提示',
+        netSuffix: '判断：{hint}',
       },
       en: {
         title: 'OpenCode accounts & usage',
@@ -520,6 +535,21 @@ window.__ModuleLoader__.load({
         switchNoticeBack: 'Back on the OpenCode route; the task keeps running.',
         switchNoticeTime: 'switched {time}',
         switchNoticeClose: 'Dismiss',
+        netTitle: 'Local network',
+        netOk: 'This machine reaches both',
+        netLocal: 'Local network or proxy is down',
+        netDns: 'Local DNS lookup fails',
+        netUpstream: 'Only OpenCode is unreachable',
+        netOfficial: 'Only the published API is unreachable',
+        netHintOk: 'opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.',
+        netHintLocal: 'Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.',
+        netHintDns: 'Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.',
+        netHintUpstream: 'The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.',
+        netHintOfficial: 'opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.',
+        netCheck: 'Check again',
+        netCheckedAt: 'checked {time}',
+        netClose: 'Close this notice',
+        netSuffix: 'Verdict: {hint}',
       },
       'zh-tw': {
         title: 'OpenCode 帳號與用量',
@@ -769,6 +799,21 @@ window.__ModuleLoader__.load({
         switchNoticeBack: '已切回 OpenCode 路由，任務繼續執行。',
         switchNoticeTime: '{time} 切換',
         switchNoticeClose: '關閉',
+        netTitle: '本機網路',
+        netOk: '本機兩邊都連得上',
+        netLocal: '本機網路／代理有問題',
+        netDns: '本機 DNS 解析失敗',
+        netUpstream: '只有 OpenCode 連不上',
+        netOfficial: '只有官方 API 連不上',
+        netHintOk: 'opencode.ai 與 api.deepseek.com 都連得上；此刻的限流、降級是上游自己的問題，與本機無關。',
+        netHintLocal: '兩個網域都連不上：問題在本機往外走的那一段（Clash／TUN／公司網路／DNS），不是 OpenCode。先修本機網路，切官方訂閱也救不了。',
+        netHintDns: '兩個網域都解析不出來：本機 DNS 掛了或被污染。改用 223.5.5.5 或 1.1.1.1、重啟 Clash 的 DNS 後再試。',
+        netHintUpstream: '官方 API 通、opencode.ai 不通：斷點在 OpenCode 這一側（或到它的鏈路），切官方訂閱是對的。',
+        netHintOfficial: 'opencode.ai 通、官方 API 不通：OpenCode 正常，問題在官方訂閱那一頭（或到它的鏈路）。',
+        netCheck: '重新自檢',
+        netCheckedAt: '自檢於 {time}',
+        netClose: '關掉這條提示',
+        netSuffix: '判斷：{hint}',
       },
     };
 
@@ -2594,6 +2639,24 @@ window.__ModuleLoader__.load({
     // Wall clock for a notice that has to be checkable ("what time did it flip").
     const stamp = (ms) => (ms ? new Date(ms).toLocaleTimeString() : t('none'));
 
+    // The reachability verdict, in the one sentence each case deserves. The chip
+    // says what it is, the sentence says what to do about it.
+    const NET_KEYS = {
+      ok: ['netOk', 'netHintOk'],
+      local: ['netLocal', 'netHintLocal'],
+      dns: ['netDns', 'netHintDns'],
+      upstream: ['netUpstream', 'netHintUpstream'],
+      official: ['netOfficial', 'netHintOfficial'],
+    };
+    const netVerdict = (net) => {
+      const verdict = NET_KEYS[net?.verdict] !== undefined ? net.verdict : 'ok';
+      return { verdict, label: t(NET_KEYS[verdict][0]), hint: t(NET_KEYS[verdict][1]) };
+    };
+    const netColor = (verdict) => (verdict === 'ok' ? '#3c9d5d' : verdict === 'upstream' ? '#e0a030' : '#d9534f');
+    const netSide = (side) => (side === undefined || side === null
+      ? t('none')
+      : `${side.host} · ${side.ok ? `${side.status || 200} · ${side.ms} ms` : (side.code ?? 'ERROR')}`);
+
     const money = (value) => {
       if (value === undefined || value === null) return t('none');
       if (value === 'free') return t('free');
@@ -3616,6 +3679,28 @@ window.__ModuleLoader__.load({
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
               upstream?.checkedAt ? h('span', null, t('statusCheckedAt', { time: ago(upstream.checkedAt) })) : null,
             ),
+            // "Them or me" cannot be answered by one slow host: this row compares
+            // this machine's own path to both upstreams, which is the only way to
+            // tell a rate limit from a dead proxy.
+            router?.net
+              ? (() => {
+                  const net = netVerdict(router.net);
+                  return h('div', { 'data-ocr': 'net-row', style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11.5 } },
+                    h('span', { style: { opacity: .6, minWidth: 56 } }, t('netTitle')),
+                    chip(net.label, netColor(net.verdict), `${net.hint} · ${t('netCheckedAt', { time: clock(router.net.at) })}`),
+                    h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.opencode)),
+                    h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.official)),
+                    h('button', {
+                      type: 'button',
+                      className: 'ocr-btn',
+                      style: { ...btn, padding: '2px 8px', fontSize: 11 },
+                      disabled: busy,
+                      title: net.hint,
+                      onClick: () => void act({ action: 'netcheck' }),
+                    }, t('netCheck')),
+                  );
+                })()
+              : null,
             // The banner above already answered "which route"; this row only
             // explains why it may have moved, so the mode pill is gone.
             router?.reason
@@ -3850,6 +3935,147 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // Shell's provider-retry toast ("N upstreams unavailable ... retrying in 1s")
+    // is not ours: it is rendered by the frame, it sits on the brand mark, and it
+    // cannot be closed. It also never says whether the outage is the upstream's or
+    // this machine's, which is the only question worth answering. So instead of
+    // drawing it we adopt it: shift it clear of the logo, add a close button, and
+    // append the reachability verdict underneath.
+    const FOREIGN_NOTICE = /(个?上游不可用|upstream[^。\n]{0,24}unavailable|connect_timeout|后重试|retry(ing)? in \d)/i;
+    const DISMISS_MS = 5 * 60 * 1000;
+    let netSnapshot = null;
+    let noticeGuardInstalled = false;
+
+    function installForeignNoticeGuard() {
+      if (noticeGuardInstalled) return;
+      if (typeof document === 'undefined' || document.body === null) return;
+      noticeGuardInstalled = true;
+
+      const touched = new WeakSet();
+      const dismissed = new Map(); // notice text -> it stays closed until this time
+      const textOf = (node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+      const isOwn = (node) => (typeof node.closest === 'function' ? node.closest('[data-ocr="route-notice"]') !== null : false);
+
+      // The toast is the largest small box around the message: walk up while the
+      // parent is still an overlay-sized element, so we never restyle the page.
+      const boxOf = (node) => {
+        let root = node;
+        for (let depth = 0; depth < 4; depth += 1) {
+          const parent = root.parentElement;
+          if (parent === null || parent === document.body) break;
+          if (typeof parent.getBoundingClientRect !== 'function') break;
+          const rect = parent.getBoundingClientRect();
+          if (rect.height > 220 || rect.width > 760) break;
+          if (typeof getComputedStyle === 'function') {
+            const position = getComputedStyle(parent).position;
+            if (position !== 'fixed' && position !== 'absolute' && position !== 'sticky') break;
+          }
+          root = parent;
+        }
+        return root;
+      };
+
+      const adopt = (node) => {
+        const box = boxOf(node);
+        if (touched.has(box)) return;
+        touched.add(box);
+        const key = textOf(box).slice(0, 180);
+        if ((dismissed.get(key) ?? 0) > Date.now()) {
+          box.style.display = 'none';
+          return;
+        }
+        let left = 0;
+        if (typeof box.getBoundingClientRect === 'function') left = box.getBoundingClientRect().left;
+        if (left < 96) box.style.left = '112px'; // never cover the brand mark
+        box.style.maxWidth = 'min(560px, calc(100vw - 128px))';
+        box.style.opacity = '1'; // the shell ships it translucent
+        box.style.pointerEvents = 'auto'; // a pass-through container would eat the ✕
+        // A translucent wrapper makes an opaque child look transparent, so the
+        // immediate parent is fixed up too.
+        const parent = box.parentElement;
+        if (parent !== null && parent !== document.body && typeof getComputedStyle === 'function') {
+          const style = getComputedStyle(parent);
+          if (Number(style.opacity) < 1) parent.style.opacity = '1';
+          if (style.pointerEvents === 'none') parent.style.pointerEvents = 'auto';
+        }
+        if (typeof getComputedStyle === 'function' && getComputedStyle(box).position === 'static') box.style.position = 'relative';
+
+        if (netSnapshot !== null) {
+          const net = netVerdict(netSnapshot);
+          const hasLine = typeof box.querySelector === 'function' && box.querySelector('[data-ocr="net-suffix"]') !== null;
+          if (net.verdict !== 'ok' && !hasLine) {
+            const line = document.createElement('div');
+            line.setAttribute('data-ocr', 'net-suffix');
+            line.textContent = t('netSuffix', { hint: net.hint });
+            line.style.cssText = 'margin-top:4px;font-size:11px;line-height:1.6;opacity:.78;';
+            box.appendChild(line);
+          }
+        }
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.title = t('netClose');
+        close.setAttribute('aria-label', t('netClose'));
+        close.textContent = '✕';
+        close.style.cssText = 'position:absolute;top:3px;right:5px;width:20px;height:20px;padding:0;line-height:1;border-radius:5px;cursor:pointer;font-size:11px;background:transparent;border:1px solid currentColor;color:inherit;opacity:.55;';
+        close.addEventListener('click', (event) => {
+          event.stopPropagation();
+          dismissed.set(key, Date.now() + DISMISS_MS);
+          box.style.display = 'none';
+        });
+        box.appendChild(close);
+      };
+
+      // Only nodes whose text already matches get adopted, and the deepest one
+      // wins. Walking the whole document on every keystroke would be a UI tax on
+      // a chat page; the observer below hands us just the nodes that appeared.
+      const consider = (node) => {
+        if (node === null || node === undefined || node.nodeType !== 1) return;
+        if (isOwn(node)) return;
+        const text = textOf(node);
+        if (text.length === 0 || text.length > 400) return;
+        if (!FOREIGN_NOTICE.test(text)) return;
+        for (const child of node.children) {
+          if (FOREIGN_NOTICE.test(textOf(child))) return; // deeper node will do it
+        }
+        adopt(node);
+      };
+
+      const sweep = () => {
+        const nodes = document.body.querySelectorAll('div,aside,section,p,span');
+        for (const node of nodes) consider(node);
+      };
+
+      // Added subtrees are usually tiny (one toast); a full sweep is the safety
+      // net for text that appears inside an existing node.
+      let pending = [];
+      let timer = null;
+      const flush = () => {
+        timer = null;
+        const batch = pending;
+        pending = [];
+        for (const node of batch) {
+          if (typeof node.querySelectorAll === 'function') {
+            for (const inner of node.querySelectorAll('div,aside,section,p,span')) consider(inner);
+          }
+          consider(node);
+        }
+      };
+      const schedule = (records) => {
+        for (const record of records ?? []) {
+          for (const node of record.addedNodes ?? []) pending.push(node);
+        }
+        if (timer !== null) return;
+        timer = setTimeout(flush, 250);
+      };
+
+      if (typeof MutationObserver === 'function') {
+        new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+        setInterval(sweep, 15000);
+      }
+      sweep();
+    }
+
     // A route switch happens to a task nobody is watching, so the shell carries a
     // notice: opaque, timestamped, and it stays on screen until it is dismissed.
     // It polls the router instead of receiving an event because the router is a
@@ -3867,6 +4093,8 @@ window.__ModuleLoader__.load({
             if (!response.ok) return;
             const next = await response.json();
             if (!alive || !next || typeof next !== 'object') return;
+            // The foreign-notice guard reads this to answer "whose fault is it".
+            if (next.net) netSnapshot = next.net;
             const mode = next.mode === 'fallback' ? 'fallback' : 'primary';
             // The first poll only records where we started: a page load is not a switch.
             if (seen.current === null) {
@@ -3900,6 +4128,7 @@ window.__ModuleLoader__.load({
       const dismiss = (id) => setItems((prev) => prev.filter((item) => item.id !== id));
 
       return h('div', {
+        'data-ocr': 'route-notice',
         style: {
           position: 'fixed',
           top: 64,
@@ -3982,6 +4211,9 @@ window.__ModuleLoader__.load({
       inject: ['slots'],
       apply(ctx) {
         ensureStyles();
+        // Adopts the shell's own upstream toast so it can be closed and says whose
+        // fault the outage is. Runs once, needs no slot.
+        installForeignNoticeGuard();
         ctx.slots.inject('settings.section', () => ctx.slots.register({
           name: 'settings.section',
           id: 'opencode-router',

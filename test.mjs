@@ -13,7 +13,7 @@ import { Readable } from 'node:stream'
 import assert from 'node:assert/strict'
 
 import * as accounts from './index.js'
-import { apply as applyRouter, isExhausted, maskKey, nextProbeAt, retryAfter } from './router.js'
+import { apply as applyRouter, classifyNet, isExhausted, maskKey, nextProbeAt, retryAfter } from './router.js'
 import { apply as applyUsage, isChinaHoliday, parseGoDocs, peakClock, peakMultiplier, peakSnapshot } from './usage.js'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -922,6 +922,26 @@ console.log('reveal key ok')
   assert.ok(panel.props.style.boxShadow, 'and separable from the page behind it')
   assert.equal(buttons(tree, '✕').length, 1, 'exactly one dismiss control')
   console.log('client render ok')
+}
+
+// Whose fault an outage is: the whole point of probing both sides.
+{
+  const ok = { ok: true, status: 200, code: null }
+  const refused = { ok: false, status: 0, code: 'ECONNREFUSED' }
+  const timedOut = { ok: false, status: 0, code: 'ETIMEDOUT' }
+  const noDns = { ok: false, status: 0, code: 'ENOTFOUND' }
+
+  assert.equal(classifyNet({ opencode: ok, official: ok }), 'ok', 'both reachable means the upstream is at fault')
+  assert.equal(classifyNet({ opencode: timedOut, official: timedOut }), 'local', 'two dead hosts is the local route')
+  assert.equal(classifyNet({ opencode: refused, official: timedOut }), 'local', 'two different local errors are still local')
+  assert.equal(classifyNet({ opencode: noDns, official: noDns }), 'dns', 'nothing resolves: local DNS')
+  assert.equal(classifyNet({ opencode: noDns, official: timedOut }), 'local', 'one resolves and one does not: the route, not DNS')
+  assert.equal(classifyNet({ opencode: refused, official: ok }), 'upstream', 'only OpenCode unreachable names OpenCode')
+  assert.equal(classifyNet({ opencode: ok, official: refused }), 'official', 'only the published API unreachable names it')
+  assert.equal(classifyNet({ opencode: ok }), 'official', 'a missing side is a failed side')
+  assert.equal(classifyNet(undefined), 'official', 'no probe at all is not a healthy verdict')
+  assert.equal(classifyNet({ opencode: undefined, official: undefined }), 'official', 'and neither is an empty probe')
+  console.log('net classify ok')
 }
 
 for (const dispose of disposers) await dispose()
