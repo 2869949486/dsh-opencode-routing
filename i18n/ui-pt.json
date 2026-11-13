@@ -136,5 +136,8 @@
   "switchNoticeTitle": "Alterado para a assinatura DeepSeek; a tarefa continua.",
   "switchNoticeBack": "De volta à rota OpenCode; a tarefa continua.",
   "switchNoticeTime": "alterado {time}",
-  "switchNoticeClose": "Fechar"
+  "switchNoticeClose": "Fechar",
+  "modelLabelFallback": "Fallback oficial",
+  "modelLabelTip": "Os pedidos vão agora para a assinatura DeepSeek (fallback automático enquanto o OpenCode não responde). A marca desaparece quando a rota volta.",
+  "modelLabelTipPrimary": "Os pedidos vão por {provider}."
 }

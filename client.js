@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     // Rendered next to the page title so a stale client bundle is visible at a
     // glance: if this stamp is not the published version, the browser is still
     // running the previous one.
-    const CLIENT_BUILD = 'v2.11.1';
+    const CLIENT_BUILD = 'v2.11.2';
 
     /**
      * UI strings. `zh` is the source; every other locale is a translation of the
@@ -283,6 +283,9 @@ window.__ModuleLoader__.load({
         netCheckedAt: '自检于 {time}',
         netClose: '关掉这条提示',
         netSuffix: '判断：{hint}',
+        modelLabelFallback: '官方回退',
+        modelLabelTip: '当前请求走 DeepSeek 官方订阅（OpenCode 上游不可用时自动回退）。切回 OpenCode 后这个标记会消失。',
+        modelLabelTipPrimary: '当前请求走 {provider}。',
       },
       en: {
         title: 'OpenCode accounts & usage',
@@ -550,6 +553,9 @@ window.__ModuleLoader__.load({
         netCheckedAt: 'checked {time}',
         netClose: 'Close this notice',
         netSuffix: 'Verdict: {hint}',
+        modelLabelFallback: 'official fallback',
+        modelLabelTip: 'Requests are going to the DeepSeek subscription right now (the automatic fallback while OpenCode is unusable). The tag disappears once the route moves back.',
+        modelLabelTipPrimary: 'Requests are going through {provider}.',
       },
       'zh-tw': {
         title: 'OpenCode 帳號與用量',
@@ -814,6 +820,9 @@ window.__ModuleLoader__.load({
         netCheckedAt: '自檢於 {time}',
         netClose: '關掉這條提示',
         netSuffix: '判斷：{hint}',
+        modelLabelFallback: '官方回退',
+        modelLabelTip: '目前請求走 DeepSeek 官方訂閱（OpenCode 上游不可用時自動回退）。切回 OpenCode 後這個標記會消失。',
+        modelLabelTipPrimary: '目前請求走 {provider}。',
       },
     };
 
@@ -959,6 +968,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "Zurück auf der OpenCode-Route; die Aufgabe läuft weiter.",
     "switchNoticeTime": "gewechselt {time}",
     "switchNoticeClose": "Schließen",
+    "modelLabelFallback": "Offizieller Fallback",
+    "modelLabelTip": "Anfragen laufen gerade über das DeepSeek-Abo (automatischer Fallback, solange OpenCode nicht nutzbar ist). Die Markierung verschwindet, sobald die Route zurückspringt.",
+    "modelLabelTipPrimary": "Anfragen laufen über {provider}.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1071,6 +1083,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "es": {
     "title": "Cuentas y uso de OpenCode",
@@ -1211,6 +1238,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "De vuelta en la ruta de OpenCode; la tarea sigue.",
     "switchNoticeTime": "cambiado {time}",
     "switchNoticeClose": "Cerrar",
+    "modelLabelFallback": "Respaldo oficial",
+    "modelLabelTip": "Las peticiones van ahora a la suscripción de DeepSeek (respaldo automático mientras OpenCode no sirve). La marca desaparece cuando la ruta vuelve.",
+    "modelLabelTipPrimary": "Las peticiones van por {provider}.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1323,6 +1353,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "fr": {
     "title": "Comptes et usage OpenCode",
@@ -1463,6 +1508,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "De retour sur la route OpenCode ; la tâche continue.",
     "switchNoticeTime": "basculé {time}",
     "switchNoticeClose": "Fermer",
+    "modelLabelFallback": "Repli officiel",
+    "modelLabelTip": "Les requêtes passent par l’abonnement DeepSeek (repli automatique tant qu’OpenCode est indisponible). La marque disparaît dès que la route revient.",
+    "modelLabelTipPrimary": "Les requêtes passent par {provider}.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1575,6 +1623,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "ja": {
     "title": "OpenCode アカウントと使用量",
@@ -1715,6 +1778,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "OpenCode ルートに戻しました。タスクは継続します。",
     "switchNoticeTime": "{time} に切り替え",
     "switchNoticeClose": "閉じる",
+    "modelLabelFallback": "公式フォールバック",
+    "modelLabelTip": "現在のリクエストは DeepSeek 公式サブスクに送られています（OpenCode が使えない間の自動フォールバック）。ルートが戻るとこの印は消えます。",
+    "modelLabelTipPrimary": "現在のリクエストは {provider} 経由です。",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -1827,6 +1893,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "ko": {
     "title": "OpenCode 계정 및 사용량",
@@ -1967,6 +2048,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "OpenCode 라우트로 되돌렸습니다. 작업은 계속됩니다.",
     "switchNoticeTime": "{time} 전환",
     "switchNoticeClose": "닫기",
+    "modelLabelFallback": "공식 대체",
+    "modelLabelTip": "현재 요청은 DeepSeek 공식 구독으로 갑니다(OpenCode를 쓸 수 없을 때의 자동 대체). 라우트가 돌아오면 이 표시는 사라집니다.",
+    "modelLabelTipPrimary": "현재 요청은 {provider} 경유입니다.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2079,6 +2163,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "pt": {
     "title": "Contas e uso do OpenCode",
@@ -2219,6 +2318,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "De volta à rota OpenCode; a tarefa continua.",
     "switchNoticeTime": "alterado {time}",
     "switchNoticeClose": "Fechar",
+    "modelLabelFallback": "Fallback oficial",
+    "modelLabelTip": "Os pedidos vão agora para a assinatura DeepSeek (fallback automático enquanto o OpenCode não responde). A marca desaparece quando a rota volta.",
+    "modelLabelTipPrimary": "Os pedidos vão por {provider}.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2331,6 +2433,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
   "ru": {
     "title": "Аккаунты и использование OpenCode",
@@ -2471,6 +2588,9 @@ window.__ModuleLoader__.load({
     "switchNoticeBack": "Снова на маршруте OpenCode; задача продолжается.",
     "switchNoticeTime": "переключено {time}",
     "switchNoticeClose": "Закрыть",
+    "modelLabelFallback": "Официальный резерв",
+    "modelLabelTip": "Запросы идут в официальную подписку DeepSeek (автоматический резерв, пока OpenCode недоступен). Метка исчезнет, когда маршрут вернётся.",
+    "modelLabelTipPrimary": "Запросы идут через {provider}.",
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
@@ -2583,6 +2703,21 @@ window.__ModuleLoader__.load({
     "officialServiceInference": "Inference API",
     "officialServicePayg": "Pay-as-you-go",
     "officialServiceFree": "Free inference",
+    "netTitle": "Local network",
+    "netOk": "This machine reaches both",
+    "netLocal": "Local network or proxy is down",
+    "netDns": "Local DNS lookup fails",
+    "netUpstream": "Only OpenCode is unreachable",
+    "netOfficial": "Only the published API is unreachable",
+    "netHintOk": "opencode.ai and api.deepseek.com both answer; any throttling or degradation right now is upstream’s own and has nothing to do with this machine.",
+    "netHintLocal": "Neither host answers: the break is on this machine’s way out (Clash / TUN / corporate network / DNS), not OpenCode. Fix the local route first — switching subscription will not help.",
+    "netHintDns": "Neither host resolves: local DNS is dead or poisoned. Point DNS at 223.5.5.5 or 1.1.1.1, restart Clash’s DNS, then retry.",
+    "netHintUpstream": "The published API answers but opencode.ai does not: the break is on OpenCode’s side or on the path to it. Switching to the subscription is the right move.",
+    "netHintOfficial": "opencode.ai answers but the published API does not: OpenCode is fine; the problem is the subscription side or the path to it.",
+    "netCheck": "Check again",
+    "netCheckedAt": "checked {time}",
+    "netClose": "Close this notice",
+    "netSuffix": "Verdict: {hint}",
   },
     });
     /* @@EXTRA_LOCALES_END@@ */
@@ -4316,8 +4451,105 @@ window.__ModuleLoader__.load({
       }));
     }
 
-    // Hover and press feedback cannot live in an inline style object, so the
-    // bundle ships one small stylesheet for its buttons.
+    // The composer's model label is shell chrome, but only this plugin knows that
+    // the router may be serving the session from the other side. The shell offers
+    // one supported seam for it (`conversation.input.model.label`, a session-scoped
+    // single slot), so the label is replaced rather than patch-post-processed: the
+    // provider badge the shell stamps on it ("OpenCode Go") gives way to the model
+    // name, plus one honest tag while a fallback is in force.
+    let routeMode = null;
+    const routeModeListeners = new Set();
+    let routeModeTimer = null;
+
+    function publishRouteMode(mode) {
+      if (routeMode === mode) return;
+      routeMode = mode;
+      for (const listener of routeModeListeners) {
+        try {
+          listener(mode);
+        } catch {
+          // A listener that throws must not take the shell's composer down.
+        }
+      }
+    }
+
+    // One poller for every label instance: the trigger, the menu value and any
+    // re-render all read the same module-level answer.
+    function watchRouteMode() {
+      if (routeModeTimer !== null || typeof fetch !== 'function') return;
+      const poll = async () => {
+        try {
+          const response = await fetch(ROUTER_API, { headers: { accept: 'application/json' } });
+          if (!response.ok) return;
+          const next = await response.json();
+          if (!next || typeof next !== 'object') return;
+          publishRouteMode(next.mode === 'fallback' ? 'fallback' : 'primary');
+        } catch {
+          // No endpoint means the plugin is off; leave the label alone.
+        }
+      };
+      void poll();
+      routeModeTimer = setInterval(() => void poll(), 20000);
+      if (routeModeTimer !== null && typeof routeModeTimer === 'object'
+        && typeof routeModeTimer.unref === 'function') routeModeTimer.unref();
+    }
+
+    function useRouteMode() {
+      const [mode, setMode] = React.useState(routeMode);
+      React.useEffect(() => {
+        watchRouteMode();
+        const listener = (next) => setMode(next);
+        routeModeListeners.add(listener);
+        return () => {
+          routeModeListeners.delete(listener);
+        };
+      }, []);
+      return mode;
+    }
+
+    function ModelLabel(props) {
+      const mode = useRouteMode();
+      const model = props?.model ?? null;
+      if (model === null) return null;
+      const provider = props?.provider ?? null;
+      const name = typeof model.name === 'string' && model.name !== '' ? model.name : String(model.id ?? '');
+      const fallback = mode === 'fallback';
+      const providerLabel = provider === null
+        ? t('none')
+        : String(provider.displayName ?? provider.label ?? provider.name ?? provider.id ?? '');
+      return h('span', {
+        'data-ocr': 'model-label',
+        title: fallback
+          ? t('modelLabelTip')
+          : t('modelLabelTipPrimary', { provider: providerLabel }),
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          minWidth: 0,
+          maxWidth: '100%',
+        },
+      },
+      h('span', {
+        style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+      }, name),
+      fallback && props?.placement === 'trigger'
+        ? h('span', {
+          style: {
+            flex: '0 0 auto',
+            fontSize: 10.5,
+            lineHeight: 1.6,
+            padding: '0 5px',
+            borderRadius: 5,
+            border: '1px solid #e0a030',
+            color: '#e0a030',
+            whiteSpace: 'nowrap',
+          },
+        }, t('modelLabelFallback'))
+        : null);
+    }
+
+
     const CSS = [
       '.ocr-btn { transition: background .12s ease, border-color .12s ease, transform .06s ease; }',
       '.ocr-btn:hover:not(:disabled) { background: rgba(127,127,127,.16); border-color: rgba(127,127,127,.75); }',
@@ -4346,6 +4578,12 @@ window.__ModuleLoader__.load({
           order: 18,
           label: 'OpenCode 路由与用量',
         }, UsageSection));
+        // The composer trigger is the one place a wrong provider badge shows up
+        // while nobody is on the settings page.
+        ctx.slots.inject('conversation.input.model.label', () => ctx.slots.register({
+          name: 'conversation.input.model.label',
+          id: 'opencode-model-label',
+        }, ModelLabel));
         // The frame-wide overlay is where a switch can reach someone who is not on
         // the settings page.
         ctx.slots.inject('shell.overlay', () => ctx.slots.register({

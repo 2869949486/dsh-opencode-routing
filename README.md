@@ -183,6 +183,24 @@ matching node, and it only walks up to four levels looking for a small `fixed/ab
   have dismissed at least one notice a 4-second sweep clears empty painted `fixed/absolute` strips in the top 220px
   (no dismissal yet means no hunting, so unrelated empty panels are left alone).
 
+## The composer's model label (2.11.2)
+
+The frame stamps a provider badge ("OpenCode Go", with an icon) onto the model trigger at the bottom of the composer. That
+badge describes the **session's configuration**, not the live route: while requests fall back to the subscription it still
+reads OpenCode Go, so the one place on screen that claims to say where traffic goes is wrong.
+
+The plugin uses the frame's own extension point — `conversation.input.model.label`, a session-scoped `single` slot — and
+replaces the label used by the trigger and the menu's current value. So:
+
+- the badge disappears and the model name stands alone (`DeepSeek V4.1 Flash`);
+- **while a fallback is in force** a small `official fallback` tag follows it, whose tooltip spells out that requests are
+  going to the DeepSeek subscription and that the tag vanishes with the route;
+- the tag disappears by itself once OpenCode takes the traffic back — no restart, no manual refresh;
+- hovering the name states which provider is actually answering.
+
+No DOM patching and no frame edits: the model and its badge arrive as the slot's owner props, and the plugin simply
+chooses not to draw the badge.
+
 ## Upstream status card
 
 The Settings page opens with one status card for the upstream itself — local probe on the left, OpenCode's published

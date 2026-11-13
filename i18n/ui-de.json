@@ -136,5 +136,8 @@
   "switchNoticeTitle": "Auf das DeepSeek-Abo gewechselt; die Aufgabe läuft weiter.",
   "switchNoticeBack": "Zurück auf der OpenCode-Route; die Aufgabe läuft weiter.",
   "switchNoticeTime": "gewechselt {time}",
-  "switchNoticeClose": "Schließen"
+  "switchNoticeClose": "Schließen",
+  "modelLabelFallback": "Offizieller Fallback",
+  "modelLabelTip": "Anfragen laufen gerade über das DeepSeek-Abo (automatischer Fallback, solange OpenCode nicht nutzbar ist). Die Markierung verschwindet, sobald die Route zurückspringt.",
+  "modelLabelTipPrimary": "Anfragen laufen über {provider}."
 }

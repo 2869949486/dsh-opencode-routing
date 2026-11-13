@@ -921,6 +921,22 @@ console.log('reveal key ok')
   assert.equal(/rgba|transparent|opacity/.test(String(panel.props.style.background)), false, 'the panel is opaque')
   assert.ok(panel.props.style.boxShadow, 'and separable from the page behind it')
   assert.equal(buttons(tree, '✕').length, 1, 'exactly one dismiss control')
+
+  // The composer label belongs to the shell, but the provider badge it stamps on
+  // the trigger ("OpenCode Go") is exactly the stale claim this plugin exists to
+  // correct, so the supported slot replaces it with the model name.
+  const labelSlot = load().get('opencode-model-label')
+  assert.equal(typeof labelSlot, 'function', 'the composer label registers on its own slot')
+  const chip = labelSlot({
+    provider: { id: 'opencode-go', displayName: 'OpenCode Go' },
+    model: { id: 'deepseek-v4.1-flash', name: 'DeepSeek V4.1 Flash' },
+    placement: 'trigger',
+    selected: true,
+  })
+  assert.equal(label(chip).trim(), 'DeepSeek V4.1 Flash', 'the label keeps the model name and drops the provider badge')
+  assert.equal(count(label(chip), 'OpenCode Go'), 0, 'the old OpenCode Go capsule no longer renders')
+  assert.match(String(chip.props.title), /OpenCode Go/, 'the tooltip still names the provider')
+  assert.equal(labelSlot({ model: null }), null, 'no selection means the slot stays out of the way')
   console.log('client render ok')
 }
 

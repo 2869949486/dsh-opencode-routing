@@ -136,5 +136,8 @@
   "switchNoticeTitle": "DeepSeek 공식 구독으로 전환했습니다. 작업은 계속됩니다.",
   "switchNoticeBack": "OpenCode 라우트로 되돌렸습니다. 작업은 계속됩니다.",
   "switchNoticeTime": "{time} 전환",
-  "switchNoticeClose": "닫기"
+  "switchNoticeClose": "닫기",
+  "modelLabelFallback": "공식 대체",
+  "modelLabelTip": "현재 요청은 DeepSeek 공식 구독으로 갑니다(OpenCode를 쓸 수 없을 때의 자동 대체). 라우트가 돌아오면 이 표시는 사라집니다.",
+  "modelLabelTipPrimary": "현재 요청은 {provider} 경유입니다."
 }

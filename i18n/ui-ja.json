@@ -136,5 +136,8 @@
   "switchNoticeTitle": "DeepSeek 公式サブスクに切り替えました。タスクは継続します。",
   "switchNoticeBack": "OpenCode ルートに戻しました。タスクは継続します。",
   "switchNoticeTime": "{time} に切り替え",
-  "switchNoticeClose": "閉じる"
+  "switchNoticeClose": "閉じる",
+  "modelLabelFallback": "公式フォールバック",
+  "modelLabelTip": "現在のリクエストは DeepSeek 公式サブスクに送られています（OpenCode が使えない間の自動フォールバック）。ルートが戻るとこの印は消えます。",
+  "modelLabelTipPrimary": "現在のリクエストは {provider} 経由です。"
 }

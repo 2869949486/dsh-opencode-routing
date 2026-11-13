@@ -136,5 +136,8 @@
   "switchNoticeTitle": "Переключено на подписку DeepSeek; задача продолжается.",
   "switchNoticeBack": "Снова на маршруте OpenCode; задача продолжается.",
   "switchNoticeTime": "переключено {time}",
-  "switchNoticeClose": "Закрыть"
+  "switchNoticeClose": "Закрыть",
+  "modelLabelFallback": "Официальный резерв",
+  "modelLabelTip": "Запросы идут в официальную подписку DeepSeek (автоматический резерв, пока OpenCode недоступен). Метка исчезнет, когда маршрут вернётся.",
+  "modelLabelTipPrimary": "Запросы идут через {provider}."
 }

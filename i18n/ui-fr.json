@@ -136,5 +136,8 @@
   "switchNoticeTitle": "Basculé sur l'abonnement DeepSeek ; la tâche continue.",
   "switchNoticeBack": "De retour sur la route OpenCode ; la tâche continue.",
   "switchNoticeTime": "basculé {time}",
-  "switchNoticeClose": "Fermer"
+  "switchNoticeClose": "Fermer",
+  "modelLabelFallback": "Repli officiel",
+  "modelLabelTip": "Les requêtes passent par l’abonnement DeepSeek (repli automatique tant qu’OpenCode est indisponible). La marque disparaît dès que la route revient.",
+  "modelLabelTipPrimary": "Les requêtes passent par {provider}."
 }

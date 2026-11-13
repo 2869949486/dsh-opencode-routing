@@ -136,5 +136,8 @@
   "switchNoticeTitle": "Cambiado a la suscripción de DeepSeek; la tarea sigue.",
   "switchNoticeBack": "De vuelta en la ruta de OpenCode; la tarea sigue.",
   "switchNoticeTime": "cambiado {time}",
-  "switchNoticeClose": "Cerrar"
+  "switchNoticeClose": "Cerrar",
+  "modelLabelFallback": "Respaldo oficial",
+  "modelLabelTip": "Las peticiones van ahora a la suscripción de DeepSeek (respaldo automático mientras OpenCode no sirve). La marca desaparece cuando la ruta vuelve.",
+  "modelLabelTipPrimary": "Las peticiones van por {provider}."
 }
