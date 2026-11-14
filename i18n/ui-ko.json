@@ -111,6 +111,8 @@
   "clockPeak": "피크",
   "clockOff": "비피크",
   "clockFlip": "{next}까지 {hours}시간 남음",
+  "clockToNext": "{next}까지",
+  "clockBeijingAt": "베이징 {time}",
   "clockHoliday": "오늘은 중국 공휴일이라 공식 API는 하루 종일 비피크 요금으로 계산됩니다",
   "colRollingQuota": "5시간 할당량",
   "capHintText": "텍스트 전용: 일반 텍스트를 넣으면 일반 텍스트로 답합니다.",

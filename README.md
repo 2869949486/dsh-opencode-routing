@@ -6,8 +6,9 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) pl
 into one package: an **OpenCode account pool with automatic A→B failover and quota routing**, plus a
 **per-account / per-model usage dashboard**. Both live on a single Settings page, "OpenCode 账户与用量".
 
-- **Client**: one `settings.section`, refreshed every 60 s; accounts can be added, edited, reordered and probed;
-  model cards carry capability tags; both tables pan by dragging; the UI speaks 10 languages (browser language wins).
+- **Client**: one `settings.section`, refreshed every 60 s; a header card that answers "which route, peak or off-peak,
+  when is the next probe"; accounts can be added, edited, reordered and probed; the model table carries capability tags;
+  both tables pan by dragging; the UI speaks 10 languages (browser language wins).
 - **Host**: two endpoints — `GET /opencode-usage.json` (usage, `?refresh=1` forces a refresh) and
   `GET|POST /opencode-quota-router.json` (pool and routing; actions below).
 
@@ -92,7 +93,8 @@ inference, Go, pay-as-you-go, free inference), one row per model with the **reas
 incident with its start time. The plugin reads it directly (Host side, cached for `router.statusRefreshMs`, 60 s
 by default) and puts it beside the local probe in **one** upstream status card — probe on the left, published verdict
 on the right, one refresh button in the head. The two cards of the previous version covered the same ground and are now
-merged:
+merged. While both halves are green the whole card folds into one line — verdict chips, age of the last probe, the two
+buttons — and opens by itself the moment either half is not (2.12.0; a closed `<details>` costs 44 px instead of 300):
 
 - **The verdict chip** — 正常 / 降级 / 中断 / 维护 — with a tooltip that says what it means *for you*: an
   `upstream` reason reads *"the upstream provider is degraded — not your key and not your allowance, switch to the
@@ -118,32 +120,44 @@ This is the difference between "my requests are failing" and "OpenCode says Go i
 provider": the local probe knows *that* it failed, the published feed knows *why*, and only the second one tells you
 whether switching to the official subscription would help.
 
-### Trimming the page (2.10.0)
+### Trimming the page (2.10.0 → 2.12.1)
 
-The first screen keeps only "which route", "how is the upstream", "how much allowance": everything else folds or
-de-duplicates.
+The first screen keeps only "which route", "is it peak right now", "how is the upstream", "how much allowance": everything
+else folds or de-duplicates. With the live data the page fell from ~2930 px to ~1050 px at 940 wide.
 
 - **Add an account** folds away — a key is entered once, it should not hold a third of the screen forever.
 - **The price table** folds under the verdict: the headline ("OpenCode is 89% cheaper") stays visible, the peak/off-peak,
-  cache-hit and output rows open on demand.
-- **The route card** drops the mode badge the banner already shows, and its two footnotes become one.
+  cache-hit and output rows open on demand. The verdict is no longer wrapped in a second card, so one sentence is framed
+  once.
+- **The banner and the router card became one card** (2.12.0): route, peak/off-peak and the three router buttons share
+  the header card. The separate 「额度路由」 card is gone — its always-visible footnote became the tooltip of
+  重置封禁标记.
+- **The upstream status card folds** (2.12.0): one line while both halves are green, and the full net row, model row and
+  error-code table only while something is wrong or you open it.
+- **The model cards became one table** (2.12.0): five columns — model, this month, 5 h, this week, requests — with the
+  capability chips reduced to small glyphs whose explanations live in tooltips. Routes untouched this month fold into
+  「其余 N 个模型（本月未使用）」, so 30 priced models cost two rows.
 - **The failure record** stays on the page only while the probe is unhealthy; once recovered it no longer sits there as
   noise.
 
-## Page header: which route is answering
+## Page header: which route, peak or off-peak
 
-The first row of the Settings page is a narrow banner (520px at most), and it answers "whose money did the sentence I just
-sent spend":
+The first card on the Settings page answers three questions in one place — whose money the next sentence spends, whether
+that sentence is billed at peak, and when the router looks at the upstream again:
 
-- **First line** — 「当前路由」 plus **one of two values**: 「OpenCode 账户池」 or 「DeepSeek 官方订阅」, green for the pool
-  and amber for the subscription, with the next-probe countdown on the right.
-- **Second line, one sentence** — on the pool it names the active account and says no subscription allowance is spent; on
-  the subscription it says the official API is being billed and that the router moves back once OpenCode is stable. It is
-  clamped to a single line and truncated with an ellipsis; hover for the full text. The banner states the fact, it does not
-  unfold it.
+- **Route row** — 「当前路由」 plus **one of two values**: 「OpenCode 账户池」 or 「DeepSeek 官方订阅」, green for the pool
+  and amber for the subscription, with the next-probe countdown on the right. The full sentence (which account answers,
+  or that the official API is being billed and the router returns once OpenCode is stable) is the row's tooltip.
+- **Peak row** — a coloured dot, 高峰期 / 低谷期 at 17 px, then a live `HH:MM:SS` countdown to the flip and that flip's
+  Beijing wall-clock time. It follows the **live route**: OpenCode's calendar on the pool, DeepSeek's holiday-aware one on
+  the subscription. They disagree only on Chinese statutory holidays, and only then does a second row show both sides.
+- **Three ghost buttons** — 立即探测, 立刻切到官方订阅 / 切回 OpenCode 账户池, 重置封禁标记 (clear the exhausted / auth-failure
+  marks; it touches neither the accounts nor the keys). Their explanations are tooltips, so the card carries no footnote
+  strip.
 - **The reason is not here** — the status card below carries it (*out of allowance, using the official API for now*).
-  Repeating it in the banner only made the banner taller than the thing it announces.
-- The router control card also dropped its *active account / next probe / status* stats: the banner already shows all three.
+  Repeating it in the header only made the header taller than the thing it announces.
+- The separate 「额度路由」 card is gone (2.12.0): its three buttons moved here, its always-visible footnote became the
+  tooltip of the last button, and its *active account / next probe / status* stats were already in the route row.
 
 ## Switch notice (frame overlay)
 
@@ -203,8 +217,9 @@ chooses not to draw the badge.
 
 ## Upstream status card
 
-The Settings page opens with one status card for the upstream itself — local probe on the left, OpenCode's published
-verdict on the right, one refresh button in the shared head — above the account and model tables:
+The Settings page puts one status card for the upstream itself under the header card — local probe on the left, OpenCode's
+published verdict on the right, one refresh button in the shared head — above the account and model tables. It stays
+collapsed to a single line while both halves are green and opens by itself the moment either is not (2.12.0):
 
 - **Two verdict chips** — the local probe (正常 / 降级 (Degraded) / 回退中 / 恢复观察 / 未知) and the published one
   (正常 / 降级 / 中断 / 维护, rendered as 「官方 降级」). Hovering either (and the model pills below) explains in one
@@ -252,8 +267,10 @@ The official `/inference/go/v1/usage` endpoint only returns rounded rolling / we
 "查看用量" opens a per-account dialog with the three windows, their reset times and the probe result (it probes that
 account only and never switches models).
 
-The peak card reports **both calendars side by side** — the official API and OpenCode — with the current period and how
-long (in hours, one decimal) until it flips. Capability chips on the model cards carry a tooltip explaining what the tag
+The peak card reads **the calendar of the route you are on** — OpenCode's on the pool, DeepSeek's holiday-aware one on
+the subscription — with the current period, an `HH:MM:SS` countdown to the flip and that flip's Beijing time; the two
+calendars are shown side by side only on Chinese statutory holidays, the one case where they disagree (2.12.1 replaced the
+24-hour strip with the countdown). Capability glyphs in the model table carry a tooltip explaining what the tag
 means, the header links to the OpenCode Console subscription page, and a floating arrow returns to the top once you have
 scrolled down. Every price cell shows the cached-input, uncached-input and output line, so a cached hit (the green row)
 can be compared directly with what the official API would charge for the same tokens.

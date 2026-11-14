@@ -111,6 +111,8 @@
   "clockPeak": "pico",
   "clockOff": "fora do pico",
   "clockFlip": "{next} em {hours} h",
+  "clockToNext": "até {next}",
+  "clockBeijingAt": "Pequim {time}",
   "clockHoliday": "Hoje é feriado nacional na China, então a API oficial cobra fora do pico o dia inteiro",
   "colRollingQuota": "Cota de 5 horas",
   "capHintText": "Só texto: entra texto puro, sai texto puro.",

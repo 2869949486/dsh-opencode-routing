@@ -111,6 +111,8 @@
   "clockPeak": "пик",
   "clockOff": "не пик",
   "clockFlip": "{next} через {hours} ч",
+  "clockToNext": "до {next}",
+  "clockBeijingAt": "Пекин {time}",
   "clockHoliday": "Сегодня государственный праздник в Китае, поэтому официальный API весь день считает по цене вне пика",
   "colRollingQuota": "Квота на 5 часов",
   "capHintText": "Только текст: на входе обычный текст, на выходе обычный текст.",

@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     // Rendered next to the page title so a stale client bundle is visible at a
     // glance: if this stamp is not the published version, the browser is still
     // running the previous one.
-    const CLIENT_BUILD = 'v2.11.2';
+    const CLIENT_BUILD = 'v2.12.1';
 
     /**
      * UI strings. `zh` is the source; every other locale is a translation of the
@@ -82,7 +82,9 @@ window.__ModuleLoader__.load({
         colRemaining: '本月剩余',
         colMonthlyUsed: '本月用量',
         colWeeklyUsed: '本周用量',
+        colRolling: '5 小时',
         modelsTitle: '按模型（本机估算）',
+        modelsIdle: '其余 {n} 个模型（本月未使用）',
         capsText: '纯文本',
         capsImage: '图像',
         capsVideo: '视频',
@@ -125,6 +127,10 @@ window.__ModuleLoader__.load({
         clockPeak: '高峰期',
         clockOff: '低谷期',
         clockFlip: '还剩 {hours} 小时到{next}',
+        clockToNext: '后转{next}',
+        clockBeijingAt: '北京时间 {time}',
+        peakRule: '高峰 = 工作日 09:00–12:00、14:00–18:00（北京时间），价格与额度消耗都按 ×{factor}；其余时间含周末全天都是低谷。',
+        peakWeekend: '今天是周末，双方全天低谷',
         clockHoliday: '今天是中国法定节假日，官方 API 全天按低谷计',
         colRollingQuota: '5 小时额度',
         capHintText: '纯文本：只吃文字、只出文字。',
@@ -352,7 +358,9 @@ window.__ModuleLoader__.load({
         colRemaining: 'Left this month',
         colMonthlyUsed: 'Used this month',
         colWeeklyUsed: 'Used this week',
+        colRolling: '5 hours',
         modelsTitle: 'Per model (local estimate)',
+        modelsIdle: 'The other {n} models (unused this month)',
         capsText: 'text',
         capsImage: 'image',
         capsVideo: 'video',
@@ -395,6 +403,10 @@ window.__ModuleLoader__.load({
         clockPeak: 'peak',
         clockOff: 'off-peak',
         clockFlip: '{hours} h until {next}',
+        clockToNext: 'until {next}',
+        clockBeijingAt: 'Beijing {time}',
+        peakRule: 'Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.',
+        peakWeekend: 'It is the weekend: both sides bill off-peak all day',
         clockHoliday: 'Chinese public holiday today, so the official API bills off-peak all day',
         colRollingQuota: '5-hour allowance',
         capHintText: 'Text only: plain text in, plain text out.',
@@ -619,7 +631,9 @@ window.__ModuleLoader__.load({
         colRemaining: '本月剩餘',
         colMonthlyUsed: '本月用量',
         colWeeklyUsed: '本週用量',
+        colRolling: '5 小時',
         modelsTitle: '依模型（本機估算）',
+        modelsIdle: '其餘 {n} 個模型（本月未使用）',
         capsText: '純文字',
         capsImage: '圖像',
         capsVideo: '影片',
@@ -662,6 +676,10 @@ window.__ModuleLoader__.load({
         clockPeak: '高峰期',
         clockOff: '低谷期',
         clockFlip: '還剩 {hours} 小時到{next}',
+        clockToNext: '後轉{next}',
+        clockBeijingAt: '北京時間 {time}',
+        peakRule: '高峰 = 工作日 09:00–12:00、14:00–18:00（北京時間），價格與額度消耗都按 ×{factor}；其餘時間含週末全天都是低谷。',
+        peakWeekend: '今天是週末，雙方全天低谷',
         clockHoliday: '今天是中國法定節假日，官方 API 全天按低谷計',
         colRollingQuota: '5 小時額度',
         capHintText: '純文字：只吃文字、只出文字。',
@@ -942,6 +960,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "Hauptzeit",
     "clockOff": "Nebenzeit",
     "clockFlip": "noch {hours} Std. bis {next}",
+    "clockToNext": "noch bis {next}",
+    "clockBeijingAt": "Beijing {time}",
     "clockHoliday": "Heute ist chinesischer gesetzlicher Feiertag, deshalb rechnet die offizielle API den ganzen Tag Nebenzeit ab",
     "colRollingQuota": "5-Stunden-Kontingent",
     "capHintText": "Nur Text: reiner Text rein, reiner Text raus.",
@@ -974,6 +994,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -1212,6 +1235,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "pico",
     "clockOff": "valle",
     "clockFlip": "{next} en {hours} h",
+    "clockToNext": "hasta {next}",
+    "clockBeijingAt": "Beijing {time}",
     "clockHoliday": "Hoy es festivo oficial en China, así que la API oficial cobra tarifa valle todo el día",
     "colRollingQuota": "Cuota de 5 horas",
     "capHintText": "Solo texto: entra texto plano, sale texto plano.",
@@ -1244,6 +1269,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -1482,6 +1510,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "heures pleines",
     "clockOff": "heures creuses",
     "clockFlip": "{next} dans {hours} h",
+    "clockToNext": "avant {next}",
+    "clockBeijingAt": "Beijing {time}",
     "clockHoliday": "Jour férié officiel en Chine aujourd’hui : l’API officielle facture en heures creuses toute la journée",
     "colRollingQuota": "Quota de 5 heures",
     "capHintText": "Texte seul : du texte simple en entrée, du texte simple en sortie.",
@@ -1514,6 +1544,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -1752,6 +1785,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "ピーク",
     "clockOff": "オフピーク",
     "clockFlip": "{next}まであと {hours} 時間",
+    "clockToNext": "{next}まで",
+    "clockBeijingAt": "北京時間 {time}",
     "clockHoliday": "今日は中国の祝日なので、公式 API は一日中オフピークの料金になります",
     "colRollingQuota": "5 時間の枠",
     "capHintText": "テキストのみ: プレーンテキストを入力し、プレーンテキストを返します。",
@@ -1784,6 +1819,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -2022,6 +2060,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "피크",
     "clockOff": "비피크",
     "clockFlip": "{next}까지 {hours}시간 남음",
+    "clockToNext": "{next}까지",
+    "clockBeijingAt": "베이징 {time}",
     "clockHoliday": "오늘은 중국 공휴일이라 공식 API는 하루 종일 비피크 요금으로 계산됩니다",
     "colRollingQuota": "5시간 할당량",
     "capHintText": "텍스트 전용: 일반 텍스트를 넣으면 일반 텍스트로 답합니다.",
@@ -2054,6 +2094,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -2292,6 +2335,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "pico",
     "clockOff": "fora do pico",
     "clockFlip": "{next} em {hours} h",
+    "clockToNext": "até {next}",
+    "clockBeijingAt": "Pequim {time}",
     "clockHoliday": "Hoje é feriado nacional na China, então a API oficial cobra fora do pico o dia inteiro",
     "colRollingQuota": "Cota de 5 horas",
     "capHintText": "Só texto: entra texto puro, sai texto puro.",
@@ -2324,6 +2369,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -2562,6 +2610,8 @@ window.__ModuleLoader__.load({
     "clockPeak": "пик",
     "clockOff": "не пик",
     "clockFlip": "{next} через {hours} ч",
+    "clockToNext": "до {next}",
+    "clockBeijingAt": "Пекин {time}",
     "clockHoliday": "Сегодня государственный праздник в Китае, поэтому официальный API весь день считает по цене вне пика",
     "colRollingQuota": "Квота на 5 часов",
     "capHintText": "Только текст: на входе обычный текст, на выходе обычный текст.",
@@ -2594,6 +2644,9 @@ window.__ModuleLoader__.load({
     "forceFallback": "Switch to the official subscription now",
     "forcePrimary": "Switch back to OpenCode",
     "forceFallbackHint": "Switches to the DeepSeek official API while OpenCode is failing; this consumes official credits.",
+    "modelsIdle": "The other {n} models (unused this month)",
+    "peakRule": "Peak = weekdays 09:00–12:00 and 14:00–18:00 (Beijing), where price and allowance burn are both ×{factor}; every other hour, weekends included, is off-peak.",
+    "peakWeekend": "It is the weekend: both sides bill off-peak all day",
     "statusTitle": "Upstream status",
     "statusRefresh": "Refresh status",
     "statusRefreshing": "Refreshing…",
@@ -3003,6 +3056,94 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /** Amber bills 2×, green does not: the page's whole verdict hangs on this
+     *  one bit, so it gets a permanent strip instead of a collapsed footnote. */
+    const PEAK_HOT = '#e0a030';
+    const PEAK_COOL = '#3c9d5d';
+
+    /** "Is it peak right now, and how long until it flips?" — answered as a live
+     *  countdown. A day strip needed a legend to be read; the number is the answer
+     *  itself. `info` is `data.clock`, `side` is whose schedule the page is
+     *  spending right now: the official API drops peak on Chinese holidays while
+     *  OpenCode keeps its weekday windows, so the countdown has to follow the
+     *  route instead of always reading `opencode`. Plain builder, not a component:
+     *  it renders from data (see the React stub in test.mjs). */
+    const peakBlock = (info, side = 'opencode') => {
+      if (!info) return null;
+      const rule = info.rule ?? { factor: 2, utcWeekdayHours: [[1, 4], [6, 10]] };
+      const beijing = info.beijing ?? null;
+      const weekend = beijing !== null && (beijing.weekday === 0 || beijing.weekday === 6);
+      const officialHot = info.official?.peak === true;
+      const opencodeHot = info.opencode?.peak === true;
+      // Fall back to the pool's schedule when the official half is missing, so an
+      // older payload still prints a period instead of an empty line.
+      const mine = (side === 'official' ? info.official : null) ?? info.opencode ?? null;
+      const hot = mine?.peak === true;
+      const color = hot ? PEAK_HOT : PEAK_COOL;
+      const pad = (value) => String(value).padStart(2, '0');
+      const beijingTime = (ms) => {
+        if (typeof ms !== 'number' || !Number.isFinite(ms)) return null;
+        const at = new Date(ms + 8 * 3600 * 1000);
+        return `${pad(at.getUTCHours())}:${pad(at.getUTCMinutes())}`;
+      };
+      // Ticking down locally beats a static "38.9 hours": the page re-renders every
+      // second, and a countdown makes the flip impossible to misread.
+      const left = typeof mine?.next === 'number' ? Math.max(0, mine.next - Date.now()) : null;
+      const countdown = left === null
+        ? null
+        : (() => {
+            const total = Math.floor(left / 1000);
+            return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
+          })();
+      const flipAt = beijingTime(mine?.next);
+      const other = (label, peak, peakText, offText) => h('span', {
+        style: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: peak ? PEAK_HOT : PEAK_COOL },
+      },
+        h('span', { style: { opacity: .7 } }, label),
+        h('span', null, peak ? peakText : offText),
+      );
+      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+        h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 9, flexWrap: 'wrap' } },
+          h('span', {
+            'aria-hidden': 'true',
+            style: {
+              alignSelf: 'center', width: 9, height: 9, borderRadius: '50%', flex: 'none',
+              background: color, boxShadow: `0 0 0 3px ${color}33`,
+            },
+          }),
+          h('span', { style: { fontSize: 17, fontWeight: 700, color, letterSpacing: '.02em' } },
+            hot ? t('clockPeak') : t('clockOff')),
+          countdown === null
+            ? null
+            : h('span', {
+                title: t('peakRule', { factor: rule.factor }),
+                style: { fontSize: 15, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' },
+              }, countdown),
+          countdown === null
+            ? null
+            : h('span', { style: { fontSize: 11.5, opacity: .66 } },
+                t('clockToNext', { next: hot ? t('clockOff') : t('clockPeak') })),
+          flipAt === null
+            ? null
+            : h('span', { style: { fontSize: 10.5, opacity: .45, fontVariantNumeric: 'tabular-nums' } },
+                t('clockBeijingAt', { time: flipAt })),
+        ),
+        // The two sides share the same windows and split only on Chinese holidays,
+        // so the second line is worth its height only when they actually disagree.
+        officialHot === opencodeHot
+          ? null
+          : h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
+              other(t('peakGoPay'), opencodeHot, t('peakGoPeak'), t('peakGoOff')),
+              other(t('peakOfficialPay'), officialHot, t('peakOfficialPeak'), t('peakOfficialOff')),
+            ),
+        h('div', { style: { fontSize: 11, opacity: .55, lineHeight: 1.6 } },
+          weekend ? `${t('peakWeekend')} · ` : '',
+          t('peakRule', { factor: rule.factor }),
+          info.holiday ? ` · ${t('clockHoliday')}` : '',
+        ),
+      );
+    };
+
     function UsageDialog({ account, busy, onProbe, onClose }) {
       if (!account) return null;
       const skin = theme();
@@ -3411,57 +3552,103 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const modelCards = (data?.models ?? []).map((row) => {
+      // A table, not a card per model: the numbers line up so the eye can compare
+      // them, and ten models no longer cost ten blocks of padding. The capability
+      // tags shrink to glyphs with their explanation on hover — they are reference
+      // material, not something anyone reads per visit. Models nobody has called
+      // this month fold into a single line instead of thirty rows of zeros.
+      const modelList = data?.models ?? [];
+      const touched = (row) => row.requests > 0 || (typeof row.monthly === 'number' && row.monthly > 0);
+      const liveRows = modelList.filter(touched);
+      const idleRows = modelList.filter((row) => !touched(row));
+      const headCell = (title, align) => h('th', {
+        key: title,
+        style: {
+          textAlign: align, padding: '6px 10px', fontWeight: 600, whiteSpace: 'nowrap',
+          borderBottom: '1px solid rgba(127,127,127,.3)',
+        },
+      }, title);
+      const numCell = (content, extra) => h('td', {
+        style: {
+          textAlign: 'right', padding: '5px 10px', borderBottom: '1px solid rgba(127,127,127,.22)',
+          whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', ...extra,
+        },
+      }, content);
+      // The allowance windows read as percentages — the question is "how close to
+      // the cap", not "how many dollars" — and the money behind them is on hover.
+      const windowCell = (row, used, limit) => {
+        const ratio = row.free || !limit ? null : (used / limit) * 100;
+        const tone = ratio === null ? 'inherit' : ratio >= 100 ? '#d9534f' : ratio >= 80 ? PEAK_HOT : 'inherit';
+        return numCell(h('span', {
+          style: { color: tone },
+          title: row.free || !limit ? undefined : `${money(used)} / ${money(limit)}`,
+        }, percentText(used, limit, row.free)));
+      };
+      const modelRow = (row) => {
         const vendor = vendorOf(row.model);
         const chips = capabilityTags(row);
-        return h('div', {
-          key: row.model,
-          style: {
-            display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 16px', borderRadius: 10,
-            border: `1px solid ${vendor.color}3d`,
-            background: `linear-gradient(135deg, ${vendor.color}2e, ${vendor.color}0f 55%, rgba(127,127,127,.03))`,
-          },
-        },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+        const ratio = row.free || !row.limit ? 0 : Math.min(100, (row.monthly / row.limit) * 100);
+        const tone = row.free ? 'inherit' : ratio >= 100 ? '#d9534f' : ratio >= 80 ? PEAK_HOT : 'inherit';
+        return h('tr', { key: row.model },
+          cell(h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
             h('span', {
-              style: {
-                width: 30, height: 30, borderRadius: '50%', flex: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: `${vendor.color}26`, border: `1px solid ${vendor.color}80`,
-                color: vendor.color, fontSize: 11, fontWeight: 700,
-              },
-            },
-              vendor.path
-                ? h('svg', { viewBox: '0 0 24 24', width: 17, height: 17, role: 'img', 'aria-label': vendor.name },
-                    h('path', { d: vendor.path, fill: vendor.color }),
-                  )
-                : vendor.mark,
-            ),
-            h('span', { style: { fontWeight: 600, fontSize: 13 } }, prettyModel(row.model)),
-            row.free ? pill(t('unlimited'), '#3c9d5d') : null,
-          ),
-          chips.length > 0
-            ? h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-                chips.map((chip) => h('span', {
-                  key: chip.key,
-                  title: chip.hint,
-                  style: {
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '2px 8px', borderRadius: 999, fontSize: 11, cursor: 'help',
-                    border: `1px solid ${vendor.color}59`, background: `${vendor.color}14`, color: 'inherit',
-                  },
-                }, h('span', null, capIcon(chip.key)), h('span', null, chip.label))),
-              )
-            : null,
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 12 } },
-            stat(t('colRemaining'), row.free ? t('unlimited') : money(row.remaining)),
-            stat(t('colMonthlyUsed'), row.free ? t('unlimited') : `${money(row.monthly)} / ${money(row.limit)}`),
-            stat(t('colWeeklyUsed'), row.free ? t('unlimited') : money(row.weekly)),
-            stat(t('colRollingQuota'), percentText(row.rolling, row.rollingLimit, row.free)),
-            stat(t('colRequests'), String(row.requests)),
-          ),
+              'aria-hidden': 'true',
+              style: { width: 7, height: 7, borderRadius: '50%', background: vendor.color, flex: 'none' },
+            }),
+            h('span', { style: { fontWeight: 600 } }, prettyModel(row.model)),
+            row.free ? h('span', { style: { fontSize: 10.5, opacity: .6 } }, t('unlimited')) : null,
+            chips.length > 0
+              ? h('span', { style: { display: 'inline-flex', gap: 4, opacity: .5, fontSize: 10.5 } },
+                  chips.map((chip) => h('span', { key: chip.key, title: chip.hint, style: { cursor: 'help' } }, capIcon(chip.key))))
+              : null,
+          )),
+          numCell(h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 } },
+            h('span', { style: { color: tone } }, row.free ? t('unlimited') : `${money(row.monthly)} / ${money(row.limit)}`),
+            row.free || !row.limit
+              ? null
+              : h('div', {
+                  style: { width: 64, height: 3, borderRadius: 999, background: 'rgba(127,127,127,.22)', overflow: 'hidden' },
+                },
+                  h('div', {
+                    style: {
+                      width: `${Math.max(2, ratio)}%`, height: '100%',
+                      background: ratio >= 100 ? '#d9534f' : ratio >= 80 ? PEAK_HOT : PEAK_COOL,
+                    },
+                  }),
+                ),
+          )),
+          windowCell(row, row.rolling, row.rollingLimit),
+          windowCell(row, row.weekly, row.weeklyLimit),
+          numCell(String(row.requests), { opacity: .6 }),
         );
-      });
+      };
+      const tableOf = (list) => h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() },
+        h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
+          h('thead', null,
+            h('tr', null,
+              headCell(t('colModel'), 'left'),
+              headCell(t('colMonthlyUsed'), 'right'),
+              headCell(t('colRolling'), 'right'),
+              headCell(t('colWeekly'), 'right'),
+              headCell(t('colRequests'), 'right'),
+            ),
+          ),
+          h('tbody', null, list.map(modelRow)),
+        ),
+      );
+      const modelTable = modelList.length === 0
+        ? h('div', { style: { opacity: .6, fontSize: 12 } }, t('none'))
+        : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            tableOf(liveRows),
+            idleRows.length === 0
+              ? null
+              : h('details', { key: 'idle' },
+                  h('summary', {
+                    style: { cursor: 'pointer', fontSize: 11.5, opacity: .6, listStyle: 'revert', paddingLeft: 2 },
+                  }, t('modelsIdle', { n: idleRows.length })),
+                  h('div', { style: { marginTop: 6 } }, tableOf(idleRows)),
+                ),
+          );
 
       const peak = data?.peak;
       const quotaSpent = typeof data?.usage?.monthly?.percent === 'number' ? data.usage.monthly.percent : null;
@@ -3491,19 +3678,6 @@ window.__ModuleLoader__.load({
         // Full-width brackets read correctly in Chinese, but look odd in Latin text.
         return /^zh/i.test(LANG) ? `${label}（${period}）` : `${label} (${period})`;
       };
-      const clockLine = (label, side) => h('div', {
-        style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' },
-      },
-        h('span', { style: { minWidth: 96, opacity: .75 } }, label),
-        side ? pill(periodOf(side), side.peak ? '#e0a030' : '#3c9d5d') : h('span', { style: { opacity: .5 } }, t('none')),
-        side && typeof side.hours === 'number'
-          ? h('span', { style: { opacity: .65 } }, t('clockFlip', {
-              hours: side.hours.toFixed(1),
-              next: side.peak ? t('clockOff') : t('clockPeak'),
-            }))
-          : null,
-      );
-
       const inspectingAccount = accountList.find((account) => account.id === inspecting) ?? null;
 
       // ---- Upstream status --------------------------------------------------
@@ -3778,80 +3952,113 @@ window.__ModuleLoader__.load({
       // our probe are the same question from both ends, so they share one card and
       // one refresh button. The open-source layout of the old two-card page is
       // preserved as two sections inside it.
-      const statusCard = localSection || officialSection
-        ? card(
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
-              h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('statusTitle')),
-              upstreamMeta ? chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint) : null,
-              publishedMeta ? chip(t('officialChip', { status: publishedMeta.label }), publishedMeta.color, publishedMeta.hint) : null,
-              upstream?.state === 'degraded' || publishedMeta?.help
-                ? h('button', {
-                    type: 'button',
-                    className: 'ocr-btn',
-                    style: btn,
-                    disabled: busy,
-                    title: t('forceFallbackHint'),
-                    onClick: () => void act({ action: 'fallback' }),
-                  }, t('statusSwitchOfficial'))
+      //
+      // While both are green the card folds to one line: this block is the biggest
+      // thing on the page and it only ever has news when something is down. A
+      // degraded state opens it on its own, because then the detail IS the answer.
+      const statusHealthy = upstream?.code === 'ok'
+        && (published === null || published?.status === undefined || published.status === 'operational');
+      const statusLink = h('a', {
+        href: 'https://status.opencode.ai/',
+        target: '_blank',
+        rel: 'noreferrer',
+        className: 'ocr-btn',
+        style: { ...btn, textDecoration: 'none', display: 'inline-block' },
+      }, t('officialOpenStatus'));
+      const statusRefresh = h('button', {
+        type: 'button',
+        className: 'ocr-btn',
+        style: btn,
+        disabled: busy,
+        title: t('statusRefreshHint'),
+        onClick: () => void act({ action: 'status' }),
+      }, busy ? t('statusRefreshing') : t('statusRefresh'));
+      const statusChips = [
+        upstreamMeta ? chip(upstreamMeta.label, upstreamMeta.color, upstreamMeta.hint) : null,
+        publishedMeta ? chip(t('officialChip', { status: publishedMeta.label }), publishedMeta.color, publishedMeta.hint) : null,
+      ];
+      const statusBody = [
+        // "Them or me" cannot be answered by one slow host: this row compares
+        // this machine's own path to both upstreams, which is the only way to
+        // tell a rate limit from a dead proxy.
+        router?.net
+          ? (() => {
+              const net = netVerdict(router.net);
+              return h('div', { 'data-ocr': 'net-row', style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11.5 } },
+                h('span', { style: { opacity: .6, minWidth: 56 } }, t('netTitle')),
+                chip(net.label, netColor(net.verdict), `${net.hint} · ${t('netCheckedAt', { time: clock(router.net.at) })}`),
+                h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.opencode)),
+                h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.official)),
+                h('button', {
+                  type: 'button',
+                  className: 'ocr-btn',
+                  style: { ...btn, padding: '2px 8px', fontSize: 11 },
+                  disabled: busy,
+                  title: net.hint,
+                  onClick: () => void act({ action: 'netcheck' }),
+                }, t('netCheck')),
+              );
+            })()
+          : null,
+        // The banner above already answered "which route"; this row only
+        // explains why it may have moved, so the mode pill is gone.
+        router?.reason
+          ? h('div', { style: { fontSize: 12, lineHeight: 1.7 } },
+              h('span', { style: { opacity: .85 } }, reasonText(router.reason)),
+              router.mode === 'fallback'
+                ? h('span', { style: { opacity: .55 } }, ` · ${t('statusSwitchWhy')}`)
                 : null,
-              h('span', { style: { flex: 1 } }),
-              h('a', {
-                href: 'https://status.opencode.ai/',
-                target: '_blank',
-                rel: 'noreferrer',
-                className: 'ocr-btn',
-                style: { ...btn, textDecoration: 'none', display: 'inline-block' },
-              }, t('officialOpenStatus')),
-              h('button', {
-                type: 'button',
-                className: 'ocr-btn',
-                style: btn,
-                disabled: busy,
-                title: t('statusRefreshHint'),
-                onClick: () => void act({ action: 'status' }),
-              }, busy ? t('statusRefreshing') : t('statusRefresh')),
-            ),
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
-              upstream?.checkedAt ? h('span', null, t('statusCheckedAt', { time: ago(upstream.checkedAt) })) : null,
-            ),
-            // "Them or me" cannot be answered by one slow host: this row compares
-            // this machine's own path to both upstreams, which is the only way to
-            // tell a rate limit from a dead proxy.
-            router?.net
-              ? (() => {
-                  const net = netVerdict(router.net);
-                  return h('div', { 'data-ocr': 'net-row', style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 11.5 } },
-                    h('span', { style: { opacity: .6, minWidth: 56 } }, t('netTitle')),
-                    chip(net.label, netColor(net.verdict), `${net.hint} · ${t('netCheckedAt', { time: clock(router.net.at) })}`),
-                    h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.opencode)),
-                    h('span', { style: { opacity: .55, fontFamily: 'ui-monospace, Consolas, monospace' } }, netSide(router.net.official)),
-                    h('button', {
+            )
+          : null,
+        h('div', { style: { display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' } },
+          localSection,
+          officialSection,
+        ),
+        modelRows,
+      ];
+      const statusCard = localSection || officialSection
+        ? statusHealthy
+          ? card(
+              h('details', { style: { fontSize: 12 } },
+                h('summary', {
+                  style: { cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+                },
+                  h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('statusTitle')),
+                  ...statusChips,
+                  upstream?.checkedAt
+                    ? h('span', { style: { fontSize: 11, opacity: .5 } }, t('statusCheckedAt', { time: ago(upstream.checkedAt) }))
+                    : null,
+                  h('span', { style: { flex: 1 } }),
+                  statusLink,
+                  statusRefresh,
+                  h('span', { 'aria-hidden': 'true', style: { fontSize: 9, opacity: .6 } }, '▼'),
+                ),
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 } }, ...statusBody),
+              ),
+            )
+          : card(
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+                h('span', { style: { fontWeight: 600, fontSize: 13 } }, t('statusTitle')),
+                ...statusChips,
+                upstream?.state === 'degraded' || publishedMeta?.help
+                  ? h('button', {
                       type: 'button',
                       className: 'ocr-btn',
-                      style: { ...btn, padding: '2px 8px', fontSize: 11 },
+                      style: btn,
                       disabled: busy,
-                      title: net.hint,
-                      onClick: () => void act({ action: 'netcheck' }),
-                    }, t('netCheck')),
-                  );
-                })()
-              : null,
-            // The banner above already answered "which route"; this row only
-            // explains why it may have moved, so the mode pill is gone.
-            router?.reason
-              ? h('div', { style: { fontSize: 12, lineHeight: 1.7 } },
-                  h('span', { style: { opacity: .85 } }, reasonText(router.reason)),
-                  router.mode === 'fallback'
-                    ? h('span', { style: { opacity: .55 } }, ` · ${t('statusSwitchWhy')}`)
-                    : null,
-                )
-              : null,
-            h('div', { style: { display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' } },
-              localSection,
-              officialSection,
-            ),
-            modelRows,
-          )
+                      title: t('forceFallbackHint'),
+                      onClick: () => void act({ action: 'fallback' }),
+                    }, t('statusSwitchOfficial'))
+                  : null,
+                h('span', { style: { flex: 1 } }),
+                statusLink,
+                statusRefresh,
+              ),
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 11, opacity: .55 } },
+                upstream?.checkedAt ? h('span', null, t('statusCheckedAt', { time: ago(upstream.checkedAt) })) : null,
+              ),
+              ...statusBody,
+            )
         : null;
 
       // Which route is answering right now is the first thing the page owes the
@@ -3869,39 +4076,10 @@ window.__ModuleLoader__.load({
         : t('routerMissing');
 
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-        h('div', {
-          title: routeHint,
-          style: {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3,
-            padding: '7px 12px',
-            borderRadius: 8,
-            border: `1px solid ${routeColor}55`,
-            background: `${routeColor}14`,
-            maxWidth: 520,
-            boxSizing: 'border-box',
-          },
-        },
-          h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' } },
-            h('span', { style: { fontSize: 10.5, opacity: .65, letterSpacing: '.06em' } }, t('routeNow')),
-            h('span', { style: { fontSize: 14, fontWeight: 700, color: routeColor } }, router
-              ? (router.mode === 'fallback' ? t('routeOfficial') : t('routeOpencode'))
-              : t('none')),
-            h('span', { style: { flex: 1 } }),
-            router
-              ? h('span', { style: { fontSize: 10.5, opacity: .55, whiteSpace: 'nowrap' } },
-                  `${t('nextProbe')} ${when(router.nextProbeAt ?? Date.now() + (router.probeIntervalMs ?? 0))}`)
-              : null,
-          ),
-          h('div', {
-            style: { fontSize: 11.5, opacity: .7, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-          }, routeHint),
-        ),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
           h('div', { style: { fontSize: 16, fontWeight: 600 } }, t('title')),
           h('span', { style: { opacity: .4, fontSize: 10.5, letterSpacing: '.04em' } }, CLIENT_BUILD),
-          state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 } }, t('updatedAt', { time: clock(data?.checkedAt) })) : null,
+          state.phase === 'ready' ? h('span', { style: { opacity: .55, fontSize: 12 }, title: clock(data?.checkedAt) }, t('updatedAt', { time: ago(data?.checkedAt) })) : null,
           h('span', { style: { flex: 1 } }),
           h('a', {
             href: 'https://opencode.ai/console',
@@ -3916,29 +4094,51 @@ window.__ModuleLoader__.load({
         actionError ? h('div', { style: { color: '#d9534f', fontSize: 13 } }, actionError) : null,
         notice ? h('div', { style: { color: '#3c9d5d', fontSize: 13 } }, notice) : null,
 
-        statusCard,
-
-        // The banner already says which route, who serves it, why, and when the next
-        // probe runs; repeating those three stats here only made the page longer.
+        // The first screen owes exactly two answers: which route is serving, and
+        // whether this hour bills at peak. They share one card, and the router's
+        // three actions sit at its foot instead of in a card of their own.
         card(
-          cardHead(t('routerTitle')),
+          h('div', {
+            title: routeHint,
+            style: { display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' },
+          },
+            h('span', { style: { fontSize: 10.5, opacity: .6, letterSpacing: '.06em' } }, t('routeNow')),
+            h('span', { style: { fontSize: 13.5, fontWeight: 700, color: routeColor } }, router
+              ? (router.mode === 'fallback' ? t('routeOfficial') : t('routeOpencode'))
+              : t('none')),
+            router?.activeLabel
+              ? h('span', { style: { fontSize: 11, opacity: .6 } }, router.activeLabel)
+              : null,
+            h('span', { style: { flex: 1 } }),
+            router
+              ? h('span', { style: { fontSize: 10.5, opacity: .55, whiteSpace: 'nowrap' } },
+                  `${t('nextProbe')} ${when(router.nextProbeAt ?? Date.now() + (router.probeIntervalMs ?? 0))}`)
+              : null,
+          ),
+          // The countdown follows whichever side is spending: the official API
+          // drops peak on Chinese holidays, and the reader must see that flip.
+          peakBlock(clockInfo, router?.mode === 'fallback' ? 'official' : 'opencode'),
           router
-            ? tools(
-                h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'probe' }) }, t('probeAll')),
+            ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingTop: 2 } },
                 h('button', {
-                  type: 'button',
-                  className: 'ocr-btn',
-                  style: btn,
-                  disabled: busy,
+                  type: 'button', className: 'ocr-btn', style: { ...btn, padding: '2px 10px', fontSize: 11 },
+                  disabled: busy, onClick: () => void act({ action: 'probe' }),
+                }, t('probeAll')),
+                h('button', {
+                  type: 'button', className: 'ocr-btn', style: { ...btn, padding: '2px 10px', fontSize: 11 },
+                  disabled: busy, title: t('statusSwitchWhy'),
                   onClick: () => void act({ action: router.mode === 'fallback' ? 'primary' : 'fallback' }),
                 }, router.mode === 'fallback' ? t('forcePrimary') : t('forceFallback')),
-                h('button', { type: 'button', className: 'ocr-btn', style: btn, disabled: busy, onClick: () => void act({ action: 'reset' }) }, t('resetMarks')),
-                // One footnote instead of two: the second one repeats the
-                // force-switch button's own tooltip.
-                h('span', { style: { flexBasis: '100%', fontSize: 11, opacity: .55, lineHeight: 1.6 } }, t('resetHint')),
+                h('button', {
+                  type: 'button', className: 'ocr-btn', style: { ...btn, padding: '2px 10px', fontSize: 11 },
+                  disabled: busy, title: t('resetHint'),
+                  onClick: () => void act({ action: 'reset' }),
+                }, t('resetMarks')),
               )
             : null,
         ),
+
+        statusCard,
 
         card(
           cardHead(t('accountsTitle'), h('span', { style: { opacity: .55, fontSize: 12 } }, t('accountsOrder'))),
@@ -3976,31 +4176,24 @@ window.__ModuleLoader__.load({
             )
           : null,
 
-        // The verdict is the headline, so it doubles as the summary: the page
-        // shows one sentence and the number table opens on demand.
+        // The verdict is the headline, so it doubles as the summary and carries
+        // the tint itself — wrapping it in a card as well would stack two borders
+        // around one sentence. The peak clock used to live in here too; it now
+        // owns the card at the top.
         shown
-          ? card(
-              h('details', { style: { fontSize: 12 } },
-                h('summary', { style: { cursor: 'pointer', listStyle: 'none' } },
-                  h('div', {
-                    style: {
-                      padding: '16px 18px', borderRadius: 10, fontSize: 18, fontWeight: 700, lineHeight: 1.5,
-                      color: verdictColor, background: `${verdictColor}22`, border: `1px solid ${verdictColor}80`,
-                    },
-                  }, verdict),
-                ),
-                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 } },
-                  clockInfo
-                    ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                        h('div', { style: { fontSize: 12, opacity: .6 } }, t('clockTitle')),
-                        clockLine(t('colOfficial'), clockInfo.official),
-                        clockLine(t('colOpenCode'), clockInfo.opencode),
-                        clockInfo.holiday
-                          ? h('div', { style: { fontSize: 11, opacity: .55 } }, t('clockHoliday'))
-                          : null,
-                      )
-                    : null,
-                  h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() }, h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
+          ? h('details', { key: 'verdict', style: { fontSize: 12 } },
+              h('summary', {
+                style: {
+                  cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px', borderRadius: 9, fontSize: 14.5, fontWeight: 700, lineHeight: 1.4,
+                  color: verdictColor, background: `${verdictColor}1c`, border: `1px solid ${verdictColor}73`,
+                },
+              },
+                h('span', { style: { flex: 1 } }, verdict),
+                h('span', { style: { fontSize: 9, fontWeight: 400, opacity: .7 } }, '▼'),
+              ),
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 } },
+                h('div', { style: { overflowX: 'auto', cursor: 'grab' }, ...draggable() }, h('table', { style: { borderCollapse: 'collapse', width: '100%', fontSize: 12 } },
                     h('thead', null,
                       h('tr', null, [
                         t('colModel'), t('colKind'),
@@ -4029,13 +4222,12 @@ window.__ModuleLoader__.load({
                     )),
                   )),
                 ),
-              ),
-            )
+              )
           : null,
 
         card(
-          cardHead(t('modelsTitle')),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, modelCards),
+          cardHead(t('modelsTitle'), h('span', { style: { opacity: .5, fontSize: 11 } }, t('footerPeakRule'))),
+          modelTable,
         ),
 
         h('div', { style: { opacity: .55, fontSize: 12, lineHeight: 1.8 } },

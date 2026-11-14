@@ -29,5 +29,5 @@ export function apply(ctx, config = {}) {
   ctx.plugin({ name: 'opencode-router:router', inject: router.inject, apply: router.apply }, routerConfig)
 }
 
-export { isChinaHoliday, peakMultiplier, peakSnapshot } from './usage.js'
+export { beijingParts, isChinaHoliday, peakClock, peakMultiplier, peakSnapshot, PEAK_RULE } from './usage.js'
 export { isExhausted, retryAfter, nextProbeAt, maskKey } from './router.js'

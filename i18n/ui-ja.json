@@ -111,6 +111,8 @@
   "clockPeak": "ピーク",
   "clockOff": "オフピーク",
   "clockFlip": "{next}まであと {hours} 時間",
+  "clockToNext": "{next}まで",
+  "clockBeijingAt": "北京時間 {time}",
   "clockHoliday": "今日は中国の祝日なので、公式 API は一日中オフピークの料金になります",
   "colRollingQuota": "5 時間の枠",
   "capHintText": "テキストのみ: プレーンテキストを入力し、プレーンテキストを返します。",

@@ -111,6 +111,8 @@
   "clockPeak": "pico",
   "clockOff": "valle",
   "clockFlip": "{next} en {hours} h",
+  "clockToNext": "hasta {next}",
+  "clockBeijingAt": "Beijing {time}",
   "clockHoliday": "Hoy es festivo oficial en China, así que la API oficial cobra tarifa valle todo el día",
   "colRollingQuota": "Cuota de 5 horas",
   "capHintText": "Solo texto: entra texto plano, sale texto plano.",

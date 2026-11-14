@@ -18,6 +18,21 @@ import { apply as applyUsage, isChinaHoliday, parseGoDocs, peakClock, peakMultip
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/**
+ * Wait until the router's own probe schedule stops moving the usage counters.
+ * The suite runs it at a 1.2 s cadence, so a background round can otherwise land
+ * between two assertions and inflate a count nobody asked for.
+ */
+async function quietProbes() {
+  let last = -1
+  for (let i = 0; i < 24; i += 1) {
+    const total = [...probes.values()].reduce((sum, hits) => sum + hits, 0)
+    if (total === last) return
+    last = total
+    await sleep(120)
+  }
+}
+
 // ---- one package, two children -------------------------------------------
 {
   assert.equal(accounts.name, 'opencode-router')
@@ -88,6 +103,12 @@ assert.equal(isExhausted({ rolling: { status: 'ok', percent: 100 } }), true)
   assert.equal(clockQuiet.official.peak, false)
   assert.equal(clockQuiet.opencode.peak, false)
   assert.ok(clockQuiet.opencode.hours > 0, 'a flip always lies ahead')
+
+  // The client draws the day from these two fields, so the schedule and the
+  // Beijing clock travel with the snapshot instead of being hardcoded again.
+  assert.deepEqual(clockQuiet.rule, { factor: 2, utcWeekdayHours: [[1, 4], [6, 10]] }, 'the rule ships with the clock')
+  assert.deepEqual(clockQuiet.beijing, { weekday: 2, hour: 20, minute: 0, minutes: 1200 }, 'and so does the Beijing wall clock')
+  assert.equal(peakClock(Date.parse('2026-02-28T04:00:00Z')).beijing.weekday, 6, 'Saturday reads as day 6 (Beijing, not UTC)')
 
   // The pricing page is the only place the plan price and the per-model allowance
   // are published, so the scraper must survive the real markup.
@@ -417,6 +438,9 @@ console.log('account failover ok')
 
 // A target probe only touches the named account
 {
+  // The router keeps probing on its own schedule, so start from a quiet moment
+  // and then compare what each call added rather than an absolute total.
+  await quietProbes()
   probes.clear()
   const probed = await api('POST', { action: 'probe', id: 'a1' })
   assert.equal(probed.status, 200)
@@ -424,8 +448,8 @@ console.log('account failover ok')
   assert.equal(probes.get('oc_sk_backup') ?? 0, 0, 'the other account was left alone')
   const all = await api('POST', { action: 'probe' })
   assert.equal(all.status, 200)
-  assert.equal(probes.get('oc_sk_test'), 2)
-  assert.equal(probes.get('oc_sk_backup'), 1)
+  assert.ok(probes.get('oc_sk_test') >= 2, 'the whole-pool probe re-reads the named account')
+  assert.ok((probes.get('oc_sk_backup') ?? 0) >= 1, 'and it reads the backup too')
   const unknown = await api('POST', { action: 'probe', id: 'zzz' })
   assert.equal(unknown.status, 400, 'a probe for an unknown account is rejected')
   assert.match(unknown.body.error, /zzz/)
@@ -842,22 +866,56 @@ console.log('reveal key ok')
     }
     walk(tree)
 
-    // The first thing on the page names the route, in words and in colour.
-    const banner = nodes.find((node) => typeof node.props?.title === 'string' && node.props?.style?.boxSizing === 'border-box')
-    assert.ok(banner, 'the page opens with a route banner')
-    const headline = nodes.find((node) => node.props?.style?.fontSize === 14 && node.props?.style?.fontWeight === 700)
-    assert.ok(headline, 'the banner carries a headline')
+    // The first thing on the page answers the two questions that matter — which
+    // route is serving, and is this hour peak — and answers both in one card.
+    const headline = nodes.find((node) => node.props?.style?.fontSize === 13.5 && node.props?.style?.fontWeight === 700)
+    assert.ok(headline, 'the page opens with the route headline')
     assert.equal(label(headline), routeOf[mode], 'the headline names the route that is answering')
     assert.equal(headline.props.style.color, mode === 'fallback' ? '#e0a030' : '#3c9d5d', 'and colours it by route')
-    assert.ok(flat.indexOf('当前路由') < flat.indexOf('本地上游探测'), 'the banner sits above the status card')
+    assert.ok(flat.indexOf('当前路由') < flat.indexOf('本地上游探测'), 'the route sits above the status card')
 
-    // Compact: two rows, a capped width, and a hint that truncates instead of
-    // wrapping the banner into a paragraph.
-    assert.equal(banner.children.length, 2, 'the banner is a verdict row and one hint line')
-    assert.ok(banner.props.style.maxWidth <= 560, 'the banner does not stretch the full page width')
-    assert.equal(banner.children[1].props.style.whiteSpace, 'nowrap', 'the hint stays on one line')
-    assert.equal(banner.children[1].props.style.textOverflow, 'ellipsis', 'and truncates rather than growing')
-    assert.equal(count(flatten(banner), mode === 'fallback' ? '额度用尽' : '额度已恢复'), 0, 'the banner leaves the reason to the status card')
+    // Peak/off-peak is spelled out on the first screen, with the windows printed
+    // under it — the old page hid it inside a collapsed price block. The countdown
+    // follows whichever side is answering, so switching routes moves the number.
+    const activeClock = mode === 'fallback' ? usage.clock?.official : usage.clock?.opencode
+    const hot = activeClock?.peak === true
+    const periodLabel = hot ? '高峰期' : '低谷期'
+    const period = nodes.find((node) => node.props?.style?.fontSize === 17 && node.props?.style?.fontWeight === 700)
+    assert.ok(period, 'the peak headline renders')
+    assert.equal(label(period), periodLabel, 'and names the current period')
+    assert.equal(period.props.style.color, hot ? '#e0a030' : '#3c9d5d', 'amber when it bills 2x, green when it does not')
+    assert.ok(flat.indexOf('当前路由') < flat.indexOf(periodLabel), 'peak belongs to the route card')
+    assert.ok(flat.indexOf(periodLabel) < flat.indexOf('本地上游探测'), 'and sits above the status card')
+    assert.ok(flat.includes('09:00–12:00'), 'the windows are printed, not implied')
+
+    // The day bar is gone: the number is the answer. It ticks in h:mm:ss and it
+    // follows the route, so a holiday shows up as a different number per side.
+    const countdown = nodes.find((node) => node.props?.style?.fontSize === 15 && node.props?.style?.fontWeight === 700)
+    assert.ok(countdown, 'the countdown replaced the day bar')
+    assert.match(label(countdown), /^\d{2,3}:\d{2}:\d{2}$/, 'and reads as hours:minutes:seconds')
+    assert.equal(
+      nodes.some((node) => node.props?.style?.position === 'relative' && node.props?.style?.height === 20),
+      false,
+      'no 24-hour bar is left on the page',
+    )
+
+    // Folded blocks may hold prices and error tables, never the answer to "is it
+    // peak right now" — that was the whole complaint.
+    const within = (root, target) => {
+      if (root === target) return true
+      if (root === null || typeof root !== 'object') return false
+      if (Array.isArray(root)) return root.some((child) => within(child, target))
+      return (root.children ?? []).some((child) => within(child, target))
+    }
+    const folded = nodes.filter((node) => node.type === 'details')
+    assert.ok(folded.length > 0, 'the page still folds the long blocks')
+    assert.equal(folded.some((node) => within(node, period)), false, 'the peak headline is never behind a summary')
+
+    // The router's three actions moved into the route card as small buttons; its
+    // own card is gone rather than repeating the route strip it duplicated.
+    assert.equal(buttons(tree, '立即探测').length, 1, 'the probe button survives the merge')
+    assert.equal(buttons(tree, '重置封禁标记').length, 1, 'so does the mark reset')
+    assert.equal(count(flat, '额度路由'), 0, 'the separate router card is gone')
 
     // Two authorities, one card, one refresh button.
     const heads = nodes.filter((node) => node.props?.style?.fontSize === 12.5)

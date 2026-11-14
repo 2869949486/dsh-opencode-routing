@@ -368,6 +368,23 @@ export function peakAt(side, at = Date.now()) {
  *  one of them — no need to scan every minute. */
 const PEAK_BOUNDARIES = PEAK.utcWeekdayHours.flatMap(([from, to]) => [from, to])
 
+/** The schedule itself, so a reader (the settings page, the docs) can draw it
+ *  without repeating the constants: windows are UTC weekday hours, doubled by
+ *  `factor`. Both sides use the same windows; only the calendar differs. */
+export const PEAK_RULE = { factor: PEAK.factor, utcWeekdayHours: PEAK.utcWeekdayHours }
+
+/** Beijing wall-clock parts of `at` — the timezone the windows are quoted in
+ *  (UTC 01–04 & 06–10 is Beijing 09–12 & 14–18, the hours users read). */
+export function beijingParts(at = Date.now()) {
+  const date = new Date(new Date(at).getTime() + 8 * HOUR)
+  return {
+    weekday: date.getUTCDay(),
+    hour: date.getUTCHours(),
+    minute: date.getUTCMinutes(),
+    minutes: date.getUTCHours() * 60 + date.getUTCMinutes(),
+  }
+}
+
 /** Peak state for both sides, plus how long until each one flips, in hours with
  *  one decimal. */
 export function peakClock(at = Date.now()) {
@@ -387,7 +404,14 @@ export function peakClock(at = Date.now()) {
     const hours = next === null ? null : Math.round(((next - at) / HOUR) * 10) / 10
     return { peak, next, hours }
   }
-  return { at, holiday: isChinaHoliday(at), official: side('official'), opencode: side('opencode') }
+  return {
+    at,
+    holiday: isChinaHoliday(at),
+    rule: PEAK_RULE,
+    beijing: beijingParts(at),
+    official: side('official'),
+    opencode: side('opencode'),
+  }
 }
 
 /** What each plan costs per month, in USD. The plan's allowance is metered at
