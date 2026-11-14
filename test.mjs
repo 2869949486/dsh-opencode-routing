@@ -775,8 +775,16 @@ console.log('reveal key ok')
     }
     const registered = new Map()
     const previous = globalThis.window
+    // Pin the UI language: the assertions below read Chinese strings, while
+    // `navigator.language` follows the host locale (en-US on CI runners).
+    const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
     let definition
     globalThis.window = { __ModuleLoader__: { load: (entry) => { definition = entry } } }
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { language: 'zh-CN', languages: ['zh-CN'] },
+      configurable: true,
+      writable: true,
+    })
     try {
       new Function('window', 'require', source)(globalThis.window, requireFake)
       assert.equal(definition.id, 'dsh-opencode-routing')
@@ -792,6 +800,8 @@ console.log('reveal key ok')
     } finally {
       if (previous === undefined) delete globalThis.window
       else globalThis.window = previous
+      if (previousNavigator === undefined) delete globalThis.navigator
+      else Object.defineProperty(globalThis, 'navigator', previousNavigator)
     }
     return registered
   }
